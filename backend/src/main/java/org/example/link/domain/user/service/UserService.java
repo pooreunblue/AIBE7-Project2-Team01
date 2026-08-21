@@ -3,6 +3,8 @@ package org.example.link.domain.user.service;
 import lombok.RequiredArgsConstructor;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
+import org.example.link.domain.user.dto.LoginRequest;
+import org.example.link.domain.user.dto.LoginResponse;
 import org.example.link.domain.user.dto.SignupRequest;
 import org.example.link.domain.user.dto.SignupResponse;
 import org.example.link.domain.user.entity.UserEntity;
@@ -18,6 +20,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // 회원가입
     public SignupResponse signUp(SignupRequest request) {
 
         if (userRepository.existsByLoginId(request.loginId())) {
@@ -42,4 +45,25 @@ public class UserService {
                 savedUser.getNickname()
         );
     }
+
+    //로그인
+    @Transactional(readOnly = true)
+    public LoginResponse login(LoginRequest request) {
+        UserEntity user = userRepository.findByLoginId(request.loginId())
+                .orElseThrow(() ->
+                        new CustomException(ErrorCode.USER_NOT_FOUND)
+                );
+        if (!passwordEncoder.matches(
+                request.password(),
+                user.getPassword()
+        )) {
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
+        }
+        String accessToken = jwtProvider.createAccessToken(
+                user.getId(),
+                user.getLoginId()
+        );
+        return new LoginResponse(accessToken);
+    }
+
 }
