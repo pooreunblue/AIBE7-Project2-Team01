@@ -1,6 +1,7 @@
 package org.example.link.domain.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.link.auth.jwt.JwtProvider;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
 import org.example.link.domain.user.dto.LoginRequest;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtProvider jwtProvider;
 
     // 회원가입
     public SignupResponse signUp(SignupRequest request) {
@@ -57,7 +59,7 @@ public class UserService {
                 request.password(),
                 user.getPassword()
         )) {
-            throw new CustomException(ErrorCode.INVALID_PASSWORD);
+            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
         String accessToken = jwtProvider.createAccessToken(
                 user.getId(),
