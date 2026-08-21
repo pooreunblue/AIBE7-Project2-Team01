@@ -53,7 +53,7 @@ public class UserService {
     public LoginResponse login(LoginRequest request) {
         UserEntity user = userRepository.findByLoginId(request.loginId())
                 .orElseThrow(() ->
-                        new CustomException(ErrorCode.USER_NOT_FOUND)
+                        new CustomException(ErrorCode.INVALID_CREDENTIALS)
                 );
         if (!passwordEncoder.matches(
                 request.password(),
