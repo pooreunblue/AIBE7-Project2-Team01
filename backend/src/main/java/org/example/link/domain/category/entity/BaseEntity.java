@@ -1,4 +1,4 @@
-package org.example.link.domain.tag.entity;
+package org.example.link.domain.category.entity;
 
 public class BaseEntity {
 }

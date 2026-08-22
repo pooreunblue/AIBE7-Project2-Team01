@@ -1,4 +1,4 @@
-package org.example.link.domain.payment.dto;
+package org.example.link.domain.wallet.dto;
 
 public class BaseDto {
 }

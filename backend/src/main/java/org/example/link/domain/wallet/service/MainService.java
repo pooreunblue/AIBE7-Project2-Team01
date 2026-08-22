@@ -1,4 +1,4 @@
-package org.example.link.domain.payment.service;
+package org.example.link.domain.wallet.service;
 
 public class MainService {
 }

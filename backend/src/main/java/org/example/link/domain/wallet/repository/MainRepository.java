@@ -1,4 +1,4 @@
-package org.example.link.domain.payment.repository;
+package org.example.link.domain.wallet.repository;
 
 public class MainRepository {
 }

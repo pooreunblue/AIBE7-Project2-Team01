@@ -1,4 +1,4 @@
-package org.example.link.domain.payment.controller;
+package org.example.link.domain.wallet.controller;
 
 public class MainController {
 }
