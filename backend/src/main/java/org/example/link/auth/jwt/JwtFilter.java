@@ -31,11 +31,11 @@ public class JwtFilter extends OncePerRequestFilter {
                 && jwtProvider.isAccessToken(token)
         ) {
             Long userId = jwtProvider.getUserId(token);
-            String loginId = jwtProvider.getLoginId(token);
+            String email = jwtProvider.getEmail(token);
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
-                            loginId,
+                            email,
                             null,
                             List.of()
                     );
@@ -56,4 +56,3 @@ public class JwtFilter extends OncePerRequestFilter {
         return authorization.substring(7);
     }
 }
-

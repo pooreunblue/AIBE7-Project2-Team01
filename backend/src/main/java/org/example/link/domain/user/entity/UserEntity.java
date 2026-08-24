@@ -13,10 +13,11 @@ public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String loginId;
+    private String email;
 
     @Column(nullable = false)
     private String password;
@@ -24,8 +25,8 @@ public class UserEntity {
     @Column(nullable = false, unique = true)
     private String nickname;
 
-    public UserEntity(String loginId, String password, String nickname) {
-        this.loginId = loginId;
+    public UserEntity(String email, String password, String nickname) {
+        this.email = email;
         this.password = password;
         this.nickname = nickname;
     }

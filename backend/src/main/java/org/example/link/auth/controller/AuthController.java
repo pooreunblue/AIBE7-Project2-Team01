@@ -30,8 +30,8 @@ public class AuthController {
     public ResponseEntity<Void> logout(
             Authentication authentication
     ){
-        String loginId = authentication.getName();
-        authService.logout(loginId);
+        String email = authentication.getName();
+        authService.logout(email);
         return ResponseEntity.noContent().build();
     }
 

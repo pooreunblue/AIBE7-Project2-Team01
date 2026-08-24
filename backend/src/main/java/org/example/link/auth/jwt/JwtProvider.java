@@ -27,14 +27,14 @@ public class JwtProvider {
     //AccessToken 생성
     public String createAccessToken(
             Long userId,
-            String loginId
+            String email
     ) {
         Instant now = Instant.now();
         Instant expiry =
                 now.plus(authProperties.jwt().accessTokenExpiry());
         return Jwts.builder()
                 .subject(String.valueOf(userId))
-                .claim("loginId", loginId)
+                .claim("email", email)
                 .claim("type", "ACCESS")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))
@@ -93,10 +93,10 @@ public class JwtProvider {
         );
     }
 
-    //loginId 추출
-    public String getLoginId(String token) {
+    //email 추출
+    public String getEmail(String token) {
         return getClaims(token)
-                .get("loginId", String.class);
+                .get("email", String.class);
     }
 
 }

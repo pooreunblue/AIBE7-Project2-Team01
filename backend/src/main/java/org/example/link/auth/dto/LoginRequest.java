@@ -1,9 +1,10 @@
 package org.example.link.auth.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
 
 public record LoginRequest(
-        @NotBlank String loginId,
+        @NotBlank @Email String email,
         @NotBlank String password
 ) {
 }

@@ -26,7 +26,7 @@ public class AuthService {
     //로그인
     @Transactional
     public LoginResponse login(LoginRequest request) {
-        UserEntity user = userRepository.findByLoginId(request.loginId())
+        UserEntity user = userRepository.findByEmail(request.email())
                 .orElseThrow(() ->
                         new CustomException(ErrorCode.INVALID_CREDENTIALS)
                 );
@@ -38,7 +38,7 @@ public class AuthService {
         }
         String accessToken = jwtProvider.createAccessToken(
                 user.getId(),
-                user.getLoginId()
+                user.getEmail()
         );
 
         String refreshToken = jwtProvider.createRefreshToken(user.getId());
@@ -48,8 +48,8 @@ public class AuthService {
     }
 
     //logout
-    public void logout(String loginId) {
-        UserEntity user = userRepository.findByLoginId(loginId)
+    public void logout(String email) {
+        UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new CustomException(ErrorCode.USER_NOT_FOUND)
                 );
@@ -78,7 +78,7 @@ public class AuthService {
 
         String newAccessToken = jwtProvider.createAccessToken(
                 user.getId(),
-                user.getLoginId()
+                user.getEmail()
         );
 
         return new RefreshResponse(newAccessToken);
