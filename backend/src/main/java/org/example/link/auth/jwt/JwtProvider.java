@@ -64,6 +64,13 @@ public class JwtProvider {
                 .compact();
     }
 
+    //RefreshToken 검증
+    public boolean isRefreshToken(String token) {
+        return "REFRESH".equals(
+                getClaims(token).get("type", String.class)
+        );
+    }
+
     //토큰 검증
     public boolean validateToken(String token) {
         try {

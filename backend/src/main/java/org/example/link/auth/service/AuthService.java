@@ -61,7 +61,8 @@ public class AuthService {
 
         String refreshToken = request.refreshToken();
 
-        if (!jwtProvider.validateToken(refreshToken)) {
+        if (!jwtProvider.validateToken(refreshToken)
+                ||!jwtProvider.isRefreshToken(refreshToken)) {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
         Long userId = jwtProvider.getUserId(refreshToken);
