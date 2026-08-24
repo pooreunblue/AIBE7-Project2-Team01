@@ -16,7 +16,10 @@ input { width: 90%; }
   <p>채팅방 ID: <input id="roomId" value="1" size="4"> (미리 SQL로 chat_rooms에 넣어둔 id)</p>
   <div class="panel">
     <h3>User A</h3>
-    <textarea id="tokenA" rows="3" style="width:95%"></textarea><br>
+    <input id="emailA" placeholder="email" value="testA@example.com"><br>
+    <input id="passwordA" placeholder="password" type="password" value="Test1234!"><br>
+    <button onclick="login('A')">Login</button>
+    <textarea id="tokenA" rows="3" style="width:95%" placeholder="Login 누르면 자동으로 채워짐 (직접 붙여넣어도 됨)"></textarea><br>
     <button onclick="connect('A')">Connect</button>
     <input id="msgA" placeholder="message">
     <button onclick="send('A')">Send</button>
@@ -24,7 +27,10 @@ input { width: 90%; }
   </div>
   <div class="panel">
     <h3>User B</h3>
-    <textarea id="tokenB" rows="3" style="width:95%"></textarea><br>
+    <input id="emailB" placeholder="email" value="testB@example.com"><br>
+    <input id="passwordB" placeholder="password" type="password" value="Test1234!"><br>
+    <button onclick="login('B')">Login</button>
+    <textarea id="tokenB" rows="3" style="width:95%" placeholder="Login 누르면 자동으로 채워짐 (직접 붙여넣어도 됨)"></textarea><br>
     <button onclick="connect('B')">Connect</button>
     <input id="msgB" placeholder="message">
     <button onclick="send('B')">Send</button>
@@ -42,6 +48,28 @@ function log(who, text) {
   const el = document.getElementById('log' + who);
   el.textContent += text + "\n";
   el.scrollTop = el.scrollHeight;
+}
+
+async function login(who) {
+  const email = document.getElementById('email' + who).value.trim();
+  const password = document.getElementById('password' + who).value;
+  const tokenField = document.getElementById('token' + who);
+  try {
+    const res = await fetch('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      log(who, '!!! LOGIN FAILED: ' + JSON.stringify(data));
+      return;
+    }
+    tokenField.value = data.accessToken;
+    log(who, '>>> LOGIN OK (' + email + ')');
+  } catch (e) {
+    log(who, '!!! LOGIN ERROR: ' + e);
+  }
 }
 
 function connect(who) {
