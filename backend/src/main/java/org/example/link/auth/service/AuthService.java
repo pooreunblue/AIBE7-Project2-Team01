@@ -49,7 +49,11 @@ public class AuthService {
 
     //logout
     public void logout(String loginId) {
-        refreshTokenService.delete(loginId);
+        UserEntity user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() ->
+                        new CustomException(ErrorCode.USER_NOT_FOUND)
+                );
+        refreshTokenService.delete(user.getId());
     }
 
     //refresh
