@@ -18,10 +18,11 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // 회원가입
     public SignupResponse signUp(SignupRequest request) {
 
-        if (userRepository.existsByLoginId(request.loginId())) {
-            throw new CustomException(ErrorCode.DUPLICATE_LOGIN_ID);
+        if (userRepository.existsByEmail(request.email())) {
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
 
         if (userRepository.existsByNickname(request.nickname())) {
@@ -31,14 +32,14 @@ public class UserService {
         String encodedPassword =
                 passwordEncoder.encode(request.password());
         UserEntity user = new UserEntity(
-                request.loginId(),
+                request.email(),
                 encodedPassword,
                 request.nickname()
         );
         UserEntity savedUser = userRepository.save(user);
         return new SignupResponse(
                 savedUser.getId(),
-                savedUser.getLoginId(),
+                savedUser.getEmail(),
                 savedUser.getNickname()
         );
     }
