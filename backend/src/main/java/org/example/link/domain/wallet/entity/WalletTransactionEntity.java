@@ -7,13 +7,14 @@ import lombok.NoArgsConstructor;
 import org.example.link.domain.trade.entity.TradeEntity;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "wallet_transactions")
 public class WalletTransactionEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "wallet_transaction_id")
@@ -39,8 +40,8 @@ public class WalletTransactionEntity {
 
     private String description;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
 
     private WalletTransactionEntity(
             WalletEntity wallet,
@@ -56,6 +57,11 @@ public class WalletTransactionEntity {
         this.amount = amount;
         this.balanceAfter = balanceAfter;
         this.description = description;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
     }
 
     public static WalletTransactionEntity createCharge(
