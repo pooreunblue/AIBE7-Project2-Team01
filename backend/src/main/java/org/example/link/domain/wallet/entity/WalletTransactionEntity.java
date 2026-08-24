@@ -41,4 +41,35 @@ public class WalletTransactionEntity {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    private WalletTransactionEntity(
+            WalletEntity wallet,
+            TradeEntity trade,
+            WalletTransactionType transactionType,
+            BigDecimal amount,
+            BigDecimal balanceAfter,
+            String description
+    ) {
+        this.wallet = wallet;
+        this.trade = trade;
+        this.transactionType = transactionType;
+        this.amount = amount;
+        this.balanceAfter = balanceAfter;
+        this.description = description;
+    }
+
+    public static WalletTransactionEntity createCharge(
+            WalletEntity wallet,
+            BigDecimal amount,
+            BigDecimal balanceAfter
+    ) {
+        return new WalletTransactionEntity(
+                wallet,
+                null,
+                WalletTransactionType.CHARGE,
+                amount,
+                balanceAfter,
+                "지갑 충전"
+        );
+    }
 }
