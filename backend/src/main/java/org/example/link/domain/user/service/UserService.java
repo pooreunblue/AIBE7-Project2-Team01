@@ -2,6 +2,7 @@ package org.example.link.domain.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.jwt.JwtProvider;
+import org.example.link.auth.jwt.RefreshTokenService;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
 import org.example.link.domain.user.dto.LoginRequest;
@@ -21,6 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final RefreshTokenService refreshTokenService;
 
     // 회원가입
     public SignupResponse signUp(SignupRequest request) {
@@ -49,7 +51,7 @@ public class UserService {
     }
 
     //로그인
-    @Transactional(readOnly = true)
+    @Transactional
     public LoginResponse login(LoginRequest request) {
         UserEntity user = userRepository.findByLoginId(request.loginId())
                 .orElseThrow(() ->
@@ -66,6 +68,8 @@ public class UserService {
                 user.getLoginId()
         );
         String refreshToken = jwtProvider.createRefreshToken(user.getId());
+
+        refreshTokenService.save(user.getId(), refreshToken);
         return new LoginResponse(accessToken, refreshToken);
     }
 
