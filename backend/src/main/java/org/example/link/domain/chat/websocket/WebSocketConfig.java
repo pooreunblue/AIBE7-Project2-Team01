@@ -13,12 +13,11 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final StompPrincipalChannelInterceptor stompPrincipalChannelInterceptor;
+    private final StompAuthChannelInterceptor stompAuthChannelInterceptor;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .addInterceptors(new TempUserHandshakeInterceptor())
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
@@ -31,6 +30,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(stompPrincipalChannelInterceptor);
+        registration.interceptors(stompAuthChannelInterceptor);
     }
 }
