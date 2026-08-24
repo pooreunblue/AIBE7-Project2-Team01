@@ -34,12 +34,14 @@ public class RequestPostEntity extends BaseEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Column(nullable = false)
-    private Long budget_max;
+    @Column(name = "budget_min",nullable = false)
+    private Long budgetMin;
 
-    @Column(nullable = false)
-    private Long budget_min;
+    @Column(name = "budget_max",nullable = false)
+    private Long budgetMax;
 
     private String status;
-    private BigDecimal ai_confidence;
+
+    @Column(name = "ai_confidence")
+    private BigDecimal aiConfidence;
 }
