@@ -24,10 +24,10 @@ public class ChatService {
     private final UserRepository userRepository;
 
     @Transactional
-    public ChatMessageResponse sendMessage(String senderLoginId, ChatSendRequest request) {
+    public ChatMessageResponse sendMessage(String senderEmail, ChatSendRequest request) {
         ChatRoom chatRoom = chatRoomRepository.findById(request.chatRoomId())
                 .orElseThrow(() -> new CustomException(ErrorCode.CHAT_ROOM_NOT_FOUND));
-        UserEntity sender = userRepository.findByLoginId(senderLoginId)
+        UserEntity sender = userRepository.findByEmail(senderEmail)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         ChatMessage message = new ChatMessage(
