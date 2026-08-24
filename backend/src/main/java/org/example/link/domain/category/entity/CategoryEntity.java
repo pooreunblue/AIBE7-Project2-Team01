@@ -27,9 +27,4 @@ public class CategoryEntity {
 
     @Column
     private Boolean active;
-
-    @CreatedDate
-    @Column(updatable = false)
-    private Instant createdAt;
-
 }
