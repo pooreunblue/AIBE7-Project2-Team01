@@ -1,5 +1,6 @@
 package org.example.link.domain.user.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.link.domain.user.dto.SignupRequest;
 import org.example.link.domain.user.dto.SignupResponse;
@@ -17,7 +18,7 @@ public class UserController {
 
     @PostMapping("/signup")
     public ResponseEntity<SignupResponse> signUp(
-            @RequestBody SignupRequest request
+           @Valid @RequestBody SignupRequest request
     ) {
         SignupResponse response = userService.signUp(request);
         return ResponseEntity

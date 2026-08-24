@@ -1,7 +1,9 @@
 package org.example.link.auth.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public record LoginRequest(
-        String loginId,
-        String password
+        @NotBlank String loginId,
+        @NotBlank String password
 ) {
 }

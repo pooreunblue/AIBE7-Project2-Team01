@@ -1,8 +1,10 @@
 package org.example.link.domain.user.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public record SignupRequest(
-        String loginId,
-        String password,
-        String nickname
+        @NotBlank String loginId,
+        @NotBlank String password,
+        @NotBlank String nickname
 ) {
 }

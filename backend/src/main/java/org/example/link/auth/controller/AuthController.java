@@ -1,5 +1,6 @@
 package org.example.link.auth.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.dto.LoginRequest;
 import org.example.link.auth.dto.LoginResponse;
@@ -18,7 +19,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
-            @RequestBody LoginRequest request
+            @Valid @RequestBody LoginRequest request
     ) {
         return ResponseEntity.ok(
                 authService.login(request)
@@ -36,7 +37,7 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<RefreshResponse> refresh(
-            @RequestBody RefreshRequest request
+            @Valid @RequestBody RefreshRequest request
     ){
         return ResponseEntity.ok(
                 authService.refresh(request)
