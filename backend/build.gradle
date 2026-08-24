@@ -26,6 +26,7 @@ ext {
 dependencies {
     // Source: https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     // Source: https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-impl
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     // Source: https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson

@@ -41,6 +41,20 @@ public class JwtProvider {
                 .compact();
     }
 
+    //RefreshToken 생성
+    public String createRefreshToken(Long userId) {
+        Instant now = Instant.now();
+        Instant expiry =
+                now.plus(authProperties.jwt().refreshTokenExpiry());
+
+        return Jwts.builder()
+                .subject(userId.toString())
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiry))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
     //토큰 검증
     public boolean validateToken(String token) {
         try {

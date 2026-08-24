@@ -8,10 +8,8 @@ import org.example.link.domain.user.dto.SignupResponse;
 import org.example.link.domain.user.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,5 +34,10 @@ public class UserController {
         return ResponseEntity.ok(
                 userService.login(request)
         );
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<String> me(Authentication authentication) {
+        return ResponseEntity.ok(authentication.getName());
     }
 }

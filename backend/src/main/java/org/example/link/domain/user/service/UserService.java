@@ -65,7 +65,8 @@ public class UserService {
                 user.getId(),
                 user.getLoginId()
         );
-        return new LoginResponse(accessToken);
+        String refreshToken = jwtProvider.createRefreshToken(user.getId());
+        return new LoginResponse(accessToken, refreshToken);
     }
 
 }
