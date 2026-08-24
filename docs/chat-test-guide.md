@@ -30,29 +30,39 @@ cd backend
 
 `Started BackendApplication` 로그가 뜨면 정상 기동된 것입니다. (http://localhost:8080/health 접속 시 `Server is running` 확인)
 
-## 3. 테스트 계정 2개 만들기
+## 3. 테스트 계정 2개 만들기 (Swagger)
 
-Swagger(`http://localhost:8080/swagger-ui/index.html`)에서 해도 되고, curl로도 가능합니다.
+`http://localhost:8080/swagger-ui/index.html` 접속.
 
-```bash
-curl -X POST http://localhost:8080/users/signup -H "Content-Type: application/json" \
-  -d '{"email":"testA@example.com","password":"Test1234!","nickname":"testerA"}'
+1. `user-controller`의 `POST /users/signup` 펼치기 → **Try it out**
+2. Request body를 아래처럼 채우고 **Execute** (email/nickname은 겹치지만 않으면 자유)
 
-curl -X POST http://localhost:8080/users/signup -H "Content-Type: application/json" \
-  -d '{"email":"testB@example.com","password":"Test1234!","nickname":"testerB"}'
+```json
+{
+  "email": "testA@example.com",
+  "password": "Test1234!",
+  "nickname": "testerA"
+}
 ```
 
-## 4. 로그인해서 JWT 발급받기
+3. 같은 방식으로 두 번째 계정도 생성 (`testB@example.com` / `testerB`)
 
-```bash
-curl -X POST http://localhost:8080/auth/login -H "Content-Type: application/json" \
-  -d '{"email":"testA@example.com","password":"Test1234!"}'
+## 4. 로그인해서 JWT 발급받기 (Swagger)
 
-curl -X POST http://localhost:8080/auth/login -H "Content-Type: application/json" \
-  -d '{"email":"testB@example.com","password":"Test1234!"}'
+1. `auth-controller`의 `POST /auth/login` 펼치기 → **Try it out**
+2. Request body에 방금 만든 계정 정보 입력
+
+```json
+{
+  "email": "testA@example.com",
+  "password": "Test1234!"
+}
 ```
 
-응답의 `accessToken` 값을 각각 복사해둡니다. (만료 15분이라 테스트 중간에 끊기면 다시 로그인)
+3. **Execute** → 응답의 `accessToken` 값을 복사해둠
+4. 같은 방식으로 `testB@example.com`도 로그인해서 accessToken 복사
+
+토큰 만료는 15분이라, 테스트 중간에 연결이 끊기면 4번을 다시 실행해서 새 토큰을 받으면 됩니다.
 
 ## 5. 테스트용 채팅방 만들기
 
