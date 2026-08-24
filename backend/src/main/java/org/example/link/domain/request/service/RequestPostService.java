@@ -26,8 +26,8 @@ public class RequestPostService {
                 .category(category)
                 .title(requestPostRequestDto.title())
                 .content(requestPostRequestDto.content())
-                .budget_max(requestPostRequestDto.budget_max())
-                .budget_min(requestPostRequestDto.budget_min())
+                .budgetMin(requestPostRequestDto.budgetMin())
+                .budgetMax(requestPostRequestDto.budgetMax())
                 .build();
         return requestPostRepository.save(requestPostEntity);
     }

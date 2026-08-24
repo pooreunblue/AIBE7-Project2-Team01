@@ -8,7 +8,7 @@ public record RequestPostRequestDto(
         @NotBlank String title,
         @NotBlank String content,
         Long categoryId,
-        @NotBlank Long budget_max,
-        @NotBlank Long budget_min
+        @NotBlank Long budgetMin,
+        @NotBlank Long budgetMax
 ) {
 }
