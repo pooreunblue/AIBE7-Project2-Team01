@@ -5,6 +5,7 @@ import org.example.link.domain.request.entity.RequestPostEntity;
 import org.example.link.domain.request.util.RequestPostStatus;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 @Builder
 public record RequestPostResponseDto(
@@ -17,7 +18,9 @@ public record RequestPostResponseDto(
         Long budgetMin,
         Long budgetMax,
         RequestPostStatus status,
-        BigDecimal aiConfidence
+        BigDecimal aiConfidence,
+        Instant createdAt,
+        Instant updatedAt
 ) {
     public static RequestPostResponseDto toDto(RequestPostEntity requestPostEntity) {
         return RequestPostResponseDto.builder()
@@ -31,6 +34,8 @@ public record RequestPostResponseDto(
                 .budgetMax(requestPostEntity.getBudgetMax())
                 .status(requestPostEntity.getStatus())
                 .aiConfidence(requestPostEntity.getAiConfidence())
+                .createdAt(requestPostEntity.getCreatedAt())
+                .updatedAt(requestPostEntity.getUpdatedAt())
                 .build();
     }
 }
