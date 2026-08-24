@@ -47,22 +47,10 @@ cd backend
 
 3. 같은 방식으로 두 번째 계정도 생성 (`testB@example.com` / `testerB`)
 
-## 4. 로그인해서 JWT 발급받기 (Swagger)
+## 4. 로그인 (선택 — 6번 테스트 페이지에서 바로 해도 됨)
 
-1. `auth-controller`의 `POST /auth/login` 펼치기 → **Try it out**
-2. Request body에 방금 만든 계정 정보 입력
-
-```json
-{
-  "email": "testA@example.com",
-  "password": "Test1234!"
-}
-```
-
-3. **Execute** → 응답의 `accessToken` 값을 복사해둠
-4. 같은 방식으로 `testB@example.com`도 로그인해서 accessToken 복사
-
-토큰 만료는 15분이라, 테스트 중간에 연결이 끊기면 4번을 다시 실행해서 새 토큰을 받으면 됩니다.
+`chat-test.html`에 로그인 기능이 내장돼 있어서 이 단계는 건너뛰어도 됩니다.
+Swagger에서 미리 토큰을 받아두고 싶으면 `auth-controller`의 `POST /auth/login`에 3번 계정 정보로 **Try it out** 하면 됩니다.
 
 ## 5. 테스트용 채팅방 만들기
 
@@ -80,11 +68,12 @@ SELECT chat_room_id FROM chat_rooms ORDER BY chat_room_id DESC LIMIT 1;
 브라우저에서 `http://localhost:8080/chat-test.html` 접속.
 
 1. 상단 "채팅방 ID"에 5번에서 확인한 id 입력 (기본값 1)
-2. User A 칸에 A의 accessToken 붙여넣고 Connect
-3. User B 칸에 B의 accessToken 붙여넣고 Connect
-4. 양쪽 로그에 `>>> CONNECTED`, `user-name:` 뒤에 본인 이메일이 뜨는지 확인 (JWT 인증이 제대로 됐다는 뜻)
-5. A의 메시지 입력창에 아무 텍스트나 쓰고 Send → **A, B 양쪽 로그에 `<<< RECEIVED`** 로 같은 메시지가 뜨는지 확인
-6. B에서도 반대로 보내서 확인
+2. User A 칸에 email/password 입력하고 **Login** → 토큰 입력란이 자동으로 채워짐 (Swagger에서 미리 받은 토큰이 있으면 직접 붙여넣어도 됨)
+3. User B 칸도 마찬가지로 Login
+4. 양쪽 다 **Connect**
+5. 양쪽 로그에 `>>> CONNECTED`, `user-name:` 뒤에 본인 이메일이 뜨는지 확인 (JWT 인증이 제대로 됐다는 뜻)
+6. A의 메시지 입력창에 아무 텍스트나 쓰고 Send → **A, B 양쪽 로그에 `<<< RECEIVED`** 로 같은 메시지가 뜨는지 확인
+7. B에서도 반대로 보내서 확인
 
 ## 7. (선택) DB에 실제 저장됐는지 확인
 
