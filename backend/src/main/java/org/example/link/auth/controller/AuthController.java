@@ -7,6 +7,7 @@ import org.example.link.auth.dto.RefreshRequest;
 import org.example.link.auth.dto.RefreshResponse;
 import org.example.link.auth.service.AuthService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +23,15 @@ public class AuthController {
         return ResponseEntity.ok(
                 authService.login(request)
         );
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            Authentication authentication
+    ){
+        String loginId = authentication.getName();
+        authService.logout(loginId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/refresh")

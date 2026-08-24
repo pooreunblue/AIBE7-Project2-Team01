@@ -26,9 +26,13 @@ public class JwtFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         String token = resolveToken(request); // 토큰 자르기
 
-        if (token != null && jwtProvider.validateToken(token)) {
+        if (token != null
+                && jwtProvider.validateToken(token)
+                && jwtProvider.isAccessToken(token)
+        ) {
             Long userId = jwtProvider.getUserId(token);
             String loginId = jwtProvider.getLoginId(token);
+
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             loginId,

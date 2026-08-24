@@ -35,10 +35,18 @@ public class JwtProvider {
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("loginId", loginId)
+                .claim("type", "ACCESS")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    //Access 검증
+    public boolean isAccessToken(String token) {
+        return "ACCESS".equals(
+                getClaims(token).get("type", String.class)
+        );
     }
 
     //RefreshToken 생성
@@ -49,6 +57,7 @@ public class JwtProvider {
 
         return Jwts.builder()
                 .subject(userId.toString())
+                .claim("type", "REFRESH")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))
                 .signWith(getSigningKey())

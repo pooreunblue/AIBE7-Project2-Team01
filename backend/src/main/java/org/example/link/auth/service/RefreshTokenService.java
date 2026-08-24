@@ -26,7 +26,7 @@ public class RefreshTokenService {
         return redisTemplate.opsForValue().get(KEY_PREFIX + userId);
     }
 
-    public void delete(Long userId) {
-        redisTemplate.delete(KEY_PREFIX + userId);
+    public void delete(String loginId) {
+        redisTemplate.delete(KEY_PREFIX + loginId);
     }
 }

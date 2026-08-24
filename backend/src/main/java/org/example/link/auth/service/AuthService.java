@@ -47,6 +47,11 @@ public class AuthService {
         return new LoginResponse(accessToken, refreshToken);
     }
 
+    //logout
+    public void logout(String loginId) {
+        refreshTokenService.delete(loginId);
+    }
+
     //refresh
     public RefreshResponse refresh(RefreshRequest request) {
 
