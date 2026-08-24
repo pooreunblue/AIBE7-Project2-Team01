@@ -1,11 +1,10 @@
-package org.example.link.domain.user.dto;
+package org.example.link.auth.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Email;
 
-public record SignupRequest(
+public record LoginRequest(
         @NotBlank @Email String email,
-        @NotBlank String password,
-        @NotBlank String nickname
+        @NotBlank String password
 ) {
 }

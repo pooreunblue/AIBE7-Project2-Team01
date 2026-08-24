@@ -7,6 +7,8 @@ import org.example.link.domain.user.dto.SignupRequest;
 import org.example.link.domain.user.dto.SignupResponse;
 import org.example.link.domain.user.entity.UserEntity;
 import org.example.link.domain.user.repository.UserRepository;
+import org.example.link.domain.wallet.entity.WalletEntity;
+import org.example.link.domain.wallet.repository.WalletRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,11 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final WalletRepository walletRepository;
 
+    // 회원가입
     public SignupResponse signUp(SignupRequest request) {
 
-        if (userRepository.existsByLoginId(request.loginId())) {
-            throw new CustomException(ErrorCode.DUPLICATE_LOGIN_ID);
+        if (userRepository.existsByEmail(request.email())) {
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
 
         if (userRepository.existsByNickname(request.nickname())) {
@@ -31,14 +35,18 @@ public class UserService {
         String encodedPassword =
                 passwordEncoder.encode(request.password());
         UserEntity user = new UserEntity(
-                request.loginId(),
+                request.email(),
                 encodedPassword,
                 request.nickname()
         );
         UserEntity savedUser = userRepository.save(user);
+
+        WalletEntity savedWallet = new WalletEntity(savedUser);
+        walletRepository.save(savedWallet);
+
         return new SignupResponse(
                 savedUser.getId(),
-                savedUser.getLoginId(),
+                savedUser.getEmail(),
                 savedUser.getNickname()
         );
     }
