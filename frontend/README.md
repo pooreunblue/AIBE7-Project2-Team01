@@ -20,9 +20,33 @@ frontend/
   styles.css
   src/
     app.js
-    components.js
-    data.js
-    pages.js
+    router.js
+    features/
+      auth/
+        LoginPage.js
+      chat/
+        ChatPage.js
+      home/
+        HomePage.js
+      payment/
+        CheckoutPage.js
+      request/
+        RequestCreatePage.js
+        RequestDetailPage.js
+        RequestListPage.js
+      search/
+        AiSearchPage.js
+      talent/
+        TalentCreatePage.js
+        TalentDetailPage.js
+        TalentListPage.js
+      user/
+        MyPage.js
+    shared/
+      data/
+        mock.js
+      ui/
+        index.js
 ```
 
 ## 화면
