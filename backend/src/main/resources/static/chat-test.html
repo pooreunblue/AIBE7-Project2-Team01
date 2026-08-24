@@ -10,6 +10,7 @@ body { font-family: sans-serif; display: flex; gap: 20px; padding: 20px; }
 .panel { flex: 1; border: 1px solid #ccc; padding: 10px; }
 .log { height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 5px; font-size: 12px; white-space: pre-wrap; }
 input { width: 90%; }
+textarea { width: 95%; height: 4.5em; resize: none; overflow-wrap: break-word; word-break: break-all; white-space: pre-wrap; }
 </style>
 </head>
 <body>
@@ -19,7 +20,7 @@ input { width: 90%; }
     <input id="emailA" placeholder="email" value="testA@example.com"><br>
     <input id="passwordA" placeholder="password" type="password" value="Test1234!"><br>
     <button onclick="login('A')">Login</button>
-    <textarea id="tokenA" rows="3" style="width:95%" placeholder="Login 누르면 자동으로 채워짐 (직접 붙여넣어도 됨)"></textarea><br>
+    <textarea id="tokenA" placeholder="Login 누르면 자동으로 채워짐 (직접 붙여넣어도 됨)"></textarea><br>
     <button onclick="connect('A')">Connect</button>
     <input id="msgA" placeholder="message">
     <button onclick="send('A')">Send</button>
@@ -30,7 +31,7 @@ input { width: 90%; }
     <input id="emailB" placeholder="email" value="testB@example.com"><br>
     <input id="passwordB" placeholder="password" type="password" value="Test1234!"><br>
     <button onclick="login('B')">Login</button>
-    <textarea id="tokenB" rows="3" style="width:95%" placeholder="Login 누르면 자동으로 채워짐 (직접 붙여넣어도 됨)"></textarea><br>
+    <textarea id="tokenB" placeholder="Login 누르면 자동으로 채워짐 (직접 붙여넣어도 됨)"></textarea><br>
     <button onclick="connect('B')">Connect</button>
     <input id="msgB" placeholder="message">
     <button onclick="send('B')">Send</button>
@@ -77,11 +78,11 @@ function connect(who) {
   const client = new StompJs.Client({
     webSocketFactory: () => new SockJS(window.location.origin + '/ws'),
     connectHeaders: { Authorization: 'Bearer ' + token },
-    debug: (str) => log(who, '[debug] ' + str),
     onConnect: () => {
       log(who, '>>> CONNECTED');
       client.subscribe('/topic/chat-rooms/' + roomId(), (msg) => {
-        log(who, '<<< RECEIVED: ' + msg.body);
+        const data = JSON.parse(msg.body);
+        log(who, `[${data.senderNickname}] ${data.content} : ${data.createdAt}`);
       });
     },
     onStompError: (frame) => {
