@@ -8,6 +8,7 @@ import org.example.link.domain.category.repository.CategoryRepository;
 import org.example.link.domain.request.dto.RequestPostRequestDto;
 import org.example.link.domain.request.entity.RequestPostEntity;
 import org.example.link.domain.request.repository.RequestPostRepository;
+import org.example.link.domain.request.util.RequestPostStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ public class RequestPostService {
                 .content(requestPostRequestDto.content())
                 .budgetMin(requestPostRequestDto.budgetMin())
                 .budgetMax(requestPostRequestDto.budgetMax())
+                .status(RequestPostStatus.OPEN)
                 .build();
         return requestPostRepository.save(requestPostEntity);
     }
