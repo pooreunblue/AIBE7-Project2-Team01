@@ -1,10 +1,7 @@
 package org.example.link.domain.request.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.link.common.entity.BaseEntity;
 import org.example.link.domain.category.entity.CategoryEntity;
 import org.example.link.domain.user.entity.UserEntity;
@@ -16,6 +13,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
+@Builder
 public class RequestPostEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
