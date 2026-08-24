@@ -763,6 +763,14 @@ a.button {
   font-size: 13px;
 }
 
+.form-message {
+  min-height: 20px;
+  margin: 0;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .inline-note a {
   color: var(--blue);
   font-weight: 800;

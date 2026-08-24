@@ -1,5 +1,6 @@
 import { shell } from "./shared/ui/index.js";
 import { parseRoute, resolvePage } from "./router.js";
+import { login } from "./features/auth/authApi.js";
 
 const app = document.querySelector("#app");
 
@@ -12,6 +13,7 @@ function render() {
 
 function bindPageEvents() {
   bindHomeFlow();
+  bindLoginForm();
 
   document.querySelectorAll("form").forEach((form) => {
     form.addEventListener("submit", (event) => {
@@ -36,6 +38,29 @@ function bindPageEvents() {
       input.value = "";
     });
   }
+}
+
+function bindLoginForm() {
+  const loginForm = document.querySelector("[data-login-form]");
+  if (!loginForm) return;
+
+  loginForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const message = loginForm.querySelector("[data-form-message]");
+    const formData = new FormData(loginForm);
+
+    try {
+      message.textContent = "";
+      await login({
+        email: formData.get("email"),
+        password: formData.get("password"),
+      });
+      window.location.hash = "/home";
+    } catch (error) {
+      message.textContent = error.message;
+    }
+  });
 }
 
 function bindHomeFlow() {

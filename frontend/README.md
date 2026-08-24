@@ -12,17 +12,26 @@ python3 -m http.server 5173 -d frontend
 
 접속 주소는 `http://localhost:5173`입니다.
 
+API 서버는 기본적으로 Express 개발 서버 기준인 `http://localhost:3000`을 바라봅니다.
+다른 주소를 사용해야 하면 `index.html`에서 `window.__API_BASE_URL__` 값을 먼저 선언하면 됩니다.
+
 ## 구조
 
 ```text
 frontend/
   index.html
+  login.html
   styles.css
   src/
+    api/
+      api.js
+    auth/
+      tokenStorage.js
     app.js
     router.js
     features/
       auth/
+        authApi.js
         LoginPage.js
       chat/
         ChatPage.js
