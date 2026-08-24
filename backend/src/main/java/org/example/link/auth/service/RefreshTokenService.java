@@ -1,4 +1,4 @@
-package org.example.link.auth.jwt;
+package org.example.link.auth.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.config.AuthProperties;
