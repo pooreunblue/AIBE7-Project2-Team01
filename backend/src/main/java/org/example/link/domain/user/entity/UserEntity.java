@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "users")
 public class UserEntity {
 
+    // TODO(임시 수정, chat 도메인 테스트용): ERD 기준 PK 컬럼명이 user_id로 확정됨에 따라 추가.
+    // auth/user 담당 팀원이 반영하면 이 주석은 지워도 됨 - 충돌 시 이 줄만 보고 확인할 것.
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
