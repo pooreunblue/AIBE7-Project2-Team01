@@ -1,5 +1,7 @@
 package org.example.link.auth.service;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.dto.LoginRequest;
 import org.example.link.auth.dto.LoginResponse;
@@ -61,11 +63,18 @@ public class AuthService {
 
         String refreshToken = request.refreshToken();
 
-        if (!jwtProvider.validateToken(refreshToken)
-                ||!jwtProvider.isRefreshToken(refreshToken)) {
+        Claims claims;
+        try {
+            claims = jwtProvider.parseClaims(refreshToken);
+        } catch (JwtException | IllegalArgumentException e) {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
-        Long userId = jwtProvider.getUserId(refreshToken);
+
+        if (!jwtProvider.isRefreshToken(claims)) {
+            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        Long userId = jwtProvider.getUserId(claims);
         String savedRefreshToken = refreshTokenService.get(userId);
 
         if(savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {

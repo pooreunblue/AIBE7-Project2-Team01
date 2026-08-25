@@ -42,10 +42,9 @@ public class JwtProvider {
                 .compact();
     }
 
-    //Access 검증
-    public boolean isAccessToken(String token) {
+    public boolean isAccessToken(Claims claims) {
         return "ACCESS".equals(
-                getClaims(token).get("type", String.class)
+                claims.get("type", String.class)
         );
     }
 
@@ -65,9 +64,9 @@ public class JwtProvider {
     }
 
     //RefreshToken 검증
-    public boolean isRefreshToken(String token) {
+    public boolean isRefreshToken(Claims claims) {
         return "REFRESH".equals(
-                getClaims(token).get("type", String.class)
+                claims.get("type", String.class)
         );
     }
 
@@ -85,7 +84,7 @@ public class JwtProvider {
     }
 
     //Claims 가져오기
-    private Claims getClaims(String token) {
+    public Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
@@ -94,16 +93,13 @@ public class JwtProvider {
     }
 
     //userId 추출
-    public Long getUserId(String token) {
-        return Long.valueOf(
-                getClaims(token).getSubject()
-        );
+    public Long getUserId(Claims claims) {
+        return Long.valueOf(claims.getSubject());
     }
 
     //email 추출
-    public String getEmail(String token) {
-        return getClaims(token)
-                .get("email", String.class);
+    public String getEmail(Claims claims) {
+        return claims.get("email", String.class);
     }
 
 }

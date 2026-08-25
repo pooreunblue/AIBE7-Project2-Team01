@@ -5,12 +5,12 @@ import org.example.link.domain.category.entity.CategoryEntity;
 
 @Builder
 public record CategoryResponseDto(
-        Long id,
+        Long categoryId,
         String name
 ) {
     public static CategoryResponseDto toDto(CategoryEntity categoryEntity) {
         return CategoryResponseDto.builder()
-                .id(categoryEntity.getId())
+                .categoryId(categoryEntity.getId())
                 .name(categoryEntity.getName())
                 .build();
     }
