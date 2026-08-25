@@ -2,6 +2,7 @@ package org.example.link.domain.user.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.link.common.response.ApiResponse;
 import org.example.link.domain.user.dto.SignupRequest;
 import org.example.link.domain.user.dto.SignupResponse;
 import org.example.link.domain.user.service.UserService;
@@ -17,17 +18,17 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/signup")
-    public ResponseEntity<SignupResponse> signUp(
+    public ResponseEntity<ApiResponse<SignupResponse>> signUp(
            @Valid @RequestBody SignupRequest request
     ) {
         SignupResponse response = userService.signUp(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(response);
+                .body(ApiResponse.ok(response));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<String> me(Authentication authentication) {
-        return ResponseEntity.ok(authentication.getName());
+    public ApiResponse<String> me(Authentication authentication) {
+        return ApiResponse.ok(authentication.getName());
     }
 }
