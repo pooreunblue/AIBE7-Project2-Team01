@@ -23,9 +23,6 @@ public class CategoryEntity {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @Column
     private String description;
-
-    @Column
     private Boolean active;
 }
