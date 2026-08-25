@@ -61,4 +61,8 @@ public class RequestPostEntity extends BaseEntity {
         this.budgetMin = budgetMin;
         this.budgetMax = budgetMax;
     }
+
+    public void closeStatus() {
+        this.status = RequestPostStatus.CLOSED;
+    }
 }

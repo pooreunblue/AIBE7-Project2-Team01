@@ -71,4 +71,20 @@ public class RequestPostController {
         RequestPostEntity updated = requestPostService.update(requestPostId, requestPostRequestDto, userDetails);
         return ResponseEntity.ok(RequestPostResponseDto.toDto(updated));
     }
+
+    @DeleteMapping("/{requestPostId}")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long requestPostId
+    ) {
+        requestPostService.delete(requestPostId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/requests/{requestPostId}/close")
+    public ResponseEntity<RequestPostResponseDto> close(
+            @PathVariable Long requestPostId
+    ) {
+        RequestPostEntity closed = requestPostService.closeStatus(requestPostId);
+        return ResponseEntity.ok(RequestPostResponseDto.toDto(closed));
+    }
 }

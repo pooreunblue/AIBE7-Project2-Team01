@@ -88,4 +88,19 @@ public class RequestPostService {
         );
         return requestPostEntity;
     }
+
+    @Transactional
+    public void delete(Long requestPostId) {
+        RequestPostEntity requestPostEntity = requestPostRepository.findById(requestPostId)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        requestPostRepository.delete(requestPostEntity);
+    }
+
+    @Transactional
+    public RequestPostEntity closeStatus(Long requestPostId) {
+        RequestPostEntity requestPostEntity = requestPostRepository.findById(requestPostId)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        requestPostEntity.closeStatus();
+        return requestPostEntity;
+    }
 }
