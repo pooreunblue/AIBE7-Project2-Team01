@@ -80,7 +80,7 @@ public class RequestPostController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/requests/{requestPostId}/close")
+    @PatchMapping("/{requestPostId}/close")
     public ResponseEntity<RequestPostResponseDto> close(
             @PathVariable Long requestPostId
     ) {
