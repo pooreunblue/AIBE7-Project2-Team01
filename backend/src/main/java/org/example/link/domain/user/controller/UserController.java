@@ -1,5 +1,6 @@
 package org.example.link.domain.user.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
@@ -24,6 +25,7 @@ public class UserController {
     private final MyPageService myPageService;
 
     @PostMapping("/signup")
+    @Operation(summary = "회원가입")
     public ResponseEntity<ApiResponse<SignupResponse>> signUp(
            @Valid @RequestBody SignupRequest request
     ) {
@@ -34,6 +36,7 @@ public class UserController {
     }
 
     @GetMapping("/me")
+    @Operation(summary = "마이페이지 조회")
     public ApiResponse<MyPageResponse> getMyPage(
             @AuthenticationPrincipal CustomUserDetails user
     ) {
@@ -45,6 +48,7 @@ public class UserController {
     }
 
     @PatchMapping("/me")
+    @Operation(summary = "내 정보 수정")
     public ApiResponse<MyPageResponse> updateUser(
             @AuthenticationPrincipal CustomUserDetails user,
             @Valid @RequestBody UpdateUserRequest request
@@ -57,6 +61,7 @@ public class UserController {
     }
 
     @DeleteMapping("/me")
+    @Operation(summary = "회원 탈퇴")
     public ApiResponse<Void> deleteUser(
             @AuthenticationPrincipal CustomUserDetails user
     ) {

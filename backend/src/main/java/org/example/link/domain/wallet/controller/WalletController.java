@@ -1,5 +1,6 @@
 package org.example.link.domain.wallet.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
@@ -23,6 +24,7 @@ public class WalletController {
     private final TransactionService transactionService;
 
     @GetMapping
+    @Operation(summary = "내 지갑 조회")
     public ApiResponse<WalletResponse> getWallet(
             @AuthenticationPrincipal CustomUserDetails user
     ) {
@@ -30,6 +32,7 @@ public class WalletController {
     }
 
     @PostMapping("/charge")
+    @Operation(summary = "지갑 충전")
     public ApiResponse<WalletResponse> charge(
             @AuthenticationPrincipal CustomUserDetails user,
             @Valid @RequestBody ChargeRequest request
@@ -41,6 +44,7 @@ public class WalletController {
     }
 
     @GetMapping("/transactions")
+    @Operation(summary = "지갑 거래 내역 조회")
     public ApiResponse<PageResponse<WalletTransactionResponse>> getTransactions(
             @AuthenticationPrincipal CustomUserDetails user,
             Pageable pageable
