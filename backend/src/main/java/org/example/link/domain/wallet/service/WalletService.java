@@ -105,7 +105,7 @@ public class WalletService {
         );
     }
 
-    private WalletEntity getWalletEntity(Long userId) {
+    public WalletEntity getWalletEntity(Long userId) {
         return walletRepository.findByUserId(userId)
                 .orElseThrow(() ->
                         new CustomException(ErrorCode.WALLET_NOT_FOUND)
