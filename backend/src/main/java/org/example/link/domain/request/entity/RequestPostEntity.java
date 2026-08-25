@@ -26,7 +26,7 @@ public class RequestPostEntity extends BaseEntity {
     private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
+    @JoinColumn(name = "category_id", nullable = false)
     private CategoryEntity category;
 
     @Column(nullable = false)
