@@ -7,6 +7,7 @@ import org.example.link.domain.request.dto.RequestPostRequestDto;
 import org.example.link.domain.request.dto.RequestPostResponseDto;
 import org.example.link.domain.request.entity.RequestPostEntity;
 import org.example.link.domain.request.service.RequestPostService;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -14,8 +15,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.parameters.P;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
@@ -29,7 +28,7 @@ public class RequestPostController {
 
     @PostMapping
     public ResponseEntity<RequestPostResponseDto> create(
-            @Validated @RequestBody RequestPostRequestDto requestPostRequestDto,
+            @Valid @RequestBody RequestPostRequestDto requestPostRequestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails
             ) {
         RequestPostEntity requestPostEntity = requestPostService.create(requestPostRequestDto, userDetails);
@@ -55,7 +54,11 @@ public class RequestPostController {
     @GetMapping("/search")
     public Page<RequestPostResponseDto> searchRequests(
             @RequestParam(required = false) String keyword,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+            @ParameterObject
+            @PageableDefault(
+                    size = 20,
+                    sort = "createdAt",
+                    direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
         Page<RequestPostEntity> requestPostEntities = requestPostService.search(keyword, pageable);
