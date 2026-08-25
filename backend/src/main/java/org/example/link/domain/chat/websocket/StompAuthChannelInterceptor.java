@@ -1,5 +1,6 @@
 package org.example.link.domain.chat.websocket;
 
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.jwt.JwtProvider;
 import org.springframework.messaging.Message;
@@ -27,10 +28,14 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
 
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
             String token = resolveToken(accessor);
-            if (token == null || !jwtProvider.validateToken(token) || !jwtProvider.isAccessToken(token)) {
+            if (token == null || !jwtProvider.validateToken(token)) {
                 throw new MessagingException("유효하지 않은 인증 토큰입니다.");
             }
-            String email = jwtProvider.getEmail(token);
+            Claims claims = jwtProvider.parseClaims(token);
+            if (!jwtProvider.isAccessToken(claims)) {
+                throw new MessagingException("유효하지 않은 인증 토큰입니다.");
+            }
+            String email = jwtProvider.getEmail(claims);
             accessor.setUser((Principal) () -> email);
         }
         return message;
