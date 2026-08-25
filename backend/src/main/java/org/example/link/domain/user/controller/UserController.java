@@ -55,4 +55,12 @@ public class UserController {
             )
     );
     }
+
+    @DeleteMapping("/me")
+    public ApiResponse<Void> deleteUser(
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        myPageService.deleteUser(user.getUserId());
+        return ApiResponse.ok();
+    }
 }

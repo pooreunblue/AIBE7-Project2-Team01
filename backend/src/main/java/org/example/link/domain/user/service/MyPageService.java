@@ -1,8 +1,6 @@
 package org.example.link.domain.user.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.link.common.exception.CustomException;
-import org.example.link.common.exception.ErrorCode;
 import org.example.link.domain.user.dto.MyPageResponse;
 import org.example.link.domain.user.dto.UpdateUserRequest;
 import org.example.link.domain.user.entity.UserEntity;
@@ -38,5 +36,11 @@ public class MyPageService {
         user.updateNickname(request.nickname());
         WalletEntity wallet = walletService.getWalletEntity(userId);
         return MyPageResponse.from(user, wallet);
+    }
+
+    //회원 탈퇴
+    @Transactional
+    public void deleteUser(Long userId) {
+        // TODO: 소프트 삭제 적용 예정
     }
 }
