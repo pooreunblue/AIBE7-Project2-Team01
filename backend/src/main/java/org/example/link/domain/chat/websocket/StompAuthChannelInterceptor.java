@@ -52,8 +52,9 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
                 );
             }
         }
-        return message;
-    }
+            return message;
+        }
+
 
 
     private String resolveToken(StompHeaderAccessor accessor) {
@@ -67,13 +68,13 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
         }
         return header.substring(7);
     }
-    private record StompPrincipal(
-            Long userId,
-            String email
-    ) implements Principal {
-        @Override
-        public String getName() {
-            return email;
+        private record StompPrincipal(
+                Long userId,
+                String email
+        ) implements Principal {
+            @Override
+            public String getName() {
+                return email;
+            }
         }
-    }
 }

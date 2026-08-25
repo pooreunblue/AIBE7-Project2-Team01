@@ -4,25 +4,66 @@
 
 ## 실행
 
-ES module을 사용하므로 로컬 서버로 실행합니다.
+Express가 정적 프론트 파일을 서빙하고 `/api` 요청을 Spring Boot 백엔드로 프록시합니다.
 
 ```bash
-python3 -m http.server 5173 -d frontend
+cd frontend
+npm install
+npm start
 ```
 
-접속 주소는 `http://localhost:5173`입니다.
+접속 주소는 `http://localhost:3000`입니다.
+
+Spring Boot API 서버는 기본적으로 `http://localhost:8080`을 바라봅니다.
+다른 주소를 사용해야 하면 Express 실행 시 `API_TARGET` 값을 지정합니다.
+
+```bash
+API_TARGET=http://localhost:8081 npm start
+```
 
 ## 구조
 
 ```text
 frontend/
   index.html
+  login.html
+  package.json
+  server.js
   styles.css
   src/
+    api/
+      api.js
+    auth/
+      tokenStorage.js
     app.js
-    components.js
-    data.js
-    pages.js
+    router.js
+    features/
+      auth/
+        authApi.js
+        LoginPage.js
+      chat/
+        ChatPage.js
+      home/
+        HomePage.js
+      payment/
+        CheckoutPage.js
+      request/
+        RequestCreatePage.js
+        RequestDetailPage.js
+        RequestListPage.js
+      search/
+        AiSearchPage.js
+      talent/
+        TalentCreatePage.js
+        TalentDetailPage.js
+        TalentListPage.js
+      user/
+        MyPage.js
+    shared/
+      data/
+        mock.js
+      ui/
+        index.js
 ```
 
 ## 화면
