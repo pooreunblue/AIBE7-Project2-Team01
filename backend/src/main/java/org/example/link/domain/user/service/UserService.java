@@ -58,25 +58,14 @@ public class UserService {
         );
     }
 
-    //닉네임 수정
-    @Transactional
-    public MyPageResponse updateUser(
-            Long userId,
-            UpdateUserRequest request
-    ){
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new CustomException(ErrorCode.USER_NOT_FOUND)
-                );
-        if (userRepository.existsByNickname(request.nickname())
-                && !user.getNickname().equals(request.nickname())) {
+    //닉네임 중복 검사
+    public void validateNickname(
+            UserEntity user,
+            String nickname
+    ) {
+        if (userRepository.existsByNickname(nickname)
+                && !user.getNickname().equals(nickname)) {
             throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
         }
-        user.updateNickname(request.nickname());
-        WalletEntity wallet = walletRepository.findByUserId(userId)
-                .orElseThrow(() ->
-                        new CustomException(ErrorCode.WALLET_NOT_FOUND)
-                );
-        return MyPageResponse.from(user, wallet);
     }
 }

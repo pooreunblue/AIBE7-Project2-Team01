@@ -7,6 +7,7 @@ import org.example.link.common.response.ApiResponse;
 import org.example.link.domain.user.dto.MyPageResponse;
 import org.example.link.domain.user.dto.SignupRequest;
 import org.example.link.domain.user.dto.SignupResponse;
+import org.example.link.domain.user.dto.UpdateUserRequest;
 import org.example.link.domain.user.service.MyPageService;
 import org.example.link.domain.user.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -41,5 +42,17 @@ public class UserController {
                         user.getUserId()
                 )
         );
+    }
+
+    @PatchMapping("/me")
+    public ApiResponse<MyPageResponse> updateUser(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @Valid @RequestBody UpdateUserRequest request
+    ){return ApiResponse.ok(
+            myPageService.updateUser(
+                    user.getUserId(),
+                    request
+            )
+    );
     }
 }
