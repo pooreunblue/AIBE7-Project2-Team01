@@ -1,3 +1,4 @@
+import { getAccessToken } from "../../auth/tokenStorage.js";
 import { categories } from "../data/mock.js";
 
 export function formatMoney(value) {
@@ -8,13 +9,14 @@ export function shell(content, route) {
   const links = [
     ["home", "⌂", "Home"],
     ["chat", "□", "Chat"],
-    ["login", "○", "Account"],
   ];
+  const isLoggedIn = Boolean(getAccessToken());
 
   return `
     <header class="site-header">
       <nav class="icon-nav" aria-label="main navigation">
         ${links.map(([key, icon, label]) => `<a class="icon-link ${route === key ? "active" : ""}" href="#/${key}" aria-label="${label}"><span aria-hidden="true">${icon}</span></a>`).join("")}
+        ${accountControl(isLoggedIn, route)}
       </nav>
     </header>
     <main class="page-shell">
@@ -23,6 +25,27 @@ export function shell(content, route) {
       </section>
     </main>
     ${footer()}
+  `;
+}
+
+function accountControl(isLoggedIn, route) {
+  if (!isLoggedIn) {
+    return `<a class="icon-link ${route === "login" ? "active" : ""}" href="#/login" aria-label="Login"><span aria-hidden="true">○</span></a>`;
+  }
+
+  const isActive = route === "mypage" || route === "portfolios";
+
+  return `
+    <div class="account-nav">
+      <button class="icon-link account-trigger ${isActive ? "active" : ""}" type="button" aria-label="Account menu" aria-expanded="false" aria-controls="account-menu" data-account-trigger>
+        <span aria-hidden="true">○</span>
+      </button>
+      <div class="account-menu" id="account-menu" data-account-menu hidden>
+        <a href="#/portfolios">포트폴리오</a>
+        <a href="#/mypage">마이페이지</a>
+        <button type="button" data-logout-button>로그아웃</button>
+      </div>
+    </div>
   `;
 }
 
