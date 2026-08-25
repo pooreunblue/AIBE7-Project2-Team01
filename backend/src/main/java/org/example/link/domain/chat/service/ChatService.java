@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -61,22 +63,38 @@ public class ChatService {
         UserEntity other = userRepository.findById(request.otherUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
+        ChatRoom existingRoom = chatRoomRepository.findExistingRoom(
+                request.requestPostId(), request.talentPostId(), creator.getId(), other.getId()
+        ).orElse(null);
+        if (existingRoom != null) {
+            return ChatRoomResponse.from(existingRoom, other);
+        }
+
         ChatRoom chatRoom = new ChatRoom(request.requestPostId(), request.talentPostId());
         ChatRoom savedRoom = chatRoomRepository.save(chatRoom);
 
         chatParticipantRepository.save(new ChatParticipant(savedRoom, creator));
         chatParticipantRepository.save(new ChatParticipant(savedRoom, other));
 
-        return ChatRoomResponse.from(savedRoom);
+        return ChatRoomResponse.from(savedRoom, other);
     }
 
     public List<ChatRoomResponse> getMyRooms(String email) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        return chatParticipantRepository.findByUserId(user.getId()).stream()
+        List<ChatParticipant> myParticipations = chatParticipantRepository.findByUserId(user.getId());
+        List<Long> roomIds = myParticipations.stream()
+                .map(p -> p.getChatRoom().getId())
+                .toList();
+
+        Map<Long, UserEntity> otherUserByRoomId = chatParticipantRepository
+                .findByChatRoomIdInAndUserIdNot(roomIds, user.getId()).stream()
+                .collect(Collectors.toMap(p -> p.getChatRoom().getId(), ChatParticipant::getUser));
+
+        return myParticipations.stream()
                 .map(ChatParticipant::getChatRoom)
-                .map(ChatRoomResponse::from)
+                .map(room -> ChatRoomResponse.from(room, otherUserByRoomId.get(room.getId())))
                 .toList();
     }
 
