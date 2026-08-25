@@ -6,5 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface RequestPostRepository extends JpaRepository<RequestPostEntity, Long> {
-    List<RequestPostEntity> findAllById(Long userId);
+    List<RequestPostEntity> findAllByUser_Id(Long userId);
+    RequestPostEntity findByUser_IdAndId(Long userId, Long requestPostId);
 }

@@ -12,6 +12,7 @@ import org.example.link.domain.request.repository.RequestPostRepository;
 import org.example.link.domain.request.util.RequestPostStatus;
 import org.example.link.domain.user.entity.UserEntity;
 import org.example.link.domain.user.repository.UserRepository;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +47,11 @@ public class RequestPostService {
 
     public List<RequestPostEntity> readAll(CustomUserDetails userDetails) {
         Long userId = userDetails.getUserId();
-        return requestPostRepository.findAllById(userId);
+        return requestPostRepository.findAllByUser_Id(userId);
+    }
+
+    public RequestPostEntity readOne(CustomUserDetails userDetails, Long requestPostId) {
+        Long userId = userDetails.getUserId();
+        return requestPostRepository.findByUser_IdAndId(userId, requestPostId);
     }
 }

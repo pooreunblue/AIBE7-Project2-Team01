@@ -38,4 +38,10 @@ public class RequestPostController {
                 .map(RequestPostResponseDto::toDto)
                 .toList());
     }
+
+    @GetMapping("/{requestPostId}")
+    public ResponseEntity<RequestPostResponseDto> readOne(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long requestPostId) {
+        RequestPostEntity requestPostEntity = requestPostService.readOne(userDetails, requestPostId);
+        return ResponseEntity.ok(RequestPostResponseDto.toDto(requestPostEntity));
+    }
 }
