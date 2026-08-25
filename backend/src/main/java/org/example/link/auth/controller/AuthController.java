@@ -7,7 +7,7 @@ import org.example.link.auth.dto.LoginResponse;
 import org.example.link.auth.dto.RefreshRequest;
 import org.example.link.auth.dto.RefreshResponse;
 import org.example.link.auth.service.AuthService;
-import org.springframework.http.ResponseEntity;
+import org.example.link.common.response.ApiResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,28 +18,28 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(
+    public ApiResponse<LoginResponse> login(
             @Valid @RequestBody LoginRequest request
     ) {
-        return ResponseEntity.ok(
+        return ApiResponse.ok(
                 authService.login(request)
         );
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(
+    public ApiResponse<Void> logout(
             Authentication authentication
     ){
         String email = authentication.getName();
         authService.logout(email);
-        return ResponseEntity.noContent().build();
+        return ApiResponse.ok(null);
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<RefreshResponse> refresh(
+    public ApiResponse<RefreshResponse> refresh(
             @Valid @RequestBody RefreshRequest request
     ){
-        return ResponseEntity.ok(
+        return ApiResponse.ok(
                 authService.refresh(request)
         );
     }

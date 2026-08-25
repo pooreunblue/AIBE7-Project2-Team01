@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface WalletTransactionRepository
         extends JpaRepository<WalletTransactionEntity, Long> {
-    Page<WalletTransactionEntity> findByWalletIdOrderByCreatedAtDesc(
+    Page<WalletTransactionEntity> findByWalletId(
             Long walletId,
             Pageable pageable
     );
