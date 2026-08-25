@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.link.auth.jwt.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -17,7 +18,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class SecurityConfig {
+public class
+SecurityConfig {
     private final JwtFilter jwtFilter;
 
     @Bean
@@ -33,6 +35,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/",
                                 "/users/signup",
                                 "/auth/login",
                                 "/auth/refresh",
@@ -43,7 +46,8 @@ public class SecurityConfig {
                                 "/ws/**",
                                 "/chat-test.html"
                         ).permitAll()
-                        .anyRequest().authenticated()
+                                .requestMatchers(HttpMethod.POST, "/requests").authenticated()
+                                .anyRequest().authenticated()
                         )
                         // JWT Filter 등록
                         .addFilterBefore(
