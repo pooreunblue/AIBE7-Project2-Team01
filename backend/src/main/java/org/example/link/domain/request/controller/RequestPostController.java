@@ -52,7 +52,7 @@ public class RequestPostController {
         return ResponseEntity.ok(RequestPostResponseDto.toDto(requestPostEntity));
     }
 
-    @GetMapping
+    @GetMapping("/search")
     public Page<RequestPostResponseDto> searchRequests(
             @RequestParam(required = false) String keyword,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
