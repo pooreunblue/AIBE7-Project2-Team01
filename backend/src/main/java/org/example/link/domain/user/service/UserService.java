@@ -3,8 +3,10 @@ package org.example.link.domain.user.service;
 import lombok.RequiredArgsConstructor;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
+import org.example.link.domain.user.dto.MyPageResponse;
 import org.example.link.domain.user.dto.SignupRequest;
 import org.example.link.domain.user.dto.SignupResponse;
+import org.example.link.domain.user.dto.UpdateUserRequest;
 import org.example.link.domain.user.entity.UserEntity;
 import org.example.link.domain.user.repository.UserRepository;
 import org.example.link.domain.wallet.entity.WalletEntity;
@@ -30,11 +32,9 @@ public class UserService {
 
     // 회원가입
     public SignupResponse signUp(SignupRequest request) {
-
         if (userRepository.existsByEmail(request.email())) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
-
         if (userRepository.existsByNickname(request.nickname())) {
             throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
         }
@@ -56,5 +56,27 @@ public class UserService {
                 savedUser.getEmail(),
                 savedUser.getNickname()
         );
+    }
+
+    //닉네임 수정
+    @Transactional
+    public MyPageResponse updateUser(
+            Long userId,
+            UpdateUserRequest request
+    ){
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new CustomException(ErrorCode.USER_NOT_FOUND)
+                );
+        if (userRepository.existsByNickname(request.nickname())
+                && !user.getNickname().equals(request.nickname())) {
+            throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
+        }
+        user.updateNickname(request.nickname());
+        WalletEntity wallet = walletRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new CustomException(ErrorCode.WALLET_NOT_FOUND)
+                );
+        return MyPageResponse.from(user, wallet);
     }
 }
