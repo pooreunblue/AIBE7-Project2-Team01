@@ -4,16 +4,22 @@
 
 ## 실행
 
-ES module을 사용하므로 로컬 서버로 실행합니다.
+Express가 정적 프론트 파일을 서빙하고 `/api` 요청을 Spring Boot 백엔드로 프록시합니다.
 
 ```bash
-python3 -m http.server 5173 -d frontend
+cd frontend
+npm install
+npm start
 ```
 
-접속 주소는 `http://localhost:5173`입니다.
+접속 주소는 `http://localhost:3000`입니다.
 
-API 서버는 기본적으로 Express 개발 서버 기준인 `http://localhost:3000`을 바라봅니다.
-다른 주소를 사용해야 하면 `index.html`에서 `window.__API_BASE_URL__` 값을 먼저 선언하면 됩니다.
+Spring Boot API 서버는 기본적으로 `http://localhost:8080`을 바라봅니다.
+다른 주소를 사용해야 하면 Express 실행 시 `API_TARGET` 값을 지정합니다.
+
+```bash
+API_TARGET=http://localhost:8081 npm start
+```
 
 ## 구조
 
@@ -21,6 +27,8 @@ API 서버는 기본적으로 Express 개발 서버 기준인 `http://localhost:
 frontend/
   index.html
   login.html
+  package.json
+  server.js
   styles.css
   src/
     api/

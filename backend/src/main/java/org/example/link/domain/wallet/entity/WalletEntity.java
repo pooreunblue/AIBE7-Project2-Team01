@@ -33,14 +33,32 @@ public class WalletEntity extends BaseEntity {
         this.balance = BigDecimal.ZERO;
     }
 
+    //충전
     public void charge(BigDecimal amount) {
         this.balance = this.balance.add(amount);
     }
 
+    //결제
     public void withdraw(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new CustomException(ErrorCode.INVALID_PAYMENT_AMOUNT);
+        }
         if (this.balance.compareTo(amount) < 0) {
             throw new CustomException(ErrorCode.INSUFFICIENT_BALANCE);
         }
         this.balance = this.balance.subtract(amount);
+    }
+
+    //정산
+    public void deposit(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new CustomException(ErrorCode.INVALID_PAYMENT_AMOUNT);
+        }
+        this.balance = this.balance.add(amount);
+    }
+
+    //환불
+    public void refund(BigDecimal amount) {
+        deposit(amount);
     }
 }
