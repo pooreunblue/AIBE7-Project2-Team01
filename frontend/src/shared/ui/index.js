@@ -1,4 +1,4 @@
-import { categories } from "./data.js";
+import { categories } from "../data/mock.js";
 
 export function formatMoney(value) {
   return `${value.toLocaleString("ko-KR")}원`;
@@ -6,25 +6,16 @@ export function formatMoney(value) {
 
 export function shell(content, route) {
   const links = [
-    ["home", "Talent"],
-    ["requests", "Requests"],
-    ["ai-search", "AI Search"],
-    ["chat", "Chat"],
-    ["mypage", "My Page"],
+    ["home", "⌂", "Home"],
+    ["chat", "□", "Chat"],
+    ["login", "○", "Account"],
   ];
 
   return `
     <header class="site-header">
-      <a class="brand" href="#/home" aria-label="TalentPulse home">TalentPulse</a>
-      <nav class="top-nav" aria-label="main navigation">
-        ${links.map(([key, label]) => `<a class="${route === key ? "active" : ""}" href="#/${key}">${label}</a>`).join("")}
+      <nav class="icon-nav" aria-label="main navigation">
+        ${links.map(([key, icon, label]) => `<a class="icon-link ${route === key ? "active" : ""}" href="#/${key}" aria-label="${label}"><span aria-hidden="true">${icon}</span></a>`).join("")}
       </nav>
-      <div class="header-tools">
-        <input class="header-search" type="search" placeholder="Search..." aria-label="Search" />
-        <a class="icon-link" href="#/mypage" aria-label="Notifications">⌁</a>
-        <a class="icon-link" href="#/chat" aria-label="Messages">□</a>
-        <a class="icon-link" href="#/login" aria-label="Account">○</a>
-      </div>
     </header>
     <main class="page-shell">
       <section class="route-view" data-route="${route}">
@@ -54,10 +45,23 @@ export function button(label, href, variant = "primary") {
   return `<a class="button ${variant}" href="${href}">${label}</a>`;
 }
 
-export function categoryTabs(active = "Design") {
+export function categoryTabs(active = "All", href = "#/talents") {
+  const items = ["All", ...categories];
   return `
     <div class="tab-row" role="list">
-      ${categories.map((category) => `<a class="tab ${category === active ? "active" : ""}" href="#/talents?category=${category}">${category}</a>`).join("")}
+      ${items.map((category) => `<a class="tab ${category === active ? "active" : ""}" href="${href}?category=${category}">${category}</a>`).join("")}
+    </div>
+  `;
+}
+
+export function listToolbar(label, activeCategory = "All", href = "#/talents") {
+  return `
+    <div class="list-toolbar">
+      <form class="list-search" data-list-search>
+        <input type="search" placeholder="${label} 검색" aria-label="${label} 검색" />
+        <button type="submit">Search</button>
+      </form>
+      ${categoryTabs(activeCategory, href)}
     </div>
   `;
 }
