@@ -1,5 +1,6 @@
 package org.example.link.auth.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.dto.LoginRequest;
@@ -18,6 +19,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
+    @Operation(summary = "로그인")
     public ApiResponse<LoginResponse> login(
             @Valid @RequestBody LoginRequest request
     ) {
@@ -27,6 +29,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+    @Operation(summary = "로그아웃")
     public ApiResponse<Void> logout(
             Authentication authentication
     ){
@@ -36,6 +39,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
+    @Operation(summary = "액세스 토큰 재발급")
     public ApiResponse<RefreshResponse> refresh(
             @Valid @RequestBody RefreshRequest request
     ){
