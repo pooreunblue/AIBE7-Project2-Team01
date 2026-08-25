@@ -21,6 +21,13 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final WalletRepository walletRepository;
 
+    public UserEntity getUserEntity(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new CustomException(ErrorCode.USER_NOT_FOUND)
+                );
+    }
+
     // 회원가입
     public SignupResponse signUp(SignupRequest request) {
 
