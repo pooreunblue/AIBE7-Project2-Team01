@@ -1,4 +1,5 @@
 package org.example.link.common.upload;
 
-public record UploadResponse() {
-}
+public record UploadResponse(
+        String url
+) {}
