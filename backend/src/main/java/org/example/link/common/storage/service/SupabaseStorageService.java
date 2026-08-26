@@ -80,12 +80,8 @@ public class SupabaseStorageService
                     .retrieve()
                     .toBodilessEntity();
         }catch (IOException | RestClientException e) {
-            e.printStackTrace();   // 또는 log.error(...)
             throw new CustomException(ErrorCode.FILE_UPLOAD_FAILED);
         }
-        System.out.println(properties.url());
-        System.out.println(properties.bucket());
-        System.out.println(uploadUrl);
         return null;
     }
 
