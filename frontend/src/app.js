@@ -4,6 +4,7 @@ import { login, logout, signup } from "./features/auth/authApi.js";
 import { createPortfolio, deletePortfolio, getMyPortfolios } from "./features/portfolio/portfolioApi.js";
 import { getMyPage } from "./features/user/userApi.js";
 import { chargeWallet } from "./features/wallet/walletApi.js";
+import {teardownChatPage} from "./features/chat/ChatPage.js";
 
 const app = document.querySelector("#app");
 let accountMenuOutsideHandler = null;
