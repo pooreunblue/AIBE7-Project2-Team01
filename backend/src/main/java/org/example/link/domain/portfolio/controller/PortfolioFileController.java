@@ -1,5 +1,6 @@
 package org.example.link.domain.portfolio.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.response.ApiResponse;
@@ -12,17 +13,17 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
-
 @RequiredArgsConstructor
-
 @RequestMapping("/portfolios/{portfolioId}/files")
-
 public class PortfolioFileController {
 
     private final PortfolioFileService portfolioFileService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "포트폴리오 파일 업로드")
     public ResponseEntity<ApiResponse<PortfolioFileResponse>> uploadFile(
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable Long portfolioId,
@@ -39,7 +40,22 @@ public class PortfolioFileController {
                 .body(ApiResponse.ok(response));
     }
 
+    @GetMapping
+    @Operation(summary = "포트폴리오 파일 목록 조회")
+    public ApiResponse<List<PortfolioFileResponse>> getFiles(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @PathVariable Long portfolioId
+    ) {
+        return ApiResponse.ok(
+                portfolioFileService.getFiles(
+                        user.getUserId(),
+                        portfolioId
+                )
+        );
+    }
+
     @DeleteMapping("/{fileId}")
+    @Operation(summary = "포트폴리오 파일 삭제")
     public ResponseEntity<ApiResponse<Void>> deleteFile(
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable Long portfolioId,
@@ -61,11 +77,12 @@ public class PortfolioFileController {
             value = "/{fileId}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
+    @Operation(summary = "포트폴리오 파일 교체")
     public ResponseEntity<ApiResponse<PortfolioFileResponse>> updateFile(
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable Long portfolioId,
             @PathVariable Long fileId,
-            @RequestPart MultipartFile file
+            @RequestPart("file") MultipartFile file
     ) {
 
         PortfolioFileResponse response =
@@ -78,6 +95,22 @@ public class PortfolioFileController {
 
         return ResponseEntity.ok(
                 ApiResponse.ok(response)
+        );
+    }
+
+    @PatchMapping("/{fileId}/thumbnail")
+    @Operation(summary = "포트폴리오 대표 이미지 지정")
+    public ApiResponse<PortfolioFileResponse> changeThumbnail(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @PathVariable Long portfolioId,
+            @PathVariable Long fileId
+    ) {
+        return ApiResponse.ok(
+                portfolioFileService.changeThumbnail(
+                        user.getUserId(),
+                        portfolioId,
+                        fileId
+                )
         );
     }
 }

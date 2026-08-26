@@ -5,7 +5,16 @@ import { setAccessToken, setRefreshToken } from "./auth/tokenStorage.js";
 import { fetchCategories } from "./features/category/categoryApi.js";
 import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
 import { startChat } from "./features/chat/startChat.js";
-import { createPortfolio, deletePortfolio, getMyPortfolios, uploadPortfolioFile } from "./features/portfolio/portfolioApi.js";
+import {
+  createPortfolio,
+  deletePortfolio,
+  deletePortfolioFile,
+  getMyPortfolios,
+  getPortfolioFiles,
+  setPortfolioThumbnail,
+  updatePortfolioFile,
+  uploadPortfolioFile,
+} from "./features/portfolio/portfolioApi.js";
 import { createRequest, fetchRequest, fetchRequests } from "./features/request/requestApi.js";
 import { getMyPage } from "./features/user/userApi.js";
 import { chargeWallet } from "./features/wallet/walletApi.js";
@@ -419,10 +428,17 @@ async function loadPortfolioList() {
 
   try {
     const portfolios = await getMyPortfolios();
+    const portfoliosWithFiles = await Promise.all(
+      portfolios.map(async (portfolio) => ({
+        ...portfolio,
+        files: await getPortfolioFiles(portfolio.portfolioId),
+      }))
+    );
     list.innerHTML = portfolios.length
-      ? portfolios.map(renderPortfolioManageCard).join("")
+      ? portfoliosWithFiles.map(renderPortfolioManageCard).join("")
       : `<article class="summary-card empty-state"><h2>등록된 포트폴리오가 없습니다.</h2><p>첫 포트폴리오를 등록해 보세요.</p></article>`;
     bindPortfolioDeleteButtons();
+    bindPortfolioFileActions();
   } catch (error) {
     list.innerHTML = `<article class="summary-card empty-state"><h2>포트폴리오를 불러오지 못했습니다.</h2><p>${error.message}</p></article>`;
   }
@@ -479,6 +495,32 @@ function bindPortfolioDeleteButtons() {
   });
 }
 
+function bindPortfolioFileActions() {
+  document.querySelectorAll("[data-portfolio-file-delete]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      await deletePortfolioFile(button.dataset.portfolioId, button.dataset.portfolioFileDelete);
+      await loadPortfolioList();
+    });
+  });
+
+  document.querySelectorAll("[data-portfolio-file-thumbnail]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      await setPortfolioThumbnail(button.dataset.portfolioId, button.dataset.portfolioFileThumbnail);
+      await loadPortfolioList();
+    });
+  });
+
+  document.querySelectorAll("[data-portfolio-file-update]").forEach((input) => {
+    input.addEventListener("change", async () => {
+      const file = input.files[0];
+      if (!file) return;
+      await updatePortfolioFile(input.dataset.portfolioId, input.dataset.portfolioFileUpdate, file);
+      input.value = "";
+      await loadPortfolioList();
+    });
+  });
+}
+
 function renderPortfolioPreviewCards(portfolios) {
   if (!portfolios.length) {
     return `<article class="portfolio-card"><span>EMPTY</span><h3>등록된 포트폴리오가 없습니다.</h3><p>포트폴리오 관리에서 첫 항목을 등록해 보세요.</p></article>`;
@@ -500,8 +542,9 @@ function renderPortfolioManageCard(portfolio) {
     <article class="summary-card portfolio-manage-card">
       <div>
         <span class="kicker">Portfolio</span>
-        <h2>${portfolio.title}</h2>
-        <p>${portfolio.description}</p>
+        <h2>${escapeHtml(portfolio.title)}</h2>
+        <p>${escapeHtml(portfolio.description)}</p>
+        ${renderPortfolioFiles(portfolio.portfolioId, portfolio.files || [])}
       </div>
       <div class="card-action">
         <span>${formatDate(portfolio.createdAt)}</span>
@@ -509,6 +552,44 @@ function renderPortfolioManageCard(portfolio) {
       </div>
     </article>
   `;
+}
+
+function renderPortfolioFiles(portfolioId, files) {
+  if (!files.length) {
+    return `<div class="portfolio-file-list empty">첨부된 파일이 없습니다.</div>`;
+  }
+
+  return `
+    <div class="portfolio-file-list">
+      ${files.map((file) => renderPortfolioFileItem(portfolioId, file)).join("")}
+    </div>
+  `;
+}
+
+function renderPortfolioFileItem(portfolioId, file) {
+  const isImage = String(file.contentType || "").startsWith("image/");
+  return `
+    <div class="portfolio-file-item">
+      <a class="portfolio-file-link" href="${escapeHtml(file.fileUrl)}" target="_blank" rel="noreferrer">
+        ${isImage ? `<img src="${escapeHtml(file.fileUrl)}" alt="" />` : `<span>${fileIcon(file.contentType)}</span>`}
+        <strong>${escapeHtml(file.originalFileName)}</strong>
+        ${file.thumbnail ? `<small>대표</small>` : ""}
+      </a>
+      <div class="portfolio-file-actions">
+        ${isImage && !file.thumbnail ? `<button class="button quiet" type="button" data-portfolio-id="${portfolioId}" data-portfolio-file-thumbnail="${file.portfolioFileId}">대표</button>` : ""}
+        <label class="button quiet">
+          교체
+          <input type="file" data-portfolio-id="${portfolioId}" data-portfolio-file-update="${file.portfolioFileId}" />
+        </label>
+        <button class="button quiet" type="button" data-portfolio-id="${portfolioId}" data-portfolio-file-delete="${file.portfolioFileId}">삭제</button>
+      </div>
+    </div>
+  `;
+}
+
+function fileIcon(contentType) {
+  if (String(contentType || "").includes("pdf")) return "PDF";
+  return "FILE";
 }
 
 function setText(selector, value) {

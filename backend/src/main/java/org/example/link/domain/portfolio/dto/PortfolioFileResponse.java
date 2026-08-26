@@ -7,7 +7,8 @@ public record PortfolioFileResponse(
         String originalFileName,
         String fileUrl,
         String contentType,
-        Long fileSize
+        Long fileSize,
+        boolean thumbnail
 ) {
 
     public static PortfolioFileResponse from(
@@ -18,7 +19,8 @@ public record PortfolioFileResponse(
                 file.getOriginalFileName(),
                 file.getFileUrl(),
                 file.getContentType(),
-                file.getFileSize()
+                file.getFileSize(),
+                file.isThumbnail()
         );
     }
 }

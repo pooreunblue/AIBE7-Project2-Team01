@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class PortfolioFileService {
@@ -66,6 +68,26 @@ public class PortfolioFileService {
                 portfolioFileRepository.save(portfolioFile);
 
         return PortfolioFileResponse.from(savedFile);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PortfolioFileResponse> getFiles(
+            Long userId,
+            Long portfolioId
+    ) {
+        PortfolioEntity portfolio =
+                findPortfolio(portfolioId);
+
+        validateOwner(
+                portfolio,
+                userId
+        );
+
+        return portfolioFileRepository
+                .findAllByPortfolioId(portfolioId)
+                .stream()
+                .map(PortfolioFileResponse::from)
+                .toList();
     }
 
     @Transactional
@@ -147,7 +169,7 @@ public class PortfolioFileService {
     }
 
     @Transactional
-    public void changeThumbnail(
+    public PortfolioFileResponse changeThumbnail(
             Long userId,
             Long portfolioId,
             Long fileId
@@ -175,6 +197,8 @@ public class PortfolioFileService {
                         PortfolioFileEntity::unsetThumbnail
                 );
         file.setThumbnail();
+
+        return PortfolioFileResponse.from(file);
     }
 
     private PortfolioEntity findPortfolio(Long portfolioId) {
