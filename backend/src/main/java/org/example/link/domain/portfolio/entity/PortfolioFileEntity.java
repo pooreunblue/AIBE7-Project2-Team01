@@ -73,6 +73,20 @@ public class PortfolioFileEntity extends BaseEntity {
                 fileSize
         );
     }
+    public void updateFile(
+            String originalFileName,
+            String storagePath,
+            String fileUrl,
+            String contentType,
+            Long fileSize
+    ) {
+        this.originalFileName = originalFileName;
+        this.storagePath = storagePath;
+        this.fileUrl = fileUrl;
+        this.contentType = contentType;
+        this.fileSize = fileSize;
+    }
+
     public void setThumbnail() {
         this.thumbnail = true;
     }

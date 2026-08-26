@@ -99,6 +99,54 @@ public class PortfolioFileService {
     }
 
     @Transactional
+
+    public PortfolioFileResponse updateFile(
+            Long userId,
+            Long portfolioId,
+            Long fileId,
+            MultipartFile newFile
+    ){
+        PortfolioEntity portfolio =
+                findPortfolio(portfolioId);
+
+        validateOwner(
+                portfolio,
+                userId
+        );
+
+        PortfolioFileEntity file =
+                findPortfolioFile(fileId);
+
+        validateFileBelongsToPortfolio(
+                file,
+                portfolioId);
+
+        StoredFile storedFile =
+                storageService.upload(
+                        newFile,
+                        "portfolios/"
+                                + userId
+                                + "/"
+                                + portfolioId,
+                        FileType.PORTFOLIO
+                );
+
+        storageService.delete(
+                file.getStoragePath()
+        );
+
+        file.updateFile(
+                storedFile.originalFileName(),
+                storedFile.path(),
+                storedFile.url(),
+                storedFile.contentType(),
+                storedFile.fileSize()
+        );
+
+        return PortfolioFileResponse.from(file);
+    }
+
+    @Transactional
     public void changeThumbnail(
             Long userId,
             Long portfolioId,
