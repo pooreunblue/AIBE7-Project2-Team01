@@ -58,6 +58,23 @@ public class UserService {
         );
     }
 
+    //소셜 로그인
+    @Transactional
+    public UserEntity createSocialUser(
+            String email,
+            String nickname
+    ) {
+        UserEntity user =
+                UserEntity.createSocialUser(email, nickname);
+
+        userRepository.save(user);
+
+        WalletEntity savedWallet = new WalletEntity(user);
+        walletRepository.save(savedWallet);
+
+        return user;
+    }
+
     //닉네임 중복 검사
     public void validateNickname(
             UserEntity user,
