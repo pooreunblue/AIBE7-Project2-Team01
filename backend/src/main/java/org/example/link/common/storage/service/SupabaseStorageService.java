@@ -47,12 +47,8 @@ public class SupabaseStorageService
         String path =
                 directory + "/"
                         + storedFileName;
-        String uploadUrl =
-                properties.url()
-                        + "/storage/v1/object/"
-                        + properties.bucket()
-                        + "/"
-                        + path;
+
+        String uploadUrl = buildUploadUrl(path);
 
         //content type 준비
         String contentType =
@@ -82,7 +78,16 @@ public class SupabaseStorageService
         }catch (IOException | RestClientException e) {
             throw new CustomException(ErrorCode.FILE_UPLOAD_FAILED);
         }
-        return null;
+        String publicUrl = buildPublicUrl(path);
+
+        return new StoredFile(
+                originalFileName,
+                storedFileName,
+                path,
+                publicUrl,
+                contentType,
+                file.getSize()
+        );
     }
 
     //파일 확장자 추출
@@ -113,6 +118,22 @@ public class SupabaseStorageService
             ".gif",
             ".webp"
     );
+
+    private String buildUploadUrl(String path) {
+        return properties.url()
+                + "/storage/v1/object/"
+                + properties.bucket()
+                + "/"
+                + path;
+    }
+
+    private String buildPublicUrl(String path) {
+        return properties.url()
+                + "/storage/v1/object/public/"
+                + properties.bucket()
+                + "/"
+                + path;
+    }
 
     @Override
     public void delete(String storedPath) {
