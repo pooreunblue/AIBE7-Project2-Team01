@@ -2,13 +2,13 @@ import { apiRequest } from "../../api/api.js";
 
 // 내 채팅방 목록 (백엔드: GET /chatrooms)
 export function fetchMyChatRooms() {
-  return apiRequest("/chatrooms");
+  return apiRequest("/chatrooms").then(unwrapApiResponse);
 }
 
 // 특정 채팅방의 메시지 이력 (백엔드: GET /chatrooms/{id}?page=&size=)
 // 서버는 최신순(desc)으로 내려주므로 화면에 그릴 땐 뒤집어서(오래된 순) 써야 함.
 export function fetchChatMessages(chatRoomId, { page = 0, size = 50 } = {}) {
-  return apiRequest(`/chatrooms/${chatRoomId}?page=${page}&size=${size}`);
+  return apiRequest(`/chatrooms/${chatRoomId}?page=${page}&size=${size}`).then(unwrapApiResponse);
 }
 
 /**
@@ -21,5 +21,9 @@ export function createOrGetChatRoom({ requestPostId, talentPostId, otherUserId }
   return apiRequest("/chatrooms", {
     method: "POST",
     body: JSON.stringify({ requestPostId, talentPostId, otherUserId }),
-  });
+  }).then(unwrapApiResponse);
+}
+
+function unwrapApiResponse(response) {
+  return response?.data ?? response;
 }
