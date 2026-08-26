@@ -5,7 +5,7 @@ import { setAccessToken, setRefreshToken } from "./auth/tokenStorage.js";
 import { fetchCategories } from "./features/category/categoryApi.js";
 import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
 import { startChat } from "./features/chat/startChat.js";
-import { createPortfolio, deletePortfolio, getMyPortfolios } from "./features/portfolio/portfolioApi.js";
+import { createPortfolio, deletePortfolio, getMyPortfolios, uploadPortfolioFile } from "./features/portfolio/portfolioApi.js";
 import { createRequest, fetchRequest, fetchRequests } from "./features/request/requestApi.js";
 import { getMyPage } from "./features/user/userApi.js";
 import { chargeWallet } from "./features/wallet/walletApi.js";
@@ -432,6 +432,16 @@ function bindPortfolioForm() {
   const form = document.querySelector("[data-portfolio-form]");
   if (!form) return;
 
+  const fileInput = form.querySelector('input[name="portfolioFile"]');
+  const fileName = form.querySelector("[data-portfolio-file-name]");
+
+  fileInput?.addEventListener("change", () => {
+    const file = fileInput.files[0];
+    if (fileName) {
+      fileName.textContent = file ? `${file.name} · ${formatFileSize(file.size)}` : "선택사항 · 이미지, PDF 등 작업 자료";
+    }
+  });
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -440,11 +450,19 @@ function bindPortfolioForm() {
 
     try {
       if (message) message.textContent = "";
-      await createPortfolio({
+      const portfolio = await createPortfolio({
         title: formData.get("title"),
         description: formData.get("description"),
       });
+      const file = fileInput?.files[0];
+      if (file) {
+        const uploadedFile = await uploadPortfolioFile(portfolio.portfolioId, file);
+        if (message) {
+          message.textContent = `${uploadedFile.originalFileName || file.name} 파일까지 업로드했습니다.`;
+        }
+      }
       form.reset();
+      if (fileName) fileName.textContent = "선택사항 · 이미지, PDF 등 작업 자료";
       await loadPortfolioList();
     } catch (error) {
       if (message) message.textContent = error.message;
@@ -508,6 +526,12 @@ function formatDate(value) {
     month: "2-digit",
     day: "2-digit",
   }).format(new Date(value));
+}
+
+function formatFileSize(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 KB";
+  if (bytes < 1024 * 1024) return `${Math.ceil(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function bindAccountMenu() {

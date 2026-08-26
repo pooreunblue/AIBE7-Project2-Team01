@@ -907,6 +907,33 @@ a.button {
   overflow-wrap: anywhere;
 }
 
+.file-drop-zone {
+  display: grid;
+  gap: 6px;
+  min-height: 104px;
+  place-items: center;
+  border: 1px dashed #c4ccda;
+  border-radius: var(--radius);
+  background: #f8fafc;
+  color: var(--muted);
+  text-align: center;
+  cursor: pointer;
+}
+
+.file-drop-zone span {
+  color: var(--blue);
+  font-weight: 900;
+}
+
+.file-drop-zone small {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.file-drop-zone input {
+  display: none;
+}
+
 .form-actions,
 .auth-options {
   display: flex;
