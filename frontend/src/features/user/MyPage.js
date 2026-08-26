@@ -1,5 +1,4 @@
 import { formatMoney } from "../../shared/ui/index.js";
-import { user } from "../../shared/data/mock.js";
 
 export function MyPage() {
   return `
@@ -16,12 +15,12 @@ export function MyPage() {
         <div class="profile-summary" data-my-page-summary>
           <div class="avatar large">A</div>
           <div>
-            <h1 data-my-page-nickname>${user.name}</h1>
+            <h1 data-my-page-nickname>계정 정보를 불러오는 중입니다.</h1>
             <p data-my-page-email>계정 정보를 불러오는 중입니다.</p>
-            <span data-my-page-created-at>${user.location}</span>
+            <span data-my-page-created-at>-</span>
           </div>
           <div class="wallet-summary">
-            <strong data-my-page-wallet>${formatMoney(user.balance)}</strong>
+            <strong data-my-page-wallet>${formatMoney(0)}</strong>
             <button class="button secondary" type="button" data-wallet-charge-open>충전하기</button>
           </div>
         </div>

@@ -45,22 +45,3 @@ export const requests = [
     summary: "Create reusable UI screens for an internal wealth management product.",
   },
 ];
-
-export const user = {
-  name: "Alex Rivera",
-  role: "UX/UI Designer & Web Developer",
-  location: "Seoul, KR",
-  balance: 12500,
-  stats: [
-    ["진행중인 거래", "3"],
-    ["완료된 거래", "42"],
-    ["내 판매 글", "8"],
-    ["새 리뷰", "2"],
-  ],
-};
-
-export const messages = [
-  ["other", "Hi there. I reviewed your requirements for the new marketplace app."],
-  ["me", "Thanks. The primary audience is young professionals, ages 25-35."],
-  ["other", "Great. I can start with a persona and a clean flow proposal."],
-];
