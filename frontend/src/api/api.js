@@ -74,7 +74,8 @@ async function refreshAccessToken() {
     return false;
   }
 
-  const data = await response.json();
+  const responseData = await response.json();
+  const data = responseData.data || responseData;
   if (!data.accessToken) {
     return false;
   }

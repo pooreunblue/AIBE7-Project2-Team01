@@ -12,18 +12,30 @@ export async function login(credentials) {
     body: JSON.stringify(credentials),
     skipAuthRefresh: true,
   });
+  const data = response.data || response;
 
-  setAccessToken(response.accessToken);
-  setRefreshToken(response.refreshToken);
-  return response;
+  setAccessToken(data.accessToken);
+  setRefreshToken(data.refreshToken);
+  return data;
+}
+
+export async function signup(payload) {
+  const response = await apiRequest("/users/signup", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    skipAuthRefresh: true,
+  });
+  return response.data || response;
 }
 
 export async function logout() {
-  await apiRequest("/auth/logout", {
-    method: "POST",
-    skipAuthRefresh: true,
-  });
-
-  removeAccessToken();
-  removeRefreshToken();
+  try {
+    await apiRequest("/auth/logout", {
+      method: "POST",
+      skipAuthRefresh: true,
+    });
+  } finally {
+    removeAccessToken();
+    removeRefreshToken();
+  }
 }
