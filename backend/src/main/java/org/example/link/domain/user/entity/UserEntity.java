@@ -39,6 +39,7 @@ public class UserEntity extends BaseEntity {
         this.password = password;
         this.nickname = nickname;
         this.provider = AuthProvider.LOCAL;
+        this.role = Role.USER;
     }
 
     public static UserEntity create(
@@ -63,6 +64,7 @@ public class UserEntity extends BaseEntity {
         user.password = null;
         user.nickname = nickname;
         user.provider = AuthProvider.GOOGLE;
+        user.role = Role.USER;
         return user;
     }
 

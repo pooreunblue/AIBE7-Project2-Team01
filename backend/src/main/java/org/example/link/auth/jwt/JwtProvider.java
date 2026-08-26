@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.config.AuthProperties;
+import org.example.link.domain.user.entity.Role;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -27,7 +28,8 @@ public class JwtProvider {
     //AccessToken 생성
     public String createAccessToken(
             Long userId,
-            String email
+            String email,
+            Role role
     ) {
         Instant now = Instant.now();
         Instant expiry =
@@ -36,6 +38,7 @@ public class JwtProvider {
                 .subject(String.valueOf(userId))
                 .claim("email", email)
                 .claim("type", "ACCESS")
+                .claim("role", role.name())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))
                 .signWith(getSigningKey())
@@ -101,5 +104,8 @@ public class JwtProvider {
     public String getEmail(Claims claims) {
         return claims.get("email", String.class);
     }
+
+    //Role 추출
+    public Role getRole(Claims claims) {return Role.valueOf(claims.get("role", String.class));}
 
 }
