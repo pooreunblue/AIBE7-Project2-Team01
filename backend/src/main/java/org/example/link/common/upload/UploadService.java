@@ -26,7 +26,8 @@ public class UploadService {
                 );
 
         return new UploadResponse(
-                storedFile.url()
+                storedFile.url(),
+                storedFile.path()
         );
     }
 
