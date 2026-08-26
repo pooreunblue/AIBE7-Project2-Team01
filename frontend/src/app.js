@@ -1,7 +1,10 @@
 import { formatMoney, shell } from "./shared/ui/index.js";
 import { parseRoute, resolvePage } from "./router.js";
 import { login, logout, signup } from "./features/auth/authApi.js";
+import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
+import { startChat } from "./features/chat/startChat.js";
 import { createPortfolio, deletePortfolio, getMyPortfolios } from "./features/portfolio/portfolioApi.js";
+import { createRequest, fetchCategories, fetchRequest, fetchRequests } from "./features/request/requestApi.js";
 import { getMyPage } from "./features/user/userApi.js";
 import { chargeWallet } from "./features/wallet/walletApi.js";
 
@@ -23,6 +26,10 @@ function bindPageEvents() {
   bindAccountMenu();
   bindMyPage();
   bindPortfolioPage();
+  bindRequestListPage();
+  bindRequestDetailPage();
+  bindRequestCreatePage();
+  initChatPage();
 
   document.querySelectorAll("form").forEach((form) => {
     form.addEventListener("submit", (event) => {
@@ -131,6 +138,154 @@ function bindPortfolioPage() {
 
   loadPortfolioList();
   bindPortfolioForm();
+}
+
+function bindRequestListPage() {
+  const list = document.querySelector("[data-request-list]");
+  if (!list) return;
+
+  const searchForm = document.querySelector("[data-list-search]");
+  loadRequestList();
+
+  searchForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const keyword = new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "";
+    loadRequestList(String(keyword));
+  });
+}
+
+function bindRequestDetailPage() {
+  const detail = document.querySelector("[data-request-detail]");
+  if (!detail) return;
+
+  loadRequestDetail(detail.dataset.requestDetail);
+}
+
+function bindRequestCreatePage() {
+  const form = document.querySelector("[data-request-create-form]");
+  if (!form) return;
+
+  loadRequestCategories();
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const message = form.querySelector("[data-request-create-message]");
+    const formData = new FormData(form);
+    const budgetMin = Number(formData.get("budgetMin"));
+    const budgetMax = Number(formData.get("budgetMax"));
+
+    if (budgetMax < budgetMin) {
+      if (message) message.textContent = "최대 예산은 최소 예산보다 커야 합니다.";
+      return;
+    }
+
+    try {
+      if (message) message.textContent = "";
+      const request = await createRequest({
+        title: formData.get("title"),
+        content: formData.get("content"),
+        categoryId: Number(formData.get("categoryId")),
+        budgetMin,
+        budgetMax,
+      });
+      window.location.hash = `/request/${request.requestPostId}`;
+    } catch (error) {
+      if (message) message.textContent = error.message;
+    }
+  });
+}
+
+async function loadRequestList(keyword = "") {
+  const list = document.querySelector("[data-request-list]");
+  if (!list) return;
+
+  try {
+    const requests = await fetchRequests(keyword);
+    list.innerHTML = requests.length
+      ? requests.map(renderRequestCard).join("")
+      : `<article class="request-card"><span class="kicker">EMPTY</span><h3>등록된 의뢰글이 없습니다.</h3><p>첫 의뢰글을 작성해 보세요.</p></article>`;
+  } catch (error) {
+    list.innerHTML = `<article class="request-card"><span class="kicker">ERROR</span><h3>의뢰글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></article>`;
+  }
+}
+
+async function loadRequestDetail(requestPostId) {
+  try {
+    const request = await fetchRequest(requestPostId);
+    renderRequestDetail(request);
+    bindRequestChatButton(request);
+  } catch (error) {
+    setText("[data-request-category]", "ERROR");
+    setText("[data-request-title]", "의뢰글을 불러오지 못했습니다.");
+    setText("[data-request-content]", error.message);
+  }
+}
+
+async function loadRequestCategories() {
+  const select = document.querySelector("[data-request-category-select]");
+  if (!select) return;
+
+  try {
+    const categories = await fetchCategories();
+    select.innerHTML = categories.length
+      ? categories.map((category) => `<option value="${category.categoryId}">${escapeHtml(category.name)}</option>`).join("")
+      : `<option value="">등록된 카테고리가 없습니다</option>`;
+  } catch {
+    select.innerHTML = `<option value="">카테고리를 불러오지 못했습니다</option>`;
+  }
+}
+
+function renderRequestCard(request) {
+  return `
+    <article class="request-card">
+      <span class="kicker">${escapeHtml(request.categoryName || "의뢰")}</span>
+      <h3><a href="#/request/${request.requestPostId}">${escapeHtml(request.title)}</a></h3>
+      <p>${escapeHtml(request.content)}</p>
+      <dl>
+        <div><dt>Budget</dt><dd>${formatBudget(request)}</dd></div>
+        <div><dt>Status</dt><dd>${escapeHtml(request.status || "-")}</dd></div>
+      </dl>
+      <a class="button quiet" href="#/request/${request.requestPostId}">상세보기</a>
+    </article>
+  `;
+}
+
+function renderRequestDetail(request) {
+  setText("[data-request-category]", `${request.categoryName || "의뢰"} · ${request.status || "-"}`);
+  setText("[data-request-title]", request.title);
+  setText("[data-request-content]", request.content);
+  setText("[data-request-budget]", formatBudget(request));
+  setText("[data-request-meta]", `작성자 #${request.userId} · 등록일 ${formatDate(request.createdAt)}`);
+}
+
+function bindRequestChatButton(request) {
+  const button = document.querySelector("[data-request-chat]");
+  if (!button) return;
+
+  button.disabled = false;
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    try {
+      await startChat({
+        requestPostId: request.requestPostId,
+        otherUserId: request.userId,
+      });
+    } catch (error) {
+      alert(error.message);
+      button.disabled = false;
+    }
+  });
+}
+
+function formatBudget(request) {
+  return `${formatMoney(Number(request.budgetMin || 0))} - ${formatMoney(Number(request.budgetMax || 0))}`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]
+  ));
 }
 
 async function loadMyPage() {
