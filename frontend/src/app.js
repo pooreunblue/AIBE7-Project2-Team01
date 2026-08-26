@@ -1,10 +1,12 @@
 import { shell } from "./shared/ui/index.js";
 import { parseRoute, resolvePage } from "./router.js";
 import { login } from "./features/auth/authApi.js";
+import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
 
 const app = document.querySelector("#app");
 
 function render() {
+  teardownChatPage();
   const { route, content } = resolvePage(parseRoute());
   app.innerHTML = shell(content, route);
   bindPageEvents();
@@ -14,6 +16,7 @@ function render() {
 function bindPageEvents() {
   bindHomeFlow();
   bindLoginForm();
+  initChatPage();
 
   document.querySelectorAll("form").forEach((form) => {
     form.addEventListener("submit", (event) => {
@@ -23,21 +26,6 @@ function bindPageEvents() {
       }
     });
   });
-
-  const messageForm = document.querySelector(".message-compose");
-  if (messageForm) {
-    messageForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const input = messageForm.querySelector("input");
-      const value = input.value.trim();
-      if (!value) return;
-      const bubble = document.createElement("p");
-      bubble.className = "bubble me";
-      bubble.textContent = value;
-      document.querySelector(".message-stream").append(bubble);
-      input.value = "";
-    });
-  }
 }
 
 function bindLoginForm() {

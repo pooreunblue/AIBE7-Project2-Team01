@@ -2,9 +2,13 @@ import { button, pageTitle } from "../../shared/ui/index.js";
 import { talents } from "../../shared/data/mock.js";
 
 export function CheckoutPage() {
+  const rawChatRoomId = new URLSearchParams(window.location.hash.split("?")[1] || "").get("chatRoomId");
+  const chatRoomId = rawChatRoomId && /^\d+$/.test(rawChatRoomId) ? rawChatRoomId : null;
+
   return `
     <section class="checkout-layout">
       ${pageTitle("Checkout", "Review your request and securely complete your payment.")}
+      ${chatRoomId ? `<p class="kicker">채팅방 #${chatRoomId}에서 진행되는 결제입니다. (결제/거래 API는 아직 준비 중 — 오늘은 이동까지만 연동)</p>` : ""}
       <div class="checkout-grid">
         <div>
           <article class="summary-card">
