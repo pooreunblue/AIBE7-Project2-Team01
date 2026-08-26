@@ -10,7 +10,7 @@ public record MyPageResponse(
         Long userId,
         String email,
         String nickname,
-//        String profileImageUrl,
+        String profileImageUrl,
         BigDecimal walletBalance,
         Instant createdAt
 ) {
@@ -22,6 +22,7 @@ public record MyPageResponse(
                 user.getId(),
                 user.getEmail(),
                 user.getNickname(),
+                user.getProfileImageUrl(),
                 wallet.getBalance(),
                 user.getCreatedAt()
         );
