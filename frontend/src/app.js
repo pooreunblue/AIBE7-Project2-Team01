@@ -9,6 +9,7 @@ const app = document.querySelector("#app");
 let accountMenuOutsideHandler = null;
 
 function render() {
+  teardownChatPage();
   const { route, content } = resolvePage(parseRoute());
   app.innerHTML = shell(content, route);
   bindPageEvents();
@@ -31,21 +32,6 @@ function bindPageEvents() {
       }
     });
   });
-
-  const messageForm = document.querySelector(".message-compose");
-  if (messageForm) {
-    messageForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const input = messageForm.querySelector("input");
-      const value = input.value.trim();
-      if (!value) return;
-      const bubble = document.createElement("p");
-      bubble.className = "bubble me";
-      bubble.textContent = value;
-      document.querySelector(".message-stream").append(bubble);
-      input.value = "";
-    });
-  }
 }
 
 function bindSignupForm() {

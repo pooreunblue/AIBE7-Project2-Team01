@@ -46,6 +46,10 @@ export function resolvePage(segments) {
     return { route: "requests", content: RequestDetailPage(id) };
   }
 
+  if (route === "chat" && id) {
+    return { route: "chat", content: ChatPage(id) };
+  }
+
   const page = routes[route] || routes.home;
   return { route: routes[route] ? route : "home", content: page() };
 }

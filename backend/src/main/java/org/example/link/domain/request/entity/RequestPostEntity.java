@@ -47,4 +47,22 @@ public class RequestPostEntity extends BaseEntity {
 
     @Column(name = "ai_confidence")
     private BigDecimal aiConfidence;
+
+    public void update(
+            String title,
+            String content,
+            CategoryEntity category,
+            Long budgetMin,
+            Long budgetMax
+    ) {
+        this.title = title;
+        this.content = content;
+        this.category = category;
+        this.budgetMin = budgetMin;
+        this.budgetMax = budgetMax;
+    }
+
+    public void closeStatus() {
+        this.status = RequestPostStatus.CLOSED;
+    }
 }
