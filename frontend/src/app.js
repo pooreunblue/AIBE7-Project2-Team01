@@ -1,6 +1,7 @@
 import { formatMoney, shell } from "./shared/ui/index.js";
 import { parseRoute, resolvePage } from "./router.js";
 import { login, logout, signup } from "./features/auth/authApi.js";
+import { setAccessToken, setRefreshToken } from "./auth/tokenStorage.js";
 import { fetchCategories } from "./features/category/categoryApi.js";
 import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
 import { startChat } from "./features/chat/startChat.js";
@@ -11,6 +12,8 @@ import { chargeWallet } from "./features/wallet/walletApi.js";
 
 const app = document.querySelector("#app");
 let accountMenuOutsideHandler = null;
+
+handleOAuthSuccess();
 
 function render() {
   teardownChatPage();
@@ -544,3 +547,18 @@ if (!window.location.hash) {
 
 window.addEventListener("hashchange", render);
 render();
+
+function handleOAuthSuccess() {
+  if (window.location.pathname !== "/oauth2/success") return;
+
+  const params = new URLSearchParams(window.location.search);
+  const accessToken = params.get("accessToken");
+  const refreshToken = params.get("refreshToken");
+
+  if (accessToken && refreshToken) {
+    setAccessToken(accessToken);
+    setRefreshToken(refreshToken);
+  }
+
+  window.history.replaceState(null, "", "/index.html#/home");
+}
