@@ -1,5 +1,6 @@
 package org.example.link.domain.chat.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.example.link.domain.chat.dto.ChatMessageResponse;
 import org.example.link.domain.chat.dto.ChatSendRequest;
@@ -18,6 +19,7 @@ public class ChatController {
     private final SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/chat.send")
+    @Operation(summary = "채팅 메시지 전송")
     public void sendMessage(ChatSendRequest request, Principal principal) {
         ChatMessageResponse response = chatService.sendMessage(principal.getName(), request);
         messagingTemplate.convertAndSend(
