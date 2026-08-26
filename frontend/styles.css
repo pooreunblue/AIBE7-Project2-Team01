@@ -822,12 +822,18 @@ a.button {
   gap: 12px;
 }
 
-.auth-options button {
+.auth-options button,
+.auth-options a {
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 40px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #fff;
+  color: #344054;
+  font-weight: 800;
 }
 
 .inline-note {

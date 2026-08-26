@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
+import org.example.link.domain.user.entity.Role;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -40,9 +41,10 @@ public class JwtFilter extends OncePerRequestFilter {
 
                     Long userId = jwtProvider.getUserId(claims);
                     String email = jwtProvider.getEmail(claims);
+                    Role role = jwtProvider.getRole(claims);
 
                     CustomUserDetails principal =
-                            new CustomUserDetails(userId, email);
+                            new CustomUserDetails(userId, email, role);
 
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(

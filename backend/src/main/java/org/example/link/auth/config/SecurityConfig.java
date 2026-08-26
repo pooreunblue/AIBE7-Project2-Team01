@@ -2,6 +2,8 @@ package org.example.link.auth.config;
 
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.jwt.JwtFilter;
+import org.example.link.auth.oauth.CustomOAuth2UserService;
+import org.example.link.auth.oauth.OAuth2SuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,6 +23,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class
 SecurityConfig {
     private final JwtFilter jwtFilter;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -33,6 +37,12 @@ SecurityConfig {
                         )
                 )
                 .csrf(AbstractHttpConfigurer::disable)
+                .oauth2Login(oauth -> oauth
+                        .userInfoEndpoint(userInfo ->
+                                userInfo.userService(customOAuth2UserService)
+                        )
+                        .successHandler(oAuth2SuccessHandler)
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",

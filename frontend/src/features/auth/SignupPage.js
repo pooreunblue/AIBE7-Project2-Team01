@@ -16,6 +16,9 @@ export function SignupPage() {
         ${formField("비밀번호", `<input name="password" type="password" autocomplete="new-password" required />`)}
         <button class="button primary" type="submit">Sign Up</button>
         <p class="form-message" data-signup-message aria-live="polite"></p>
+        <div class="auth-options">
+          <a href="http://localhost:8080/oauth2/authorization/google">구글로 시작하기</a>
+        </div>
         <span class="inline-note">Already have an account? <a href="#/login">Sign in</a></span>
       </form>
     </section>
