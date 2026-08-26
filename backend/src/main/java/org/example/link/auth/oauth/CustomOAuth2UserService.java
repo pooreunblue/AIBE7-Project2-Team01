@@ -10,9 +10,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 @Service
-
 @RequiredArgsConstructor
-
 public class CustomOAuth2UserService
         implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     private final UserRepository userRepository;
@@ -26,6 +24,7 @@ public class CustomOAuth2UserService
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
 
+
         UserEntity user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
                     UserEntity newUser =
@@ -33,6 +32,11 @@ public class CustomOAuth2UserService
                     return userRepository.save(newUser);
                 });
 
-        return oAuth2User;
+        return new CustomOAuth2User(
+                user.getId(),
+                user.getEmail(),
+                user.getRole(),
+                oAuth2User.getAttributes()
+        );
     }
 }
