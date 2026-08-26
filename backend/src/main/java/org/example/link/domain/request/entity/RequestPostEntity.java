@@ -42,6 +42,7 @@ public class RequestPostEntity extends BaseEntity {
     @Column(name = "budget_max",nullable = false)
     private Long budgetMax;
 
+    @Column(name = "due_date")
     private LocalDate dueDate;
 
     @Enumerated(EnumType.STRING)
