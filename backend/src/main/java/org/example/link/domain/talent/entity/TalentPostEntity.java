@@ -48,7 +48,7 @@ public class TalentPostEntity extends BaseEntity {
     private DurationUnit durationUnit;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "portfolio_id")
+    @JoinColumn(name = "portfolio_id", nullable = false)
     private PortfolioEntity portfolio;
 
     @Enumerated(EnumType.STRING)
@@ -57,4 +57,26 @@ public class TalentPostEntity extends BaseEntity {
 
     @Column(name = "ai_confidence")
     private BigDecimal aiConfidence;
+
+    public void update(
+            String title,
+            String content,
+            CategoryEntity category,
+            Long price,
+            Integer estimatedDuration,
+            DurationUnit durationUnit,
+            PortfolioEntity portfolio
+    ) {
+        this.title = title;
+        this.content = content;
+        this.category = category;
+        this.price = price;
+        this.estimatedDuration = estimatedDuration;
+        this.durationUnit = durationUnit;
+        this.portfolio = portfolio;
+    }
+
+    public void inactiveStatus() {
+        this.status = TalentPostStatus.INACTIVE;
+    }
 }
