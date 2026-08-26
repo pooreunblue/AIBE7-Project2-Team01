@@ -7,7 +7,7 @@ import {
   setRefreshToken,
 } from "../auth/tokenStorage.js";
 
-const API_BASE_URL = window.__API_BASE_URL__ || "http://localhost:3000";
+const API_BASE_URL = window.__API_BASE_URL__ || "/api";
 
 export async function apiRequest(path, options = {}) {
   return request(path, options, false);
@@ -74,7 +74,8 @@ async function refreshAccessToken() {
     return false;
   }
 
-  const data = await response.json();
+  const responseData = await response.json();
+  const data = responseData.data || responseData;
   if (!data.accessToken) {
     return false;
   }

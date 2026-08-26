@@ -1,7 +1,9 @@
 import { LoginPage } from "./features/auth/LoginPage.js";
+import { SignupPage } from "./features/auth/SignupPage.js";
 import { ChatPage } from "./features/chat/ChatPage.js";
 import { HomePage } from "./features/home/HomePage.js";
 import { CheckoutPage } from "./features/payment/CheckoutPage.js";
+import { PortfolioPage } from "./features/portfolio/PortfolioPage.js";
 import { RequestCreatePage } from "./features/request/RequestCreatePage.js";
 import { RequestDetailPage } from "./features/request/RequestDetailPage.js";
 import { RequestListPage } from "./features/request/RequestListPage.js";
@@ -14,6 +16,7 @@ import { MyPage } from "./features/user/MyPage.js";
 const routes = {
   home: HomePage,
   login: LoginPage,
+  signup: SignupPage,
   talents: TalentListPage,
   "talent-new": TalentCreatePage,
   requests: RequestListPage,
@@ -21,6 +24,7 @@ const routes = {
   "ai-search": AiSearchPage,
   chat: ChatPage,
   mypage: MyPage,
+  portfolios: PortfolioPage,
   checkout: CheckoutPage,
 };
 
@@ -40,6 +44,10 @@ export function resolvePage(segments) {
 
   if (route === "request" && id) {
     return { route: "requests", content: RequestDetailPage(id) };
+  }
+
+  if (route === "chat" && id) {
+    return { route: "chat", content: ChatPage(id) };
   }
 
   const page = routes[route] || routes.home;

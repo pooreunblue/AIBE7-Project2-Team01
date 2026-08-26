@@ -56,6 +56,7 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
         }
 
 
+
     private String resolveToken(StompHeaderAccessor accessor) {
         List<String> authHeaders = accessor.getNativeHeader("Authorization");
         if (authHeaders == null || authHeaders.isEmpty()) {

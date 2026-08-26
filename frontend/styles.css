@@ -68,6 +68,10 @@ a.button {
   gap: 8px;
 }
 
+.account-nav {
+  position: relative;
+}
+
 .icon-link {
   display: grid;
   width: 38px;
@@ -84,6 +88,59 @@ a.button {
 .icon-link.active {
   border-color: #c7d7fe;
   background: #edf4ff;
+}
+
+.account-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  width: 160px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  animation: menu-in 140ms ease-out;
+}
+
+.account-menu[hidden] {
+  display: none;
+}
+
+.account-menu a,
+.account-menu button {
+  min-height: 42px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 0 14px;
+  background: #fff;
+  color: #344054;
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+}
+
+.account-menu button {
+  border-bottom: 0;
+  color: #b42318;
+}
+
+.account-menu a:hover,
+.account-menu button:hover {
+  background: #f5f8ff;
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .page-shell {
@@ -743,6 +800,21 @@ a.button {
   display: none;
 }
 
+.profile-upload {
+  min-height: 132px;
+  cursor: pointer;
+}
+
+.profile-upload span {
+  color: var(--blue);
+  font-weight: 900;
+}
+
+.profile-upload small {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .form-actions,
 .auth-options {
   display: flex;
@@ -975,6 +1047,16 @@ dd {
   color: var(--muted);
 }
 
+.wallet-summary {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+.wallet-summary strong {
+  font-size: 24px;
+}
+
 .stats-grid,
 .dashboard-panels {
   display: grid;
@@ -1008,8 +1090,164 @@ dd {
   color: var(--muted);
 }
 
+.dashboard-section {
+  display: grid;
+  gap: 14px;
+}
+
+.dashboard-section .section-head {
+  align-items: center;
+}
+
+.portfolio-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.portfolio-card {
+  display: grid;
+  gap: 10px;
+  min-height: 150px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.portfolio-card span {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.portfolio-card h3,
+.portfolio-card p {
+  margin: 0;
+}
+
+.portfolio-card h3 {
+  font-size: 18px;
+}
+
+.portfolio-card p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.34);
+  backdrop-filter: blur(5px);
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.charge-modal {
+  display: grid;
+  width: min(420px, 100%);
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  background: var(--panel);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18);
+  animation: modal-in 160ms ease-out;
+}
+
+.modal-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.modal-head h2 {
+  margin: 4px 0 0;
+}
+
+.modal-close {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.modal-close:hover {
+  border-color: #c7d7fe;
+  background: #edf4ff;
+  color: var(--blue);
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.portfolio-card:hover {
+  border-color: #c7d7fe;
+  background: #f8fbff;
+}
+
 .checkout-layout > .page-title {
   justify-self: center;
+}
+
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.portfolio-manage-layout {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.portfolio-form {
+  position: sticky;
+  top: 82px;
+}
+
+.portfolio-form h2,
+.portfolio-manage-card h2 {
+  margin: 0;
+}
+
+.portfolio-manage-card {
+  align-content: space-between;
+  min-height: 190px;
+}
+
+.portfolio-manage-card p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.empty-state {
+  border-style: dashed;
 }
 
 .checkout-grid {
@@ -1079,6 +1317,8 @@ dd {
   .talent-grid,
   .talent-grid.two-col,
   .request-grid,
+  .portfolio-grid,
+  .portfolio-manage-layout,
   .detail-layout,
   .checkout-grid,
   .dashboard-layout,
@@ -1128,6 +1368,7 @@ dd {
   .category-grid,
   .stats-grid,
   .dashboard-panels,
+  .portfolio-card-grid,
   .chat-layout {
     grid-template-columns: 1fr;
   }

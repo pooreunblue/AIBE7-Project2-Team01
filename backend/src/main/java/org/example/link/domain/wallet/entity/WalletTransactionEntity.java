@@ -64,18 +64,84 @@ public class WalletTransactionEntity {
         this.createdAt = Instant.now();
     }
 
+    public static WalletTransactionEntity create(
+            WalletEntity wallet,
+            TradeEntity trade,
+            WalletTransactionType transactionType,
+            BigDecimal amount,
+            BigDecimal balanceAfter,
+            String description
+    ) {
+        return new WalletTransactionEntity(
+                wallet,
+                trade,
+                transactionType,
+                amount,
+                balanceAfter,
+                description
+        );
+    }
+
     public static WalletTransactionEntity createCharge(
             WalletEntity wallet,
             BigDecimal amount,
             BigDecimal balanceAfter
     ) {
-        return new WalletTransactionEntity(
+        return create(
                 wallet,
                 null,
                 WalletTransactionType.CHARGE,
                 amount,
                 balanceAfter,
                 "지갑 충전"
+        );
+    }
+
+    public static WalletTransactionEntity createWithdraw(
+            WalletEntity wallet,
+            TradeEntity trade,
+            BigDecimal amount,
+            BigDecimal balanceAfter
+    ) {
+        return create(
+                wallet,
+                trade,
+                WalletTransactionType.PAYMENT,
+                amount,
+                balanceAfter,
+                "거래 결제"
+        );
+    }
+
+    public static WalletTransactionEntity createDeposit(
+            WalletEntity wallet,
+            TradeEntity trade,
+            BigDecimal amount,
+            BigDecimal balanceAfter
+    ) {
+        return create(
+                wallet,
+                trade,
+                WalletTransactionType.RECEIVE,
+                amount,
+                balanceAfter,
+                "거래 정산"
+        );
+    }
+
+    public static WalletTransactionEntity createRefund(
+            WalletEntity wallet,
+            TradeEntity trade,
+            BigDecimal amount,
+            BigDecimal balanceAfter
+    ) {
+        return create(
+                wallet,
+                trade,
+                WalletTransactionType.REFUND,
+                amount,
+                balanceAfter,
+                "거래 환불"
         );
     }
 }

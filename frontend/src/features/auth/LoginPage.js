@@ -14,7 +14,7 @@ export function LoginPage() {
           <button type="button">Google</button>
           <button type="button">Apple</button>
         </div>
-        <span class="inline-note">Do not have an account? <a href="#/login">Sign up</a></span>
+        <span class="inline-note">Do not have an account? <a href="#/signup">Sign up</a></span>
       </form>
     </section>
   `;
