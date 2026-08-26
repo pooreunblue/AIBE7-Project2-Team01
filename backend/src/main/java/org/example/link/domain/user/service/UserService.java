@@ -22,6 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final WalletRepository walletRepository;
+    private final UserRegistrationService userRegistrationService;
 
     public UserEntity getUserEntity(Long userId) {
         return userRepository.findById(userId)
@@ -46,33 +47,18 @@ public class UserService {
                 encodedPassword,
                 request.nickname()
         );
-        UserEntity savedUser = userRepository.save(user);
-
-        WalletEntity savedWallet = new WalletEntity(savedUser);
-        walletRepository.save(savedWallet);
+        UserEntity savedUser =
+                userRegistrationService.registerLocal(
+                        request.email(),
+                        encodedPassword,
+                        request.nickname()
+                );
 
         return new SignupResponse(
                 savedUser.getId(),
                 savedUser.getEmail(),
                 savedUser.getNickname()
         );
-    }
-
-    //소셜 로그인
-    @Transactional
-    public UserEntity createSocialUser(
-            String email,
-            String nickname
-    ) {
-        UserEntity user =
-                UserEntity.createSocialUser(email, nickname);
-
-        userRepository.save(user);
-
-        WalletEntity savedWallet = new WalletEntity(user);
-        walletRepository.save(savedWallet);
-
-        return user;
     }
 
     //닉네임 중복 검사

@@ -3,6 +3,7 @@ package org.example.link.auth.oauth;
 import lombok.RequiredArgsConstructor;
 import org.example.link.domain.user.entity.UserEntity;
 import org.example.link.domain.user.repository.UserRepository;
+import org.example.link.domain.user.service.UserRegistrationService;
 import org.example.link.domain.user.service.UserService;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Service;
 public class CustomOAuth2UserService
         implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     private final UserRepository userRepository;
-    private final UserService userService;
+    private final UserRegistrationService userRegistrationService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest request) {
@@ -28,15 +29,12 @@ public class CustomOAuth2UserService
 
 
         UserEntity user = userRepository.findByEmail(email)
-                .orElseGet(() -> {
-                    UserEntity newUser =
-                            UserEntity.createSocialUser(email, name);
-                    return userService.createSocialUser(
+                .orElseGet(() ->
+                    userRegistrationService.registerSocial(
                             email,
                             name
-                    );
-                });
-
+                    )
+                );
         return new CustomOAuth2User(
                 user.getId(),
                 user.getEmail(),
