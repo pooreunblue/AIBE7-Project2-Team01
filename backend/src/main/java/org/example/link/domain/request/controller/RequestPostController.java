@@ -1,5 +1,6 @@
 package org.example.link.domain.request.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
@@ -28,6 +29,7 @@ public class RequestPostController {
     private final RequestPostService requestPostService;
 
     @PostMapping
+    @Operation(summary = "의뢰글 등록")
     public ResponseEntity<ApiResponse<RequestPostResponseDto>> create(
             @Valid @RequestBody RequestPostRequestDto requestPostRequestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -39,6 +41,7 @@ public class RequestPostController {
     }
 
     @GetMapping
+    @Operation(summary = "의뢰글 목록 조회")
     public ApiResponse<List<RequestPostResponseDto>> readAll() {
         List<RequestPostEntity> requestPostEntities = requestPostService.readAll();
         return ApiResponse.ok(requestPostEntities.stream()
@@ -47,12 +50,14 @@ public class RequestPostController {
     }
 
     @GetMapping("/{requestPostId}")
+    @Operation(summary = "의뢰글 상세 조회")
     public ApiResponse<RequestPostResponseDto> readOne(@PathVariable Long requestPostId) {
         RequestPostEntity requestPostEntity = requestPostService.readOne(requestPostId);
         return ApiResponse.ok(RequestPostResponseDto.toDto(requestPostEntity));
     }
 
     @GetMapping("/search")
+    @Operation(summary = "의뢰글 검색")
     public ApiResponse<Page<RequestPostResponseDto>> searchRequests(
             @RequestParam(required = false) String keyword,
             @ParameterObject
@@ -67,6 +72,7 @@ public class RequestPostController {
     }
 
     @PutMapping("/{requestPostId}")
+    @Operation(summary = "의뢰글 수정")
     public ApiResponse<RequestPostResponseDto> update(
             @PathVariable Long requestPostId,
             @Valid @RequestBody RequestPostRequestDto requestPostRequestDto,
@@ -77,6 +83,7 @@ public class RequestPostController {
     }
 
     @DeleteMapping("/{requestPostId}")
+    @Operation(summary = "의뢰글 삭제")
     public ApiResponse<Void> delete(
             @PathVariable Long requestPostId
     ) {
@@ -85,6 +92,7 @@ public class RequestPostController {
     }
 
     @PatchMapping("/{requestPostId}/close")
+    @Operation(summary = "의뢰글 마감")
     public ApiResponse<RequestPostResponseDto> close(
             @PathVariable Long requestPostId
     ) {

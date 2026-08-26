@@ -28,9 +28,19 @@ public class WalletEntity extends BaseEntity {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal balance = BigDecimal.ZERO;
 
-    public WalletEntity(UserEntity user) {
+    private WalletEntity(
+            UserEntity user,
+            BigDecimal balance
+    ) {
         this.user = user;
-        this.balance = BigDecimal.ZERO;
+        this.balance = balance;
+    }
+
+    public static WalletEntity create(UserEntity user) {
+        return new WalletEntity(
+                user,
+                BigDecimal.ZERO
+        );
     }
 
     //충전

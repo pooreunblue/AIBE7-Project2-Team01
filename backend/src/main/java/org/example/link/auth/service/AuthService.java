@@ -40,7 +40,8 @@ public class AuthService {
         }
         String accessToken = jwtProvider.createAccessToken(
                 user.getId(),
-                user.getEmail()
+                user.getEmail(),
+                user.getRole()
         );
 
         String refreshToken = jwtProvider.createRefreshToken(user.getId());
@@ -88,7 +89,8 @@ public class AuthService {
 
         String newAccessToken = jwtProvider.createAccessToken(
                 user.getId(),
-                user.getEmail()
+                user.getEmail(),
+                user.getRole()
         );
 
         return new RefreshResponse(newAccessToken);

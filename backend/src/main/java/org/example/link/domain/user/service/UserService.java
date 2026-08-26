@@ -22,6 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final WalletRepository walletRepository;
+    private final UserRegistrationService userRegistrationService;
 
     public UserEntity getUserEntity(Long userId) {
         return userRepository.findById(userId)
@@ -46,10 +47,12 @@ public class UserService {
                 encodedPassword,
                 request.nickname()
         );
-        UserEntity savedUser = userRepository.save(user);
-
-        WalletEntity savedWallet = new WalletEntity(savedUser);
-        walletRepository.save(savedWallet);
+        UserEntity savedUser =
+                userRegistrationService.registerLocal(
+                        request.email(),
+                        encodedPassword,
+                        request.nickname()
+                );
 
         return new SignupResponse(
                 savedUser.getId(),
