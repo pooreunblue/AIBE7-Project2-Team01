@@ -36,6 +36,7 @@ SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
+                                "/categories",
                                 "/users/signup",
                                 "/auth/login",
                                 "/auth/refresh",
@@ -46,7 +47,10 @@ SecurityConfig {
                                 "/ws/**",
                                 "/chat-test.html"
                         ).permitAll()
+                                .requestMatchers(HttpMethod.GET, "/requests/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/requests").authenticated()
+                                .requestMatchers(HttpMethod.PUT, "/requests/**").authenticated()
+                                .requestMatchers(HttpMethod.DELETE, "/requests/**").authenticated()
                                 .anyRequest().authenticated()
                         )
                         // JWT Filter 등록

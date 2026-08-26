@@ -44,6 +44,7 @@ public class RequestPostService {
                 .content(requestPostRequestDto.content())
                 .budgetMin(requestPostRequestDto.budgetMin())
                 .budgetMax(requestPostRequestDto.budgetMax())
+                .dueDate(requestPostRequestDto.dueDate())
                 .status(RequestPostStatus.OPEN)
                 .build();
         return requestPostRepository.save(requestPostEntity);
@@ -84,7 +85,8 @@ public class RequestPostService {
                 requestPostRequestDto.content(),
                 category,
                 requestPostRequestDto.budgetMin(),
-                requestPostRequestDto.budgetMax()
+                requestPostRequestDto.budgetMax(),
+                requestPostRequestDto.dueDate()
         );
         return requestPostEntity;
     }
