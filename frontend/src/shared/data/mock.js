@@ -1,5 +1,3 @@
-export const categories = ["Design", "Development", "Marketing", "Writing"];
-
 export const talents = [
   {
     id: "talent-ux",

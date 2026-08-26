@@ -1,10 +1,11 @@
 import { formatMoney, shell } from "./shared/ui/index.js";
 import { parseRoute, resolvePage } from "./router.js";
 import { login, logout, signup } from "./features/auth/authApi.js";
+import { fetchCategories } from "./features/category/categoryApi.js";
 import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
 import { startChat } from "./features/chat/startChat.js";
 import { createPortfolio, deletePortfolio, getMyPortfolios } from "./features/portfolio/portfolioApi.js";
-import { createRequest, fetchCategories, fetchRequest, fetchRequests } from "./features/request/requestApi.js";
+import { createRequest, fetchRequest, fetchRequests } from "./features/request/requestApi.js";
 import { getMyPage } from "./features/user/userApi.js";
 import { chargeWallet } from "./features/wallet/walletApi.js";
 
@@ -26,6 +27,7 @@ function bindPageEvents() {
   bindAccountMenu();
   bindMyPage();
   bindPortfolioPage();
+  bindCategoryTabs();
   bindRequestListPage();
   bindRequestDetailPage();
   bindRequestCreatePage();
@@ -140,6 +142,13 @@ function bindPortfolioPage() {
   bindPortfolioForm();
 }
 
+function bindCategoryTabs() {
+  const tabRows = document.querySelectorAll("[data-category-tabs]");
+  if (!tabRows.length) return;
+
+  loadCategoryTabs(tabRows);
+}
+
 function bindRequestListPage() {
   const list = document.querySelector("[data-request-list]");
   if (!list) return;
@@ -233,6 +242,29 @@ async function loadRequestCategories() {
       : `<option value="">등록된 카테고리가 없습니다</option>`;
   } catch {
     select.innerHTML = `<option value="">카테고리를 불러오지 못했습니다</option>`;
+  }
+}
+
+async function loadCategoryTabs(tabRows) {
+  try {
+    const categories = await fetchCategories();
+    tabRows.forEach((row) => {
+      const href = row.dataset.categoryHref || "#/talents";
+      const active = row.dataset.categoryActive || "All";
+      const items = [{ name: "All", href }, ...categories.map((category) => ({
+        name: category.name,
+        href: `${href}?categoryId=${category.categoryId}`,
+      }))];
+
+      row.innerHTML = items.map((item) => `
+        <a class="tab ${item.name === active ? "active" : ""}" href="${item.href}">${escapeHtml(item.name)}</a>
+      `).join("");
+    });
+  } catch {
+    tabRows.forEach((row) => {
+      const href = row.dataset.categoryHref || "#/talents";
+      row.innerHTML = `<a class="tab active" href="${href}">All</a>`;
+    });
   }
 }
 

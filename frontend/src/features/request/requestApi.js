@@ -20,11 +20,6 @@ export async function createRequest(payload) {
   return unwrapApiResponse(response);
 }
 
-export async function fetchCategories() {
-  const response = await apiRequest("/categories");
-  return unwrapApiResponse(response);
-}
-
 function unwrapApiResponse(response) {
   return response?.data ?? response;
 }
