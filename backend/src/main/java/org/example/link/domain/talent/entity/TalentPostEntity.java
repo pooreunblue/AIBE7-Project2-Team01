@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.link.common.entity.BaseEntity;
 import org.example.link.domain.category.entity.CategoryEntity;
-import org.example.link.domain.request.util.RequestPostStatus;
+import org.example.link.domain.portfolio.entity.PortfolioEntity;
+import org.example.link.domain.talent.util.DurationUnit;
+import org.example.link.domain.talent.util.TalentPostStatus;
 import org.example.link.domain.user.entity.UserEntity;
 
 import java.math.BigDecimal;
@@ -38,9 +40,20 @@ public class TalentPostEntity extends BaseEntity {
     @Column(nullable = false)
     private Long price;
 
+    @Column(nullable = false)
+    private Integer estimatedDuration;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private RequestPostStatus status;
+    private DurationUnit durationUnit;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "portfolio_id")
+    private PortfolioEntity portfolio;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TalentPostStatus status;
 
     @Column(name = "ai_confidence")
     private BigDecimal aiConfidence;
