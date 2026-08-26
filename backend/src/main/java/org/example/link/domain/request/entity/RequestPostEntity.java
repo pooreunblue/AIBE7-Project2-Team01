@@ -8,6 +8,7 @@ import org.example.link.domain.request.util.RequestPostStatus;
 import org.example.link.domain.user.entity.UserEntity;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "request_posts")
@@ -41,6 +42,8 @@ public class RequestPostEntity extends BaseEntity {
     @Column(name = "budget_max",nullable = false)
     private Long budgetMax;
 
+    private LocalDate dueDate;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RequestPostStatus status;
@@ -53,13 +56,15 @@ public class RequestPostEntity extends BaseEntity {
             String content,
             CategoryEntity category,
             Long budgetMin,
-            Long budgetMax
+            Long budgetMax,
+            LocalDate dueDate
     ) {
         this.title = title;
         this.content = content;
         this.category = category;
         this.budgetMin = budgetMin;
         this.budgetMax = budgetMax;
+        this.dueDate = dueDate;
     }
 
     public void closeStatus() {

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
+import org.example.link.common.response.ApiResponse;
 import org.example.link.domain.request.dto.RequestPostRequestDto;
 import org.example.link.domain.request.dto.RequestPostResponseDto;
 import org.example.link.domain.request.entity.RequestPostEntity;
@@ -29,35 +30,35 @@ public class RequestPostController {
 
     @PostMapping
     @Operation(summary = "의뢰글 등록")
-    public ResponseEntity<RequestPostResponseDto> create(
+    public ResponseEntity<ApiResponse<RequestPostResponseDto>> create(
             @Valid @RequestBody RequestPostRequestDto requestPostRequestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails
             ) {
         RequestPostEntity requestPostEntity = requestPostService.create(requestPostRequestDto, userDetails);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(RequestPostResponseDto.toDto(requestPostEntity));
+                .body(ApiResponse.ok(RequestPostResponseDto.toDto(requestPostEntity)));
     }
 
     @GetMapping
     @Operation(summary = "의뢰글 목록 조회")
-    public ResponseEntity<List<RequestPostResponseDto>> readAll() {
+    public ApiResponse<List<RequestPostResponseDto>> readAll() {
         List<RequestPostEntity> requestPostEntities = requestPostService.readAll();
-        return ResponseEntity.ok(requestPostEntities.stream()
+        return ApiResponse.ok(requestPostEntities.stream()
                 .map(RequestPostResponseDto::toDto)
                 .toList());
     }
 
     @GetMapping("/{requestPostId}")
     @Operation(summary = "의뢰글 상세 조회")
-    public ResponseEntity<RequestPostResponseDto> readOne(@PathVariable Long requestPostId) {
+    public ApiResponse<RequestPostResponseDto> readOne(@PathVariable Long requestPostId) {
         RequestPostEntity requestPostEntity = requestPostService.readOne(requestPostId);
-        return ResponseEntity.ok(RequestPostResponseDto.toDto(requestPostEntity));
+        return ApiResponse.ok(RequestPostResponseDto.toDto(requestPostEntity));
     }
 
     @GetMapping("/search")
     @Operation(summary = "의뢰글 검색")
-    public Page<RequestPostResponseDto> searchRequests(
+    public ApiResponse<Page<RequestPostResponseDto>> searchRequests(
             @RequestParam(required = false) String keyword,
             @ParameterObject
             @PageableDefault(
@@ -67,35 +68,35 @@ public class RequestPostController {
             Pageable pageable
     ) {
         Page<RequestPostEntity> requestPostEntities = requestPostService.search(keyword, pageable);
-        return requestPostEntities.map(RequestPostResponseDto::toDto);
+        return ApiResponse.ok(requestPostEntities.map(RequestPostResponseDto::toDto));
     }
 
     @PutMapping("/{requestPostId}")
     @Operation(summary = "의뢰글 수정")
-    public ResponseEntity<RequestPostResponseDto> update(
+    public ApiResponse<RequestPostResponseDto> update(
             @PathVariable Long requestPostId,
             @Valid @RequestBody RequestPostRequestDto requestPostRequestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) throws AccessDeniedException {
         RequestPostEntity updated = requestPostService.update(requestPostId, requestPostRequestDto, userDetails);
-        return ResponseEntity.ok(RequestPostResponseDto.toDto(updated));
+        return ApiResponse.ok(RequestPostResponseDto.toDto(updated));
     }
 
     @DeleteMapping("/{requestPostId}")
     @Operation(summary = "의뢰글 삭제")
-    public ResponseEntity<Void> delete(
+    public ApiResponse<Void> delete(
             @PathVariable Long requestPostId
     ) {
         requestPostService.delete(requestPostId);
-        return ResponseEntity.noContent().build();
+        return ApiResponse.ok();
     }
 
     @PatchMapping("/{requestPostId}/close")
     @Operation(summary = "의뢰글 마감")
-    public ResponseEntity<RequestPostResponseDto> close(
+    public ApiResponse<RequestPostResponseDto> close(
             @PathVariable Long requestPostId
     ) {
         RequestPostEntity closed = requestPostService.closeStatus(requestPostId);
-        return ResponseEntity.ok(RequestPostResponseDto.toDto(closed));
+        return ApiResponse.ok(RequestPostResponseDto.toDto(closed));
     }
 }

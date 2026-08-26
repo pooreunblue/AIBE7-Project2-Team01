@@ -2,6 +2,7 @@ package org.example.link.domain.chat.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.example.link.common.response.ApiResponse;
 import org.example.link.domain.chat.dto.ChatMessageResponse;
 import org.example.link.domain.chat.dto.ChatRoomCreateRequest;
 import org.example.link.domain.chat.dto.ChatRoomResponse;
@@ -30,29 +31,29 @@ public class ChatRoomController {
 
     @PostMapping
     @Operation(summary = "채팅방 생성")
-    public ResponseEntity<ChatRoomResponse> create(
+    public ResponseEntity<ApiResponse<ChatRoomResponse>> create(
             @RequestBody ChatRoomCreateRequest request,
             Authentication authentication
     ) {
         ChatRoomResponse response = chatService.createRoom(authentication.getName(), request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
     }
 
     @GetMapping
     @Operation(summary = "내 채팅방 목록 조회")
-    public ResponseEntity<List<ChatRoomResponse>> myRooms(Authentication authentication) {
-        return ResponseEntity.ok(chatService.getMyRooms(authentication.getName()));
+    public ApiResponse<List<ChatRoomResponse>> myRooms(Authentication authentication) {
+        return ApiResponse.ok(chatService.getMyRooms(authentication.getName()));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "채팅 메시지 목록 조회")
-    public ResponseEntity<List<ChatMessageResponse>> messages(
+    public ApiResponse<List<ChatMessageResponse>> messages(
             @PathVariable Long id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             Authentication authentication
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(chatService.getMessages(authentication.getName(), id, pageable));
+        return ApiResponse.ok(chatService.getMessages(authentication.getName(), id, pageable));
     }
 }

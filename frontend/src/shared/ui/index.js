@@ -1,5 +1,4 @@
 import { getAccessToken } from "../../auth/tokenStorage.js";
-import { categories } from "../data/mock.js";
 
 export function formatMoney(value) {
   return `${value.toLocaleString("ko-KR")}원`;
@@ -69,10 +68,9 @@ export function button(label, href, variant = "primary") {
 }
 
 export function categoryTabs(active = "All", href = "#/talents") {
-  const items = ["All", ...categories];
   return `
-    <div class="tab-row" role="list">
-      ${items.map((category) => `<a class="tab ${category === active ? "active" : ""}" href="${href}?category=${category}">${category}</a>`).join("")}
+    <div class="tab-row" role="list" data-category-tabs data-category-active="${active}" data-category-href="${href}">
+      <a class="tab active" href="${href}">All</a>
     </div>
   `;
 }
@@ -81,7 +79,7 @@ export function listToolbar(label, activeCategory = "All", href = "#/talents") {
   return `
     <div class="list-toolbar">
       <form class="list-search" data-list-search>
-        <input type="search" placeholder="${label} 검색" aria-label="${label} 검색" />
+        <input name="keyword" type="search" placeholder="${label} 검색" aria-label="${label} 검색" />
         <button type="submit">Search</button>
       </form>
       ${categoryTabs(activeCategory, href)}
