@@ -944,6 +944,12 @@ dd {
   border-bottom: 1px solid var(--line);
 }
 
+.chat-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .message-stream {
   display: grid;
   align-content: end;
