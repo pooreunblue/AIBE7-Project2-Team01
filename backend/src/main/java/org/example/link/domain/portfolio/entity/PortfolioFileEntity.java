@@ -36,6 +36,9 @@ public class PortfolioFileEntity extends BaseEntity {
     @Column(nullable = false)
     private Long fileSize;
 
+    @Column(nullable = false)
+    private boolean thumbnail = false;
+
     private PortfolioFileEntity(
             PortfolioEntity portfolio,
             String originalFileName,
@@ -50,6 +53,7 @@ public class PortfolioFileEntity extends BaseEntity {
         this.fileUrl = fileUrl;
         this.contentType = contentType;
         this.fileSize = fileSize;
+        this.thumbnail = false;
     }
 
     public static PortfolioFileEntity create(
@@ -68,5 +72,12 @@ public class PortfolioFileEntity extends BaseEntity {
                 contentType,
                 fileSize
         );
+    }
+    public void setThumbnail() {
+        this.thumbnail = true;
+    }
+
+    public void unsetThumbnail() {
+        this.thumbnail = false;
     }
 }

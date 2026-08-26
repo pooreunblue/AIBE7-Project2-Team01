@@ -79,4 +79,75 @@ public class PortfolioFileService {
         // Storage 삭제
         // DB 삭제
     }
+
+    @Transactional
+    public void changeThumbnail(
+            Long userId,
+            Long portfolioId,
+            Long fileId
+    ){
+        PortfolioEntity portfolio =
+                findPortfolio(portfolioId);
+        validateOwner(
+                portfolio,
+                userId
+        );
+        PortfolioFileEntity file =
+                findPortfolioFile(fileId);
+        validateFileBelongsToPortfolio(
+                file,
+                portfolioId
+        );
+        if (!file.getContentType().startsWith("image/")) {
+            throw new CustomException(
+                    ErrorCode.INVALID_THUMBNAIL
+            );
+        }
+        portfolioFileRepository
+                .findByPortfolioIdAndThumbnailTrue(portfolioId)
+                .ifPresent(
+                        PortfolioFileEntity::unsetThumbnail
+                );
+        file.setThumbnail();
+    }
+
+    private PortfolioEntity findPortfolio(Long portfolioId) {
+        return portfolioRepository.findById(portfolioId)
+                .orElseThrow(() ->
+                        new CustomException(
+                                ErrorCode.PORTFOLIO_NOT_FOUND
+                        )
+                );
+    }
+
+    private PortfolioFileEntity findPortfolioFile(Long fileId) {
+        return portfolioFileRepository.findById(fileId)
+                .orElseThrow(() ->
+                        new CustomException(
+                                ErrorCode.PORTFOLIO_FILE_NOT_FOUND
+                        )
+                );
+    }
+
+    private void validateOwner(
+            PortfolioEntity portfolio,
+            Long userId
+    ) {
+        if (!portfolio.getUser().getId().equals(userId)) {
+            throw new CustomException(
+                    ErrorCode.PORTFOLIO_ACCESS_DENIED
+            );
+        }
+    }
+
+    private void validateFileBelongsToPortfolio(
+            PortfolioFileEntity file,
+            Long portfolioId
+    ) {
+        if (!file.getPortfolio().getId().equals(portfolioId)) {
+            throw new CustomException(
+                    ErrorCode.INVALID_PORTFOLIO_FILE
+            );
+        }
+    }
 }

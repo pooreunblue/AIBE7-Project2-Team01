@@ -38,6 +38,7 @@ public enum ErrorCode {
     PORTFOLIO_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "포트폴리오 파일을 찾을 수 없습니다."),
     INVALID_PORTFOLIO_FILE(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 형식입니다."),
     PORTFOLIO_FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "파일 크기가 허용 범위를 초과했습니다."),
+    INVALID_THUMBNAIL(HttpStatus.BAD_REQUEST, "이미지 파일만 썸네일로 지정할 수 있습니다."),
 
     //chat
     CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
