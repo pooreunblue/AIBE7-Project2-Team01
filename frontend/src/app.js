@@ -4,6 +4,7 @@ import { login, logout, signup } from "./features/auth/authApi.js";
 import { fetchCategories } from "./features/category/categoryApi.js";
 import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
 import { startChat } from "./features/chat/startChat.js";
+import { initCheckoutPage } from "./features/payment/CheckoutPage.js";
 import { createPortfolio, deletePortfolio, getMyPortfolios } from "./features/portfolio/portfolioApi.js";
 import { createRequest, fetchRequest, fetchRequests } from "./features/request/requestApi.js";
 import { getMyPage } from "./features/user/userApi.js";
@@ -32,6 +33,7 @@ function bindPageEvents() {
   bindRequestDetailPage();
   bindRequestCreatePage();
   initChatPage();
+  initCheckoutPage();
 
   document.querySelectorAll("form").forEach((form) => {
     form.addEventListener("submit", (event) => {
