@@ -55,7 +55,8 @@ SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/ws/**",
-                                "/chat-test.html"
+                                "/chat-test.html",
+                                "/test/**"
                         ).permitAll()
                                 .requestMatchers(HttpMethod.GET, "/requests/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/requests").authenticated()
