@@ -30,6 +30,10 @@ public class UserEntity extends BaseEntity {
     @Column(nullable = false)
     private AuthProvider provider = AuthProvider.LOCAL;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
+
     public UserEntity(String email, String password, String nickname) {
         this.email = email;
         this.password = password;
