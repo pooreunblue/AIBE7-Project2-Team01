@@ -137,5 +137,32 @@ public class SupabaseStorageService
 
     @Override
     public void delete(String storedPath) {
+
+        String deleteUrl =
+                properties.url()
+                        + "/storage/v1/object/"
+                        + properties.bucket()
+                        + "/"
+                        + storedPath;
+
+        try {
+            restClient.delete()
+                    .uri(deleteUrl)
+                    .header(
+                            HttpHeaders.AUTHORIZATION,
+                            "Bearer " + properties.serviceKey()
+                    )
+                    .header(
+                            "apikey",
+                            properties.serviceKey()
+                    )
+                    .retrieve()
+                    .toBodilessEntity();
+
+        } catch (RestClientException e) {
+            throw new CustomException(
+                    ErrorCode.FILE_DELETE_FAILED
+            );
+        }
     }
 }
