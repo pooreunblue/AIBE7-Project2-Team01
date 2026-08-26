@@ -53,9 +53,25 @@ function bindSignupForm() {
 
   const fileInput = signupForm.querySelector('input[name="profileImage"]');
   const fileName = signupForm.querySelector("[data-profile-file-name]");
+  const preview = signupForm.querySelector("[data-profile-preview]");
+  let previewUrl = null;
 
   fileInput?.addEventListener("change", () => {
-    fileName.textContent = fileInput.files[0]?.name || "선택사항 · JPG, PNG 파일";
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      previewUrl = null;
+    }
+
+    const file = fileInput.files[0];
+    if (!file) {
+      if (preview) preview.textContent = "○";
+      if (fileName) fileName.textContent = "선택사항 · JPG, PNG 파일";
+      return;
+    }
+
+    previewUrl = URL.createObjectURL(file);
+    if (preview) preview.innerHTML = `<img src="${previewUrl}" alt="" />`;
+    if (fileName) fileName.textContent = file.name;
   });
 
   signupForm.addEventListener("submit", async (event) => {

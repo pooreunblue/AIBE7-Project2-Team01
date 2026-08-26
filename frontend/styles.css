@@ -842,6 +842,71 @@ a.button {
   overflow-wrap: anywhere;
 }
 
+.profile-upload-field {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.profile-image-picker {
+  position: relative;
+  display: block;
+  width: 108px;
+  height: 108px;
+  cursor: pointer;
+}
+
+.profile-image-picker input {
+  display: none;
+}
+
+.signup-avatar {
+  display: grid;
+  width: 108px;
+  height: 108px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #c7d7fe;
+  border-radius: 50%;
+  background: #eaf2ff;
+  color: var(--blue);
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.signup-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
+.profile-edit-button {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 8px 18px rgba(8, 102, 216, 0.28);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.profile-upload-field small {
+  max-width: 100%;
+  color: var(--muted);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
 .form-actions,
 .auth-options {
   display: flex;
