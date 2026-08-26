@@ -38,4 +38,46 @@ public class PortfolioFileController {
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(response));
     }
+
+    @DeleteMapping("/{fileId}")
+    public ResponseEntity<ApiResponse<Void>> deleteFile(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @PathVariable Long portfolioId,
+            @PathVariable Long fileId
+    ) {
+
+        portfolioFileService.deleteFile(
+                user.getUserId(),
+                portfolioId,
+                fileId
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.ok(null)
+        );
+    }
+
+    @PatchMapping(
+            value = "/{fileId}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<ApiResponse<PortfolioFileResponse>> updateFile(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @PathVariable Long portfolioId,
+            @PathVariable Long fileId,
+            @RequestPart MultipartFile file
+    ) {
+
+        PortfolioFileResponse response =
+                portfolioFileService.updateFile(
+                        user.getUserId(),
+                        portfolioId,
+                        fileId,
+                        file
+                );
+
+        return ResponseEntity.ok(
+                ApiResponse.ok(response)
+        );
+    }
 }
