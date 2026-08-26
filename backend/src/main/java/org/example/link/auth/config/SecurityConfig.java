@@ -36,6 +36,7 @@ SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
+                                "/categories",
                                 "/users/signup",
                                 "/auth/login",
                                 "/auth/refresh",
