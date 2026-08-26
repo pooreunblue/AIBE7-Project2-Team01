@@ -190,9 +190,9 @@ function bindWalletChargeModal() {
 
 function bindPortfolioPage() {
   const list = document.querySelector("[data-portfolio-list]");
-  if (!list) return;
-
-  loadPortfolioList();
+  if (list) {
+    loadPortfolioList();
+  }
   bindPortfolioForm();
 }
 
@@ -416,7 +416,13 @@ async function loadPortfolioPreview() {
 
   try {
     const portfolios = await getMyPortfolios();
-    preview.innerHTML = renderPortfolioPreviewCards(portfolios.slice(0, 6));
+    const portfoliosWithFiles = await Promise.all(
+      portfolios.slice(0, 6).map(async (portfolio) => ({
+        ...portfolio,
+        files: await getPortfolioFiles(portfolio.portfolioId),
+      }))
+    );
+    preview.innerHTML = renderPortfolioPreviewCards(portfoliosWithFiles);
   } catch (error) {
     preview.innerHTML = `<article class="portfolio-card"><span>ERROR</span><h3>포트폴리오를 불러오지 못했습니다.</h3><p>${error.message}</p></article>`;
   }
@@ -435,12 +441,10 @@ async function loadPortfolioList() {
       }))
     );
     list.innerHTML = portfolios.length
-      ? portfoliosWithFiles.map(renderPortfolioManageCard).join("")
-      : `<article class="summary-card empty-state"><h2>등록된 포트폴리오가 없습니다.</h2><p>첫 포트폴리오를 등록해 보세요.</p></article>`;
-    bindPortfolioDeleteButtons();
-    bindPortfolioFileActions();
+      ? renderPortfolioPreviewCards(portfoliosWithFiles)
+      : `<article class="portfolio-card text-only"><h3>등록된 포트폴리오가 없습니다.</h3><p>마이페이지에서 포트폴리오 정보를 확인할 수 있습니다.</p></article>`;
   } catch (error) {
-    list.innerHTML = `<article class="summary-card empty-state"><h2>포트폴리오를 불러오지 못했습니다.</h2><p>${error.message}</p></article>`;
+    list.innerHTML = `<article class="portfolio-card text-only"><h3>포트폴리오를 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></article>`;
   }
 }
 
@@ -448,13 +452,15 @@ function bindPortfolioForm() {
   const form = document.querySelector("[data-portfolio-form]");
   if (!form) return;
 
-  const fileInput = form.querySelector('input[name="portfolioFile"]');
+  const fileInput = form.querySelector('input[name="portfolioFiles"]');
   const fileName = form.querySelector("[data-portfolio-file-name]");
 
   fileInput?.addEventListener("change", () => {
-    const file = fileInput.files[0];
+    const files = Array.from(fileInput.files || []);
     if (fileName) {
-      fileName.textContent = file ? `${file.name} · ${formatFileSize(file.size)}` : "선택사항 · 이미지, PDF 등 작업 자료";
+      fileName.textContent = files.length
+        ? formatSelectedFiles(files)
+        : "선택사항 · 여러 이미지와 작업 자료를 함께 올릴 수 있습니다.";
     }
   });
 
@@ -470,16 +476,24 @@ function bindPortfolioForm() {
         title: formData.get("title"),
         description: formData.get("description"),
       });
-      const file = fileInput?.files[0];
-      if (file) {
-        const uploadedFile = await uploadPortfolioFile(portfolio.portfolioId, file);
+      const files = Array.from(fileInput?.files || []);
+      if (files.length) {
+        const uploadedFiles = [];
+        for (const file of files) {
+          uploadedFiles.push(await uploadPortfolioFile(portfolio.portfolioId, file));
+        }
         if (message) {
-          message.textContent = `${uploadedFile.originalFileName || file.name} 파일까지 업로드했습니다.`;
+          message.textContent = `${uploadedFiles.length}개 파일까지 업로드했습니다.`;
         }
       }
       form.reset();
-      if (fileName) fileName.textContent = "선택사항 · 이미지, PDF 등 작업 자료";
-      await loadPortfolioList();
+      if (fileName) fileName.textContent = "선택사항 · 여러 이미지와 작업 자료를 함께 올릴 수 있습니다.";
+      const list = document.querySelector("[data-portfolio-list]");
+      if (list) {
+        await loadPortfolioList();
+      } else {
+        window.location.hash = "/portfolios";
+      }
     } catch (error) {
       if (message) message.textContent = error.message;
     }
@@ -527,14 +541,33 @@ function renderPortfolioPreviewCards(portfolios) {
   }
 
   return portfolios
-    .map((portfolio, index) => `
-      <a class="portfolio-card" href="#/portfolios">
-        <span>${String(index + 1).padStart(2, "0")}</span>
-        <h3>${portfolio.title}</h3>
-        <p>${portfolio.description}</p>
+    .map((portfolio) => `
+      <a class="portfolio-card ${getPortfolioPreviewImage(portfolio) ? "has-media" : "text-only"}" href="#/portfolios">
+        ${renderPortfolioPreviewMedia(portfolio)}
+        <div>
+          <h3>${escapeHtml(portfolio.title)}</h3>
+          <p>${escapeHtml(portfolio.description)}</p>
+        </div>
       </a>
     `)
     .join("");
+}
+
+function renderPortfolioPreviewMedia(portfolio) {
+  const image = getPortfolioPreviewImage(portfolio);
+  if (!image) return "";
+
+  return `
+    <div class="portfolio-card-media">
+      <img src="${escapeHtml(image.fileUrl)}" alt="" />
+      ${image.thumbnail ? `<small>대표</small>` : ""}
+    </div>
+  `;
+}
+
+function getPortfolioPreviewImage(portfolio) {
+  const imageFiles = (portfolio.files || []).filter((file) => String(file.contentType || "").startsWith("image/"));
+  return imageFiles.find((file) => file.thumbnail) || imageFiles[0] || null;
 }
 
 function renderPortfolioManageCard(portfolio) {
@@ -613,6 +646,15 @@ function formatFileSize(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) return "0 KB";
   if (bytes < 1024 * 1024) return `${Math.ceil(bytes / 1024)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatSelectedFiles(files) {
+  const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+  if (files.length === 1) {
+    return `${files[0].name} · ${formatFileSize(files[0].size)}`;
+  }
+
+  return `${files[0].name} 외 ${files.length - 1}개 · 총 ${formatFileSize(totalSize)}`;
 }
 
 function bindAccountMenu() {
