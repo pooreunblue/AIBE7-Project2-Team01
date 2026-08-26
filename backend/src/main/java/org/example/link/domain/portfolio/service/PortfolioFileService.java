@@ -74,10 +74,28 @@ public class PortfolioFileService {
             Long portfolioId,
             Long fileId
     ) {
-        // 파일 조회
-        // 포트폴리오/소유권 검증
-        // Storage 삭제
-        // DB 삭제
+
+        PortfolioEntity portfolio =
+                findPortfolio(portfolioId);
+
+        validateOwner(
+                portfolio,
+                userId
+        );
+
+        PortfolioFileEntity file =
+                findPortfolioFile(fileId);
+
+        validateFileBelongsToPortfolio(
+                file,
+                portfolioId
+        );
+
+        storageService.delete(
+                file.getStoragePath()
+        );
+
+        portfolioFileRepository.delete(file);
     }
 
     @Transactional
