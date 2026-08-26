@@ -51,6 +51,8 @@ SecurityConfig {
                                 "/auth/login",
                                 "/auth/refresh",
                                 "/health",
+                                "/oauth2/**",
+                                "/login/oauth2/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
@@ -63,6 +65,13 @@ SecurityConfig {
                                 .requestMatchers(HttpMethod.PUT, "/requests/**").authenticated()
                                 .requestMatchers(HttpMethod.DELETE, "/requests/**").authenticated()
                                 .anyRequest().authenticated()
+                        )
+                        .exceptionHandling(exception -> exception
+                                .authenticationEntryPoint((request, response, authException) ->
+                                        response.sendError(
+                                                jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED
+                                        )
+                                )
                         )
                         // JWT Filter 등록
                         .addFilterBefore(

@@ -25,7 +25,7 @@ public class UploadController {
     )
     public ResponseEntity<ApiResponse<UploadResponse>> uploadTempImage(
             @AuthenticationPrincipal CustomUserDetails user,
-            @RequestPart MultipartFile file
+            @RequestPart("file") MultipartFile file
     ){
 
         return ResponseEntity.ok(

@@ -10,9 +10,11 @@ export function shell(content, route) {
     ["chat", "□", "Chat"],
   ];
   const isLoggedIn = Boolean(getAccessToken());
+  const headerTitle = getHeaderTitle(route);
 
   return `
     <header class="site-header">
+      <strong class="header-title">${headerTitle}</strong>
       <nav class="icon-nav" aria-label="main navigation">
         ${links.map(([key, icon, label]) => `<a class="icon-link ${route === key ? "active" : ""}" href="#/${key}" aria-label="${label}"><span aria-hidden="true">${icon}</span></a>`).join("")}
         ${accountControl(isLoggedIn, route)}
@@ -25,6 +27,32 @@ export function shell(content, route) {
     </main>
     ${footer()}
   `;
+}
+
+function getHeaderTitle(route) {
+  const titles = {
+    home: "Home",
+    login: "Login",
+    signup: "Sign Up",
+    talents: "Talent",
+    "talent-new": "Talent Create",
+    requests: "Requests",
+    "request-new": "Request Create",
+    "ai-search": "AI Search",
+    chat: "Chat",
+    mypage: "My Page",
+    portfolios: "Portfolio",
+    "portfolio-new": getPortfolioWriteTitle(),
+    checkout: "Payment",
+  };
+
+  return titles[route] || "TalentPulse";
+}
+
+function getPortfolioWriteTitle() {
+  return window.location.hash.includes("?id=")
+    ? "Portfolio Edit"
+    : "Portfolio Create";
 }
 
 function accountControl(isLoggedIn, route) {

@@ -1,4 +1,5 @@
 import { formatMoney, shell } from "./shared/ui/index.js";
+import { uploadTempImage } from "./api/uploadApi.js";
 import { parseRoute, resolvePage } from "./router.js";
 import { login, logout, signup } from "./features/auth/authApi.js";
 import { setAccessToken, setRefreshToken } from "./auth/tokenStorage.js";
@@ -9,9 +10,11 @@ import {
   createPortfolio,
   deletePortfolio,
   deletePortfolioFile,
+  getPortfolio,
   getMyPortfolios,
   getPortfolioFiles,
   setPortfolioThumbnail,
+  updatePortfolio,
   updatePortfolioFile,
   uploadPortfolioFile,
 } from "./features/portfolio/portfolioApi.js";
@@ -21,6 +24,7 @@ import { chargeWallet } from "./features/wallet/walletApi.js";
 
 const app = document.querySelector("#app");
 let accountMenuOutsideHandler = null;
+const portfolioCache = new Map();
 
 handleOAuthSuccess();
 
@@ -194,6 +198,54 @@ function bindPortfolioPage() {
     loadPortfolioList();
   }
   bindPortfolioForm();
+  bindMarkdownImageUpload();
+  bindPortfolioMarkdownPreview();
+}
+
+function bindPortfolioMarkdownPreview() {
+  const titleInput = document.querySelector("[data-portfolio-title-input]");
+  const markdownInput = document.querySelector("[data-portfolio-markdown-input]");
+  const preview = document.querySelector("[data-markdown-preview]");
+  if (!titleInput || !markdownInput || !preview) return;
+
+  const renderPreview = () => {
+    preview.innerHTML = renderMarkdown(titleInput.value, markdownInput.value);
+  };
+
+  titleInput.addEventListener("input", renderPreview);
+  markdownInput.addEventListener("input", renderPreview);
+  renderPreview();
+}
+
+function bindMarkdownImageUpload() {
+  const trigger = document.querySelector("[data-markdown-image-trigger]");
+  const input = document.querySelector("[data-markdown-image-input]");
+  const textarea = document.querySelector(".portfolio-content-input");
+  const message = document.querySelector("[data-portfolio-message]");
+  if (!trigger || !input || !textarea) return;
+
+  trigger.addEventListener("click", () => {
+    input.click();
+  });
+
+  input.addEventListener("change", async () => {
+    const file = input.files[0];
+    if (!file) return;
+
+    try {
+      trigger.disabled = true;
+      if (message) message.textContent = "이미지를 업로드하는 중입니다.";
+      const uploaded = await uploadTempImage(file);
+      insertTextAtCursor(textarea, markdownImageText(file.name, uploaded.url));
+      if (message) message.textContent = "본문에 이미지를 삽입했습니다.";
+    } catch (error) {
+      if (message) message.textContent = error.message;
+    } finally {
+      trigger.disabled = false;
+      input.value = "";
+      textarea.focus();
+    }
+  });
 }
 
 function bindCategoryTabs() {
@@ -422,7 +474,9 @@ async function loadPortfolioPreview() {
         files: await getPortfolioFiles(portfolio.portfolioId),
       }))
     );
+    cachePortfolios(portfoliosWithFiles);
     preview.innerHTML = renderPortfolioPreviewCards(portfoliosWithFiles);
+    bindPortfolioCardOpen(preview);
   } catch (error) {
     preview.innerHTML = `<article class="portfolio-card"><span>ERROR</span><h3>포트폴리오를 불러오지 못했습니다.</h3><p>${error.message}</p></article>`;
   }
@@ -440,9 +494,12 @@ async function loadPortfolioList() {
         files: await getPortfolioFiles(portfolio.portfolioId),
       }))
     );
+    cachePortfolios(portfoliosWithFiles);
     list.innerHTML = portfolios.length
-      ? renderPortfolioPreviewCards(portfoliosWithFiles)
+      ? renderPortfolioPreviewCards(portfoliosWithFiles, { showEdit: true })
       : `<article class="portfolio-card text-only"><h3>등록된 포트폴리오가 없습니다.</h3><p>마이페이지에서 포트폴리오 정보를 확인할 수 있습니다.</p></article>`;
+    bindPortfolioCardOpen(list);
+    bindPortfolioCardActions(list);
   } catch (error) {
     list.innerHTML = `<article class="portfolio-card text-only"><h3>포트폴리오를 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></article>`;
   }
@@ -452,16 +509,43 @@ function bindPortfolioForm() {
   const form = document.querySelector("[data-portfolio-form]");
   if (!form) return;
 
+  const portfolioId = getPortfolioEditId();
+  const titleInput = form.querySelector('input[name="title"]');
+  const descriptionInput = form.querySelector('textarea[name="description"]');
   const fileInput = form.querySelector('input[name="portfolioFiles"]');
   const fileName = form.querySelector("[data-portfolio-file-name]");
+  const selectedFileList = form.querySelector("[data-selected-portfolio-files]");
+  const submitButton = form.querySelector("[data-portfolio-submit]");
+  let selectedFiles = [];
+  let existingFiles = [];
+
+  if (portfolioId) {
+    loadPortfolioEditForm({
+      portfolioId,
+      titleInput,
+      descriptionInput,
+      selectedFileList,
+      fileName,
+      submitButton,
+    }).then((files) => {
+      existingFiles = files;
+    });
+  }
 
   fileInput?.addEventListener("change", () => {
-    const files = Array.from(fileInput.files || []);
-    if (fileName) {
-      fileName.textContent = files.length
-        ? formatSelectedFiles(files)
-        : "선택사항 · 여러 이미지와 작업 자료를 함께 올릴 수 있습니다.";
-    }
+    selectedFiles = [...selectedFiles, ...Array.from(fileInput.files || [])];
+    fileInput.value = "";
+    renderPortfolioEditorFiles(selectedFileList, existingFiles, selectedFiles);
+    updateSelectedPortfolioFileSummary(fileName, existingFiles, selectedFiles);
+  });
+
+  selectedFileList?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-remove-selected-file]");
+    if (!button) return;
+
+    selectedFiles.splice(Number(button.dataset.removeSelectedFile), 1);
+    renderPortfolioEditorFiles(selectedFileList, existingFiles, selectedFiles);
+    updateSelectedPortfolioFileSummary(fileName, existingFiles, selectedFiles);
   });
 
   form.addEventListener("submit", async (event) => {
@@ -472,14 +556,16 @@ function bindPortfolioForm() {
 
     try {
       if (message) message.textContent = "";
-      const portfolio = await createPortfolio({
+      const payload = {
         title: formData.get("title"),
         description: formData.get("description"),
-      });
-      const files = Array.from(fileInput?.files || []);
-      if (files.length) {
+      };
+      const portfolio = portfolioId
+        ? await updatePortfolio(portfolioId, payload)
+        : await createPortfolio(payload);
+      if (selectedFiles.length) {
         const uploadedFiles = [];
-        for (const file of files) {
+        for (const file of selectedFiles) {
           uploadedFiles.push(await uploadPortfolioFile(portfolio.portfolioId, file));
         }
         if (message) {
@@ -487,7 +573,9 @@ function bindPortfolioForm() {
         }
       }
       form.reset();
-      if (fileName) fileName.textContent = "선택사항 · 여러 이미지와 작업 자료를 함께 올릴 수 있습니다.";
+      selectedFiles = [];
+      renderPortfolioEditorFiles(selectedFileList, [], selectedFiles);
+      updateSelectedPortfolioFileSummary(fileName, [], selectedFiles);
       const list = document.querySelector("[data-portfolio-list]");
       if (list) {
         await loadPortfolioList();
@@ -498,6 +586,44 @@ function bindPortfolioForm() {
       if (message) message.textContent = error.message;
     }
   });
+}
+
+async function loadPortfolioEditForm({
+  portfolioId,
+  titleInput,
+  descriptionInput,
+  selectedFileList,
+  fileName,
+  submitButton,
+}) {
+  const message = document.querySelector("[data-portfolio-message]");
+
+  try {
+    if (message) message.textContent = "기존 포트폴리오를 불러오는 중입니다.";
+    if (submitButton) submitButton.textContent = "수정하기";
+
+    const [portfolio, files] = await Promise.all([
+      getPortfolio(portfolioId),
+      getPortfolioFiles(portfolioId),
+    ]);
+
+    if (titleInput) {
+      titleInput.value = portfolio.title || "";
+      titleInput.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    if (descriptionInput) {
+      descriptionInput.value = portfolio.description || "";
+      descriptionInput.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    renderPortfolioEditorFiles(selectedFileList, files, []);
+    updateSelectedPortfolioFileSummary(fileName, files, []);
+    if (message) message.textContent = "";
+    return files;
+  } catch (error) {
+    if (message) message.textContent = error.message;
+    return [];
+  }
 }
 
 function bindPortfolioDeleteButtons() {
@@ -535,22 +661,166 @@ function bindPortfolioFileActions() {
   });
 }
 
-function renderPortfolioPreviewCards(portfolios) {
+function renderPortfolioPreviewCards(portfolios, options = {}) {
   if (!portfolios.length) {
     return `<article class="portfolio-card"><span>EMPTY</span><h3>등록된 포트폴리오가 없습니다.</h3><p>포트폴리오 관리에서 첫 항목을 등록해 보세요.</p></article>`;
   }
 
   return portfolios
     .map((portfolio) => `
-      <a class="portfolio-card ${getPortfolioPreviewImage(portfolio) ? "has-media" : "text-only"}" href="#/portfolios">
-        ${renderPortfolioPreviewMedia(portfolio)}
-        <div>
-          <h3>${escapeHtml(portfolio.title)}</h3>
-          <p>${escapeHtml(portfolio.description)}</p>
-        </div>
-      </a>
+      <article class="portfolio-card is-clickable ${options.showEdit ? "has-edit" : ""} ${getPortfolioPreviewImage(portfolio) ? "has-media" : "text-only"}">
+        ${options.showEdit ? `
+          <button class="portfolio-edit-button" type="button" aria-label="${escapeHtml(portfolio.title)} 관리 메뉴" aria-expanded="false" data-portfolio-action-trigger="${escapeHtml(portfolio.portfolioId)}">
+            <span aria-hidden="true">✎</span>
+          </button>
+          <div class="portfolio-action-menu" data-portfolio-action-menu="${escapeHtml(portfolio.portfolioId)}" hidden>
+            <a href="#/portfolio-new?id=${escapeHtml(portfolio.portfolioId)}">수정</a>
+            <button type="button" data-portfolio-delete="${escapeHtml(portfolio.portfolioId)}">삭제</button>
+          </div>
+        ` : ""}
+        <button class="portfolio-card-open" type="button" data-portfolio-detail="${escapeHtml(portfolio.portfolioId)}">
+          ${renderPortfolioPreviewMedia(portfolio)}
+          <div>
+            <h3>${escapeHtml(portfolio.title)}</h3>
+            <p>${escapeHtml(portfolio.description)}</p>
+          </div>
+        </button>
+      </article>
     `)
     .join("");
+}
+
+function bindPortfolioCardActions(root = document) {
+  root.querySelectorAll("[data-portfolio-action-trigger]").forEach((trigger) => {
+    trigger.addEventListener("click", () => {
+      const menu = root.querySelector(`[data-portfolio-action-menu="${trigger.dataset.portfolioActionTrigger}"]`);
+      if (!menu) return;
+
+      const willOpen = menu.hidden;
+      closePortfolioActionMenus(root);
+      menu.hidden = !willOpen;
+      trigger.setAttribute("aria-expanded", String(willOpen));
+    });
+  });
+
+  root.querySelectorAll("[data-portfolio-delete]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      try {
+        await deletePortfolio(button.dataset.portfolioDelete);
+        await loadPortfolioList();
+      } catch (error) {
+        alert(error.message);
+        button.disabled = false;
+      }
+    });
+  });
+}
+
+function closePortfolioActionMenus(root = document) {
+  root.querySelectorAll("[data-portfolio-action-menu]").forEach((menu) => {
+    menu.hidden = true;
+  });
+  root.querySelectorAll("[data-portfolio-action-trigger]").forEach((trigger) => {
+    trigger.setAttribute("aria-expanded", "false");
+  });
+}
+
+function cachePortfolios(portfolios) {
+  portfolios.forEach((portfolio) => {
+    portfolioCache.set(String(portfolio.portfolioId), portfolio);
+  });
+}
+
+function bindPortfolioCardOpen(root = document) {
+  root.querySelectorAll("[data-portfolio-detail]").forEach((card) => {
+    card.addEventListener("click", () => {
+      openPortfolioModal(card.dataset.portfolioDetail);
+    });
+  });
+}
+
+function openPortfolioModal(portfolioId) {
+  const portfolio = portfolioCache.get(String(portfolioId));
+  if (!portfolio) return;
+
+  const modal = getPortfolioModal();
+  const content = modal.querySelector("[data-portfolio-modal-content]");
+  content.innerHTML = renderPortfolioModalContent(portfolio);
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+  modal.querySelector("[data-portfolio-modal-close]")?.focus();
+}
+
+function closePortfolioModal() {
+  const modal = document.querySelector("[data-portfolio-modal]");
+  if (!modal) return;
+
+  modal.hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
+function getPortfolioModal() {
+  let modal = document.querySelector("[data-portfolio-modal]");
+  if (modal) return modal;
+
+  modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.dataset.portfolioModal = "";
+  modal.hidden = true;
+  modal.innerHTML = `
+    <div class="portfolio-detail-modal" role="dialog" aria-modal="true" aria-label="포트폴리오 상세">
+      <div class="modal-head">
+        <span class="kicker">Portfolio</span>
+        <button class="modal-close" type="button" data-portfolio-modal-close aria-label="포트폴리오 상세 닫기">x</button>
+      </div>
+      <div data-portfolio-modal-content></div>
+    </div>
+  `;
+
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal || event.target.closest("[data-portfolio-modal-close]")) {
+      closePortfolioModal();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !modal.hidden) {
+      closePortfolioModal();
+    }
+  });
+
+  document.body.append(modal);
+  return modal;
+}
+
+function renderPortfolioModalContent(portfolio) {
+  const image = getPortfolioPreviewImage(portfolio);
+
+  return `
+    ${image ? `<img class="portfolio-detail-cover" src="${escapeHtml(image.fileUrl)}" alt="" />` : ""}
+    <div class="markdown-preview portfolio-detail-markdown">
+      ${renderMarkdown(portfolio.title, portfolio.description || "")}
+    </div>
+    ${renderPortfolioModalFiles(portfolio.files || [])}
+  `;
+}
+
+function renderPortfolioModalFiles(files) {
+  const attachmentFiles = files.filter((file) => !String(file.contentType || "").startsWith("image/"));
+  if (!attachmentFiles.length) return "";
+
+  return `
+    <div class="portfolio-detail-files">
+      <h3>첨부파일</h3>
+      ${attachmentFiles.map((file) => `
+        <a href="${escapeHtml(file.fileUrl)}" target="_blank" rel="noreferrer">
+          <span>${escapeHtml(file.originalFileName)}</span>
+          <small>${formatFileSize(Number(file.fileSize || 0))}</small>
+        </a>
+      `).join("")}
+    </div>
+  `;
 }
 
 function renderPortfolioPreviewMedia(portfolio) {
@@ -648,13 +918,121 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatSelectedFiles(files) {
-  const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-  if (files.length === 1) {
-    return `${files[0].name} · ${formatFileSize(files[0].size)}`;
+function getPortfolioEditId() {
+  const query = window.location.hash.split("?")[1] || "";
+  return new URLSearchParams(query).get("id");
+}
+
+function updateSelectedPortfolioFileSummary(element, existingFiles, selectedFiles) {
+  if (!element) return;
+
+  const totalLength = existingFiles.length + selectedFiles.length;
+  element.textContent = totalLength
+    ? `기존 ${existingFiles.length}개 · 추가 ${selectedFiles.length}개`
+    : "선택사항 · 여러 이미지와 작업 자료를 함께 올릴 수 있습니다.";
+}
+
+function renderPortfolioEditorFiles(container, existingFiles, selectedFiles) {
+  if (!container) return;
+
+  container.hidden = existingFiles.length + selectedFiles.length === 0;
+  container.innerHTML = [
+    ...existingFiles.map(renderExistingPortfolioEditorFile),
+    ...selectedFiles.map((file, index) => renderSelectedPortfolioFile(file, index)),
+  ].join("");
+}
+
+function renderExistingPortfolioEditorFile(file) {
+  return `
+    <a class="selected-file-item existing-file-item" href="${escapeHtml(file.fileUrl)}" target="_blank" rel="noreferrer">
+      <div>
+        <strong>${escapeHtml(file.originalFileName)}</strong>
+        <small>기존 파일 · ${escapeHtml(file.contentType || "file")} · ${formatFileSize(Number(file.fileSize || 0))}</small>
+      </div>
+    </a>
+  `;
+}
+
+function renderSelectedPortfolioFile(file, index) {
+  return `
+    <div class="selected-file-item">
+      <div>
+        <strong>${escapeHtml(file.name)}</strong>
+        <small>추가 예정 · ${escapeHtml(file.type || "file")} · ${formatFileSize(file.size)}</small>
+      </div>
+      <button type="button" aria-label="${escapeHtml(file.name)} 제거" data-remove-selected-file="${index}">x</button>
+    </div>
+  `;
+}
+
+function markdownImageText(fileName, url) {
+  const alt = fileName.replace(/\.[^.]+$/, "") || "portfolio image";
+  return `\n![${alt}](${url})\n`;
+}
+
+function insertTextAtCursor(textarea, text) {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const before = textarea.value.slice(0, start);
+  const after = textarea.value.slice(end);
+
+  textarea.value = `${before}${text}${after}`;
+  const cursor = start + text.length;
+  textarea.setSelectionRange(cursor, cursor);
+  textarea.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function renderMarkdown(title, markdown) {
+  const blocks = [];
+  const safeTitle = escapeHtml(title).trim();
+
+  if (safeTitle) {
+    blocks.push(`<h1>${safeTitle}</h1>`);
   }
 
-  return `${files[0].name} 외 ${files.length - 1}개 · 총 ${formatFileSize(totalSize)}`;
+  const lines = markdown.split(/\n/);
+  let paragraph = [];
+
+  const flushParagraph = () => {
+    if (!paragraph.length) return;
+    blocks.push(`<p>${renderInlineMarkdown(paragraph.join(" "))}</p>`);
+    paragraph = [];
+  };
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      flushParagraph();
+      return;
+    }
+
+    const image = trimmed.match(/^!\[(.*?)]\((.*?)\)$/);
+    if (image) {
+      flushParagraph();
+      blocks.push(`<img src="${escapeHtml(image[2])}" alt="${escapeHtml(image[1])}" />`);
+      return;
+    }
+
+    const heading = trimmed.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      flushParagraph();
+      blocks.push(`<h${heading[1].length + 1}>${renderInlineMarkdown(heading[2])}</h${heading[1].length + 1}>`);
+      return;
+    }
+
+    paragraph.push(trimmed);
+  });
+
+  flushParagraph();
+
+  return blocks.length ? blocks.join("") : `<p>작성한 내용이 여기에 미리보기로 표시됩니다.</p>`;
+}
+
+function renderInlineMarkdown(value) {
+  return escapeHtml(value)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
 }
 
 function bindAccountMenu() {

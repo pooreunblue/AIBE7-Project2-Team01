@@ -67,6 +67,8 @@ public class PortfolioFileService {
         PortfolioFileEntity savedFile =
                 portfolioFileRepository.save(portfolioFile);
 
+        setDefaultThumbnailIfAbsent(portfolioId);
+
         return PortfolioFileResponse.from(savedFile);
     }
 
@@ -118,6 +120,8 @@ public class PortfolioFileService {
         );
 
         portfolioFileRepository.delete(file);
+        portfolioFileRepository.flush();
+        setDefaultThumbnailIfAbsent(portfolioId);
     }
 
     @Transactional
@@ -164,6 +168,11 @@ public class PortfolioFileService {
                 storedFile.contentType(),
                 storedFile.fileSize()
         );
+
+        if (!isImageFile(file)) {
+            file.unsetThumbnail();
+        }
+        setDefaultThumbnailIfAbsent(portfolioId);
 
         return PortfolioFileResponse.from(file);
     }
@@ -239,5 +248,25 @@ public class PortfolioFileService {
                     ErrorCode.INVALID_PORTFOLIO_FILE
             );
         }
+    }
+
+    private void setDefaultThumbnailIfAbsent(Long portfolioId) {
+        if (portfolioFileRepository
+                .findByPortfolioIdAndThumbnailTrue(portfolioId)
+                .isPresent()) {
+            return;
+        }
+
+        portfolioFileRepository
+                .findAllByPortfolioIdOrderByIdAsc(portfolioId)
+                .stream()
+                .filter(this::isImageFile)
+                .findFirst()
+                .ifPresent(PortfolioFileEntity::setThumbnail);
+    }
+
+    private boolean isImageFile(PortfolioFileEntity file) {
+        return file.getContentType() != null
+                && file.getContentType().startsWith("image/");
     }
 }
