@@ -26,12 +26,19 @@ public class UserController {
     private final UserService userService;
     private final MyPageService myPageService;
 
-    @PostMapping("/signup")
-    @Operation(summary = "회원가입")
+    @PostMapping(
+            value = "/signup",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public ResponseEntity<ApiResponse<SignupResponse>> signUp(
-           @Valid @RequestBody SignupRequest request
+            @Valid @RequestPart("request") SignupRequest request,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
     ) {
-        SignupResponse response = userService.signUp(request);
+        SignupResponse response =
+                userService.signUp(
+                        request,
+                        profileImage
+                );
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(response));

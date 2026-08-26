@@ -38,7 +38,11 @@ public class UserService {
     }
 
     // 회원가입
-    public SignupResponse signUp(SignupRequest request) {
+    @Transactional
+    public SignupResponse signUp(
+            SignupRequest request,
+            MultipartFile profileImage
+    ) {
         if (userRepository.existsByEmail(request.email())) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
@@ -48,17 +52,25 @@ public class UserService {
 
         String encodedPassword =
                 passwordEncoder.encode(request.password());
-        UserEntity user = new UserEntity(
-                request.email(),
-                encodedPassword,
-                request.nickname()
-        );
+
         UserEntity savedUser =
                 userRegistrationService.registerLocal(
                         request.email(),
                         encodedPassword,
                         request.nickname()
                 );
+
+        if (profileImage != null && !profileImage.isEmpty()) {
+            StoredFile storedFile =
+                    storageService.upload(
+                            profileImage,
+                            "profiles/" + savedUser.getId()
+                    );
+            savedUser.updateProfileImage(
+                    storedFile.url(),
+                    storedFile.path()
+            );
+        }
 
         return new SignupResponse(
                 savedUser.getId(),
