@@ -79,9 +79,27 @@ a.button {
   place-items: center;
   border: 1px solid transparent;
   border-radius: 50%;
+  padding: 0;
+  overflow: hidden;
   color: var(--blue);
   background: transparent;
   font-weight: 800;
+}
+
+.icon-link span {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.icon-link img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .icon-link:hover,
@@ -706,9 +724,18 @@ a.button {
   min-width: 44px;
   place-items: center;
   border-radius: 50%;
+  overflow: hidden;
   background: #eaf2ff;
   color: var(--blue);
   font-weight: 900;
+}
+
+.avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
 }
 
 .avatar.large {

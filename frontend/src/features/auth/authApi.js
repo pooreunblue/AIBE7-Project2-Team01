@@ -20,9 +20,26 @@ export async function login(credentials) {
 }
 
 export async function signup(payload) {
+  const formData = new FormData();
+  const profileImage = payload.profileImage;
+  formData.append(
+    "request",
+    new Blob([
+      JSON.stringify({
+        email: payload.email,
+        password: payload.password,
+        nickname: payload.nickname,
+      }),
+    ], { type: "application/json" })
+  );
+
+  if (profileImage) {
+    formData.append("profileImage", profileImage);
+  }
+
   const response = await apiRequest("/users/signup", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: formData,
     skipAuthRefresh: true,
   });
   return response.data || response;

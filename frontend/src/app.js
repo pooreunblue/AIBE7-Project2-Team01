@@ -28,6 +28,7 @@ function bindPageEvents() {
   bindLoginForm();
   bindSignupForm();
   bindAccountMenu();
+  bindHeaderProfileImage();
   bindMyPage();
   bindPortfolioPage();
   bindCategoryTabs();
@@ -69,6 +70,7 @@ function bindSignupForm() {
         email: formData.get("email"),
         password: formData.get("password"),
         nickname: formData.get("nickname"),
+        profileImage: fileInput?.files[0] || null,
       });
       window.location.hash = "/login";
     } catch (error) {
@@ -84,6 +86,30 @@ function bindMyPage() {
   bindWalletChargeModal();
   loadMyPage();
   loadPortfolioPreview();
+}
+
+async function bindHeaderProfileImage() {
+  const avatar = document.querySelector("[data-header-avatar]");
+  if (!avatar) return;
+
+  try {
+    const myPage = await getMyPage();
+    renderHeaderAvatar(myPage);
+  } catch {
+    avatar.textContent = "○";
+  }
+}
+
+function renderHeaderAvatar(myPage) {
+  const avatar = document.querySelector("[data-header-avatar]");
+  if (!avatar) return;
+
+  if (myPage.profileImageUrl) {
+    avatar.innerHTML = `<img src="${escapeHtml(myPage.profileImageUrl)}" alt="" />`;
+    return;
+  }
+
+  avatar.textContent = (myPage.nickname || myPage.email || "?").charAt(0).toUpperCase();
 }
 
 function bindWalletChargeModal() {
@@ -340,10 +366,23 @@ async function loadMyPage() {
 }
 
 function renderMyPage(myPage) {
+  renderMyPageAvatar(myPage);
   setText("[data-my-page-nickname]", myPage.nickname);
   setText("[data-my-page-email]", myPage.email);
   setText("[data-my-page-created-at]", `가입일 ${formatDate(myPage.createdAt)}`);
   setText("[data-my-page-wallet]", formatMoney(Number(myPage.walletBalance || 0)));
+}
+
+function renderMyPageAvatar(myPage) {
+  const avatar = document.querySelector("[data-my-page-avatar]");
+  if (!avatar) return;
+
+  if (myPage.profileImageUrl) {
+    avatar.innerHTML = `<img src="${escapeHtml(myPage.profileImageUrl)}" alt="" />`;
+    return;
+  }
+
+  avatar.textContent = (myPage.nickname || myPage.email || "?").charAt(0).toUpperCase();
 }
 
 async function loadPortfolioPreview() {
