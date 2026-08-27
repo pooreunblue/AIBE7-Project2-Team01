@@ -11,6 +11,7 @@ import org.example.link.auth.dto.LoginRequest;
 import org.example.link.auth.dto.LoginResponse;
 import org.example.link.auth.dto.RefreshRequest;
 import org.example.link.auth.dto.RefreshResponse;
+import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.auth.service.AuthService;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
@@ -19,6 +20,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
@@ -35,18 +37,10 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> login(
             @Valid @RequestBody LoginRequest request
     ) {
-        LoginResponse tokens =
-                authService.login(request);
+        LoginResponse tokens = authService.login(request);
 
-        ResponseCookie accessCookie =
-                cookieUtil.createAccessTokenCookie(
-                        tokens.accessToken()
-                );
-
-        ResponseCookie refreshCookie =
-                cookieUtil.createRefreshTokenCookie(
-                        tokens.refreshToken()
-                );
+        ResponseCookie accessCookie = cookieUtil.createAccessTokenCookie(tokens.accessToken());
+        ResponseCookie refreshCookie = cookieUtil.createRefreshTokenCookie(tokens.refreshToken());
 
         return ResponseEntity.ok()
                 .header(
@@ -62,12 +56,23 @@ public class AuthController {
 
     @PostMapping("/logout")
     @Operation(summary = "로그아웃")
-    public ApiResponse<Void> logout(
-            Authentication authentication
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ){
-        String email = authentication.getName();
-        authService.logout(email);
-        return ApiResponse.ok(null);
+        authService.logout(userDetails.getUsername());
+        ResponseCookie accessCookie = cookieUtil.deleteAccessTokenCookie();
+        ResponseCookie refreshCookie = cookieUtil.deleteRefreshTokenCookie();
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.SET_COOKIE,
+                        accessCookie.toString()
+                )
+                .header(
+                        HttpHeaders.SET_COOKIE,
+                        refreshCookie.toString()
+                )
+                .body(ApiResponse.ok(null));
     }
 
     @PostMapping("/refresh")
@@ -86,13 +91,8 @@ public class AuthController {
                         )
                 );
 
-        RefreshResponse response =
-                authService.refresh(refreshToken);
-
-        ResponseCookie accessCookie =
-                cookieUtil.createAccessTokenCookie(
-                        response.accessToken()
-                );
+        RefreshResponse response = authService.refresh(refreshToken);
+        ResponseCookie accessCookie = cookieUtil.createAccessTokenCookie(response.accessToken());
 
         return ResponseEntity.ok()
                 .header(
