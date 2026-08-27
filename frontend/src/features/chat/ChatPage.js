@@ -1,6 +1,6 @@
 import { button } from "../../shared/ui/index.js";
 import { getCurrentUserId } from "../../auth/currentUser.js";
-import { fetchMyChatRooms, fetchChatMessages } from "./chatApi.js";
+import { fetchMyChatRooms, fetchChatMessages, leaveChatRoom } from "./chatApi.js";
 import { connectChatRoom, sendChatMessage } from "./chatSocket.js";
 
 let activeClient = null;
@@ -17,7 +17,7 @@ export function ChatPage(activeRoomId) {
         <div data-room-list>
           <p>채팅방을 불러오는 중...</p>
         </div>
-      </aside>
+     </aside>
       <article class="chat-panel" data-chat-panel>
         <p>왼쪽에서 대화를 선택하세요.</p>
       </article>
@@ -119,6 +119,23 @@ function openRoom(panelEl, room) {
       alert(error.message);
     }
   });
+
+  const leaveButtonEl = panelEl.querySelector("[data-leave-room]");
+  leaveButtonEl?.addEventListener("click", () => handleLeaveRoom(room.chatRoomId));
+}
+
+async function handleLeaveRoom(chatRoomId) {
+  if (!confirm("채팅방을 나가시겠습니까? 대화 내용을 다시 볼 수 없습니다.")) return;
+
+  try {
+    await leaveChatRoom(chatRoomId);
+  } catch (error) {
+    alert(`채팅방 나가기 실패: ${error.message}`);
+    return;
+  }
+
+  // hashchange 리스너(app.js의 render())가 teardown + 목록 갱신을 알아서 처리함.
+  window.location.hash = "/chat";
 }
 
 async function loadHistory(streamEl, chatRoomId, currentUserId) {
@@ -144,7 +161,10 @@ function panelTemplate(room) {
         <div class="avatar">${escapeHtml(initial)}</div>
         <div><strong>${escapeHtml(room.otherUserNickname ?? "상대방")}</strong><span>${postLabel(room)}</span></div>
       </div>
-      ${button("결제하기", payHref, "primary")}
+      <div class="chat-panel-actions">
+        ${button("결제하기", payHref, "primary")}
+        <button type="button" class="button quiet" data-leave-room>채팅방 나가기</button>
+      </div>
     </header>
     <div class="message-stream" data-message-stream>
       <p>메시지를 불러오는 중...</p>

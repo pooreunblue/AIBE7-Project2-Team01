@@ -43,6 +43,14 @@ public enum ErrorCode {
     //chat
     CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
     CHAT_ROOM_ACCESS_DENIED(HttpStatus.FORBIDDEN, "채팅방에 접근할 권한이 없습니다."),
+    CHAT_MESSAGE_NOT_FOUND(HttpStatus.BAD_REQUEST, "채팅 내역이 없어 거래를 생성할 수 없습니다."),
+
+    //trade
+    TRADE_NOT_FOUND(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다."),
+    TRADE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "거래에 접근할 권한이 없습니다."),
+    TRADE_ALREADY_IN_PROGRESS(HttpStatus.CONFLICT, "이미 진행 중인 거래가 있습니다."),
+    INVALID_TRADE_STATUS(HttpStatus.BAD_REQUEST, "현재 거래 상태에서는 처리할 수 없습니다."),
+    TALENT_TRADE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "재능글 기반 거래는 아직 지원하지 않습니다."),
 
     //category
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 카테고리입니다."),
