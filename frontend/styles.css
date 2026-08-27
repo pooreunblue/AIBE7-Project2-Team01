@@ -533,6 +533,11 @@ a.button {
   overflow: hidden;
 }
 
+.request-list-card {
+  overflow: hidden;
+  padding: 0;
+}
+
 .visual {
   position: relative;
   display: block;

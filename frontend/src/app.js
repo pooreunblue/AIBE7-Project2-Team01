@@ -23,6 +23,7 @@ import {
   createRequest,
   fetchRequest,
   fetchRequests,
+  getRequestFiles,
   setRequestThumbnail,
   uploadRequestFile,
 } from "./features/request/requestApi.js";
@@ -380,11 +381,18 @@ async function loadRequestList(keyword = "") {
 
   try {
     const requests = await fetchRequests(keyword);
-    list.innerHTML = requests.length
-      ? requests.map(renderRequestCard).join("")
-      : `<article class="request-card"><span class="kicker">EMPTY</span><h3>등록된 의뢰글이 없습니다.</h3><p>첫 의뢰글을 작성해 보세요.</p></article>`;
+    const requestsWithFiles = await Promise.all(
+      requests.map(async (request) => ({
+        ...request,
+        files: await getRequestFiles(request.requestPostId).catch(() => []),
+      }))
+    );
+
+    list.innerHTML = requestsWithFiles.length
+      ? requestsWithFiles.map(renderRequestCard).join("")
+      : `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 의뢰글이 없습니다.</h3><p>첫 의뢰글을 작성해 보세요.</p></div></article>`;
   } catch (error) {
-    list.innerHTML = `<article class="request-card"><span class="kicker">ERROR</span><h3>의뢰글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></article>`;
+    list.innerHTML = `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">ERROR</span><h3>의뢰글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`;
   }
 }
 
@@ -1181,6 +1189,11 @@ function getTalentPreviewImage(files) {
   return imageFiles.find((file) => file.thumbnail) || imageFiles[0] || null;
 }
 
+function getRequestPreviewImage(files) {
+  const imageFiles = files.filter((file) => String(file.contentType || "").startsWith("image/"));
+  return imageFiles.find((file) => file.thumbnail) || imageFiles[0] || null;
+}
+
 function selectedOptionText(select) {
   if (!select || !select.value) return "";
   return select.options[select.selectedIndex]?.textContent || "";
@@ -1229,16 +1242,31 @@ function durationUnitLabel(unit) {
 }
 
 function renderRequestCard(request) {
+  const thumbnail = getRequestPreviewImage(request.files || []);
   return `
-    <article class="request-card">
-      <span class="kicker">${escapeHtml(request.categoryName || "의뢰")}</span>
-      <h3><a href="#/request/${request.requestPostId}">${escapeHtml(request.title)}</a></h3>
-      <p>${escapeHtml(request.content)}</p>
-      <dl>
-        <div><dt>Budget</dt><dd>${formatBudget(request)}</dd></div>
-        <div><dt>Status</dt><dd>${escapeHtml(request.status || "-")}</dd></div>
-      </dl>
-      <a class="button quiet" href="#/request/${request.requestPostId}">상세보기</a>
+    <article class="request-card request-list-card">
+      ${thumbnail ? `
+      <a class="visual has-image" href="#/request/${request.requestPostId}" aria-label="${escapeHtml(request.title)} 상세">
+        <img src="${escapeHtml(thumbnail.fileUrl)}" alt="" />
+        <span>${escapeHtml(request.categoryName || "Request")}</span>
+      </a>
+      ` : ""}
+      <div class="card-body">
+        <div class="meta-line">
+          <span>작성자 #${escapeHtml(request.userId)}</span>
+          <strong>${escapeHtml(request.status || "-")}</strong>
+        </div>
+        <h3><a href="#/request/${request.requestPostId}">${escapeHtml(request.title)}</a></h3>
+        <p>${escapeHtml(markdownExcerpt(request.content))}</p>
+        <div class="chip-row">
+          <span>${escapeHtml(request.categoryName || "카테고리")}</span>
+          <span>${request.dueDate ? `마감 ${escapeHtml(request.dueDate)}` : "일정 협의"}</span>
+        </div>
+        <div class="card-action">
+          <strong>${formatBudget(request)}</strong>
+          <a class="button quiet" href="#/request/${request.requestPostId}">상세보기</a>
+        </div>
+      </div>
     </article>
   `;
 }
