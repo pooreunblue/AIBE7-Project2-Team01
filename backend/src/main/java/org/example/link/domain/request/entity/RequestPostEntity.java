@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.link.common.entity.BaseEntity;
 import org.example.link.domain.category.entity.CategoryEntity;
-import org.example.link.domain.portfolio.entity.PortfolioFileEntity;
 import org.example.link.domain.request.util.RequestPostStatus;
 import org.example.link.domain.user.entity.UserEntity;
 
@@ -44,6 +43,7 @@ public class RequestPostEntity extends BaseEntity {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
+    @Builder.Default
     private List<RequestPostFileEntity> files = new ArrayList<>();
 
     @Column(name = "budget_min",nullable = false)
