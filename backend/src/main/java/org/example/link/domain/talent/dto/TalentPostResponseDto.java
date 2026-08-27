@@ -36,7 +36,7 @@ public record TalentPostResponseDto(
                 .price(talentPostEntity.getPrice())
                 .estimatedDuration(talentPostEntity.getEstimatedDuration())
                 .durationUnit(talentPostEntity.getDurationUnit())
-                .portfolioId(talentPostEntity.getPortfolio().getId())
+                .portfolioId(talentPostEntity.getPortfolio() == null ? null : talentPostEntity.getPortfolio().getId())
                 .status(talentPostEntity.getStatus())
                 .aiConfidence(talentPostEntity.getAiConfidence())
                 .createdAt(talentPostEntity.getCreatedAt())
