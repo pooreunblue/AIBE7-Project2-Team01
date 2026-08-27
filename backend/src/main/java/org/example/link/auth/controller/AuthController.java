@@ -1,31 +1,62 @@
 package org.example.link.auth.controller;
 
+import com.nimbusds.oauth2.sdk.TokenResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.link.auth.config.AuthProperties;
+import org.example.link.auth.cookie.CookieUtil;
 import org.example.link.auth.dto.LoginRequest;
 import org.example.link.auth.dto.LoginResponse;
 import org.example.link.auth.dto.RefreshRequest;
 import org.example.link.auth.dto.RefreshResponse;
 import org.example.link.auth.service.AuthService;
 import org.example.link.common.response.ApiResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
 public class AuthController {
+    private final AuthProperties authProperties;
     private final AuthService authService;
+    private final CookieUtil cookieUtil;
 
     @PostMapping("/login")
-    @Operation(summary = "로그인")
-    public ApiResponse<LoginResponse> login(
+    public ResponseEntity<ApiResponse<Void>> login(
             @Valid @RequestBody LoginRequest request
     ) {
-        return ApiResponse.ok(
-                authService.login(request)
-        );
+        LoginResponse tokens =
+                authService.login(request);
+
+        ResponseCookie accessCookie =
+                cookieUtil.createAccessTokenCookie(
+                        tokens.accessToken(),
+                        authProperties.jwt().accessTokenExpiry()
+                );
+
+        ResponseCookie refreshCookie =
+                cookieUtil.createRefreshTokenCookie(
+                        tokens.refreshToken(),
+                        authProperties.jwt().refreshTokenExpiry()
+                );
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.SET_COOKIE,
+                        accessCookie.toString()
+                )
+                .header(
+                        HttpHeaders.SET_COOKIE,
+                        refreshCookie.toString()
+                )
+                .body(ApiResponse.ok(null));
     }
 
     @PostMapping("/logout")
