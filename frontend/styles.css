@@ -669,6 +669,12 @@ a.button {
   background: #f5f8ff;
 }
 
+.button.danger {
+  border-color: #fecaca;
+  background: #fff5f5;
+  color: #b42318;
+}
+
 .center-action {
   display: flex;
   justify-content: center;
@@ -1273,6 +1279,12 @@ dd {
   box-shadow: var(--shadow);
 }
 
+.talent-page {
+  position: relative;
+  min-height: calc(100vh - 236px);
+  padding-bottom: 88px;
+}
+
 .portfolio-page-grid {
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   align-items: stretch;
@@ -1372,6 +1384,7 @@ dd {
 
 .portfolio-write-toolbar {
   display: flex;
+  gap: 8px;
   justify-content: flex-end;
 }
 
@@ -1500,6 +1513,43 @@ dd {
   color: var(--blue);
 }
 
+.inline-file-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.inline-file-actions a,
+.inline-file-actions label,
+.inline-file-actions button {
+  display: inline-flex;
+  width: auto;
+  height: 28px;
+  min-width: auto;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 10px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.inline-file-actions input {
+  display: none;
+}
+
+.inline-file-actions a:hover,
+.inline-file-actions label:hover,
+.inline-file-actions button:hover {
+  border-color: #c7d7fe;
+  background: #edf4ff;
+  color: var(--blue);
+}
+
 .existing-file-item {
   color: var(--text);
 }
@@ -1515,6 +1565,156 @@ dd {
   gap: 12px;
   border-top: 1px solid var(--line);
   padding-top: 18px;
+}
+
+.talent-write-toolbar {
+  justify-content: space-between;
+}
+
+.talent-detail-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  background: #f8fafc;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.talent-detail-summary strong {
+  color: var(--blue);
+}
+
+.talent-detail-summary span {
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: #fff;
+  color: #344054;
+  font-weight: 800;
+}
+
+.talent-settings-modal {
+  width: min(520px, 100%);
+}
+
+.talent-file-section,
+.linked-portfolio-section {
+  display: grid;
+  gap: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.talent-file-section h2,
+.linked-portfolio-section h2 {
+  margin: 0;
+}
+
+.talent-file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.talent-file-card,
+.linked-portfolio-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.talent-file-card {
+  display: grid;
+  color: var(--text);
+}
+
+.talent-file-card img,
+.linked-portfolio-card img {
+  display: block;
+  width: 100%;
+  height: 138px;
+  object-fit: cover;
+  background: #eef2f8;
+}
+
+.talent-file-card > span,
+.linked-portfolio-empty {
+  display: grid;
+  height: 138px;
+  place-items: center;
+  background: #eef2f8;
+  color: var(--blue);
+  font-weight: 900;
+}
+
+.talent-file-card div,
+.linked-portfolio-card div {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.talent-file-card strong,
+.linked-portfolio-card h2 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.talent-file-card small,
+.linked-portfolio-card small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.linked-portfolio-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.linked-portfolio-card {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  color: var(--text);
+}
+
+.linked-portfolio-card img,
+.linked-portfolio-empty {
+  height: 100%;
+  min-height: 170px;
+}
+
+.linked-portfolio-card p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.detail-hero.has-image {
+  background: #eef2f8;
+}
+
+.detail-hero.has-image::before,
+.detail-hero.has-image::after {
+  display: none;
+}
+
+.detail-hero.has-image img {
+  display: block;
+  width: 100%;
+  height: 330px;
+  object-fit: cover;
 }
 
 .portfolio-card {
@@ -2137,6 +2337,22 @@ body.modal-open {
 
   .portfolio-write-actions {
     display: grid;
+  }
+
+  .linked-portfolio-head,
+  .inline-file-actions {
+    align-items: stretch;
+    display: grid;
+  }
+
+  .linked-portfolio-card {
+    grid-template-columns: 1fr;
+  }
+
+  .linked-portfolio-card img,
+  .linked-portfolio-empty {
+    height: 180px;
+    min-height: 180px;
   }
 
   .floating-create-button {

@@ -1,41 +1,32 @@
-import { button, formatMoney } from "../../shared/ui/index.js";
-import { talents } from "../../shared/data/mock.js";
-
 export function TalentDetailPage(id) {
-  const talent = talents.find((item) => item.id === id) || talents[0];
-
   return `
-    <section class="detail-layout">
+    <section class="detail-layout" data-talent-detail="${id}">
       <article class="detail-main">
-        <div class="detail-hero visual ${talent.category.toLowerCase()}">
-          <span>${talent.category}</span>
+        <div class="detail-hero visual">
+          <span data-talent-category>LOAD</span>
         </div>
         <div class="detail-copy">
-          <span class="kicker">${talent.category} · ${talent.location}</span>
-          <h1>${talent.title}</h1>
-          <p>${talent.summary}</p>
+          <span class="kicker" data-talent-meta>재능글을 불러오는 중입니다.</span>
+          <h1 data-talent-title>잠시만 기다려 주세요.</h1>
+          <div class="markdown-preview portfolio-detail-markdown" data-talent-content>
+            <p>내용을 확인하고 있습니다.</p>
+          </div>
+          <!-- TODO(talent-files): 백엔드 재능 파일 API 구현 후 <div data-talent-files></div> 재활성화. -->
+          <div data-talent-linked-portfolio></div>
           <div class="seller-box">
-            <div class="avatar">A</div>
+            <div class="avatar" data-talent-avatar>?</div>
             <div>
-              <strong>${talent.expert}</strong>
-              <span>Top Rated Seller · ★ ${talent.rating}</span>
+              <strong data-talent-author>작성자 확인 중</strong>
+              <span data-talent-status>-</span>
             </div>
           </div>
-          <h2>About This Service</h2>
-          <p>I specialize in simple, usable interfaces and practical delivery documents that help teams move from idea to launch.</p>
-          <ul class="check-list">
-            <li>Responsive screen design and interaction states</li>
-            <li>Frontend handoff with clear component structure</li>
-            <li>Portfolio materials available during chat</li>
-          </ul>
         </div>
       </article>
-      <aside class="checkout-card">
-        <span>Standard Package</span>
-        <strong>${formatMoney(talent.price)}</strong>
-        <p>Includes core screens, revisions, and delivery notes.</p>
-        ${button("Request Transaction", "#/checkout", "primary")}
-        ${button("Chat with Seller", "#/chat", "quiet")}
+      <aside class="checkout-card" data-talent-actions>
+        <span>Service Details</span>
+        <strong data-talent-price>-</strong>
+        <p data-talent-duration>예상 작업기간을 확인 중입니다.</p>
+        <button class="button primary" type="button" data-talent-chat disabled>Chat with Seller</button>
       </aside>
     </section>
   `;
