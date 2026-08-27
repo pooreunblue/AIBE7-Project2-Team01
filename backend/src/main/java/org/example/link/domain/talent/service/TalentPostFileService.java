@@ -30,8 +30,10 @@ public class TalentPostFileService {
         TalentPostEntity post = findPost(postId);
         validateOwner(post, user.getUserId());
         StoredFile stored = storageService.upload(file, "talents/" + user.getUserId() + "/" + postId, FileType.PORTFOLIO);
-        return TalentPostFileResponse.from(talentPostFileRepository.save(TalentPostFileEntity.create(
-                post, stored.originalFileName(), stored.path(), stored.url(), stored.contentType(), stored.fileSize())));
+        TalentPostFileEntity saved = talentPostFileRepository.save(TalentPostFileEntity.create(
+                post, stored.originalFileName(), stored.path(), stored.url(), stored.contentType(), stored.fileSize()));
+        setDefaultThumbnailIfAbsent(postId);
+        return TalentPostFileResponse.from(saved);
     }
 
     @Transactional(readOnly = true)
@@ -50,6 +52,8 @@ public class TalentPostFileService {
         validateBelongsToPost(file, postId);
         storageService.delete(file.getStoragePath());
         talentPostFileRepository.delete(file);
+        talentPostFileRepository.flush();
+        setDefaultThumbnailIfAbsent(postId);
     }
 
     @Transactional
@@ -61,6 +65,27 @@ public class TalentPostFileService {
         StoredFile stored = storageService.upload(newFile, "talents/" + user.getUserId() + "/" + postId, FileType.PORTFOLIO);
         storageService.delete(file.getStoragePath());
         file.updateFile(stored.originalFileName(), stored.path(), stored.url(), stored.contentType(), stored.fileSize());
+        if (!isImageFile(file)) {
+            file.unsetThumbnail();
+        }
+        setDefaultThumbnailIfAbsent(postId);
+        return TalentPostFileResponse.from(file);
+    }
+
+    @Transactional
+    public TalentPostFileResponse changeThumbnail(CustomUserDetails user, Long postId, Long fileId) {
+        TalentPostEntity post = findPost(postId);
+        validateOwner(post, user.getUserId());
+        TalentPostFileEntity file = findFile(fileId);
+        validateBelongsToPost(file, postId);
+        if (!isImageFile(file)) {
+            throw new CustomException(ErrorCode.INVALID_THUMBNAIL);
+        }
+
+        talentPostFileRepository.findByTalentPostIdAndThumbnailTrue(postId)
+                .ifPresent(TalentPostFileEntity::unsetThumbnail);
+        file.setThumbnail();
+
         return TalentPostFileResponse.from(file);
     }
 
@@ -84,5 +109,21 @@ public class TalentPostFileService {
         if (!file.getTalentPost().getId().equals(postId)) {
             throw new CustomException(ErrorCode.INVALID_POST_FILE);
         }
+    }
+
+    private void setDefaultThumbnailIfAbsent(Long postId) {
+        if (talentPostFileRepository.findByTalentPostIdAndThumbnailTrue(postId).isPresent()) {
+            return;
+        }
+
+        talentPostFileRepository.findAllByTalentPostIdOrderByIdAsc(postId)
+                .stream()
+                .filter(this::isImageFile)
+                .findFirst()
+                .ifPresent(TalentPostFileEntity::setThumbnail);
+    }
+
+    private boolean isImageFile(TalentPostFileEntity file) {
+        return file.getContentType() != null && file.getContentType().startsWith("image/");
     }
 }

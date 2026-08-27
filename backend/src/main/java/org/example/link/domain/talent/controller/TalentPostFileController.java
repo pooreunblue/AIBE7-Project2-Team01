@@ -58,4 +58,13 @@ public class TalentPostFileController {
             @RequestPart("file") MultipartFile file) {
         return ApiResponse.ok(talentPostFileService.updateFile(user, talentPostId, fileId, file));
     }
+
+    @PatchMapping("/{fileId}/thumbnail")
+    @Operation(summary = "재능글 대표 이미지 지정")
+    public ApiResponse<TalentPostFileResponse> changeThumbnail(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @PathVariable Long talentPostId,
+            @PathVariable Long fileId) {
+        return ApiResponse.ok(talentPostFileService.changeThumbnail(user, talentPostId, fileId));
+    }
 }

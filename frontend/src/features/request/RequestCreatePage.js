@@ -11,6 +11,12 @@ export function RequestCreatePage() {
         ${formField("최소 예산", `<input name="budgetMin" type="number" min="0" step="1000" placeholder="예: 300000" required />`)}
         ${formField("최대 예산", `<input name="budgetMax" type="number" min="0" step="1000" placeholder="예: 500000" required />`)}
         ${formField("희망 일정", `<input type="text" placeholder="예: 2026년 9월 첫째 주까지" />`)}
+        <label class="file-drop-zone">
+          <span>의뢰 자료 추가</span>
+          <small data-request-file-name>선택사항 · 대표 이미지와 참고 자료를 함께 올릴 수 있습니다.</small>
+          <input name="requestFiles" type="file" multiple />
+        </label>
+        <div class="selected-file-list" data-selected-request-files hidden></div>
         <p class="form-message" data-request-create-message aria-live="polite"></p>
         <div class="form-actions">
           ${button("Cancel", "#/home", "quiet")}

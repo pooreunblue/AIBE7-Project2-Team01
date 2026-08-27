@@ -7,7 +7,8 @@ public record RequestPostFileResponse(
         String originalFileName,
         String fileUrl,
         String contentType,
-        Long fileSize
+        Long fileSize,
+        boolean thumbnail
 ) {
     public static RequestPostFileResponse from(RequestPostFileEntity file) {
         return new RequestPostFileResponse(
@@ -15,7 +16,8 @@ public record RequestPostFileResponse(
                 file.getOriginalFileName(),
                 file.getFileUrl(),
                 file.getContentType(),
-                file.getFileSize()
+                file.getFileSize(),
+                file.isThumbnail()
         );
     }
 }

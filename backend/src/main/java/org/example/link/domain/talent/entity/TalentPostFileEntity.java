@@ -36,6 +36,9 @@ public class TalentPostFileEntity extends BaseEntity {
     @Column(nullable = false)
     private Long fileSize;
 
+    @Column(nullable = false)
+    private boolean thumbnail = false;
+
     private TalentPostFileEntity(
             TalentPostEntity talentPost,
             String originalFileName,
@@ -50,6 +53,7 @@ public class TalentPostFileEntity extends BaseEntity {
         this.fileUrl = fileUrl;
         this.contentType = contentType;
         this.fileSize = fileSize;
+        this.thumbnail = false;
     }
 
     public static TalentPostFileEntity create(
@@ -82,5 +86,13 @@ public class TalentPostFileEntity extends BaseEntity {
         this.fileUrl = fileUrl;
         this.contentType = contentType;
         this.fileSize = fileSize;
+    }
+
+    public void setThumbnail() {
+        this.thumbnail = true;
+    }
+
+    public void unsetThumbnail() {
+        this.thumbnail = false;
     }
 }
