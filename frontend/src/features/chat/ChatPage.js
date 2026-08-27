@@ -78,8 +78,11 @@ function renderRoomList(rooms, activeRoomId) {
       const isActive = room.chatRoomId === activeRoomId;
       return `
         <a class="conversation ${isActive ? "active" : ""}" href="#/chat/${room.chatRoomId}">
-          <strong>${escapeHtml(room.otherUserNickname ?? "상대방")}</strong>
-          <span>${postLabel(room)}</span>
+          ${renderChatAvatar(room)}
+          <div>
+            <strong>${escapeHtml(room.otherUserNickname ?? "상대방")}</strong>
+            <span>${postLabel(room)}</span>
+          </div>
         </a>
       `;
     })
@@ -153,12 +156,11 @@ async function loadHistory(streamEl, chatRoomId, currentUserId) {
 
 function panelTemplate(room) {
   const payHref = `#/checkout?chatRoomId=${room.chatRoomId}`;
-  const initial = (room.otherUserNickname || "?").charAt(0).toUpperCase();
 
   return `
     <header>
       <div class="seller-box">
-        <div class="avatar">${escapeHtml(initial)}</div>
+        ${renderChatAvatar(room)}
         <div><strong>${escapeHtml(room.otherUserNickname ?? "상대방")}</strong><span>${postLabel(room)}</span></div>
       </div>
       <div class="chat-panel-actions">
@@ -182,9 +184,19 @@ function renderBubble(message, currentUserId) {
 }
 
 function postLabel(room) {
-  if (room.talentPostId) return `판매글 #${room.talentPostId}`;
-  if (room.requestPostId) return `요청글 #${room.requestPostId}`;
+  if (room.postTitle) return escapeHtml(room.postTitle);
+  if (room.talentPostId) return "판매글";
+  if (room.requestPostId) return "요청글";
   return "";
+}
+
+function renderChatAvatar(room) {
+  const initial = (room.otherUserNickname || "?").charAt(0).toUpperCase();
+  return `
+    <div class="avatar chat-avatar">
+      ${room.otherUserProfileImageUrl ? `<img src="${escapeHtml(room.otherUserProfileImageUrl)}" alt="" />` : escapeHtml(initial)}
+    </div>
+  `;
 }
 
 function escapeHtml(value) {

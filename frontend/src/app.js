@@ -21,12 +21,9 @@ import {
 } from "./features/portfolio/portfolioApi.js";
 import {
   createRequest,
-  deleteRequestFile,
   fetchRequest,
   fetchRequests,
-  getRequestFiles,
   setRequestThumbnail,
-  updateRequestFile,
   uploadRequestFile,
 } from "./features/request/requestApi.js";
 import {
@@ -310,54 +307,66 @@ function bindRequestCreatePage() {
   const form = document.querySelector("[data-request-create-form]");
   if (!form) return;
 
-  const fileInput = form.querySelector('input[name="requestFiles"]');
-  const fileName = form.querySelector("[data-request-file-name]");
-  const selectedFileList = form.querySelector("[data-selected-request-files]");
-  let selectedFiles = [];
+  const thumbnailInput = form.querySelector("[data-request-thumbnail-input]");
+  const thumbnailTrigger = form.querySelector("[data-request-thumbnail-trigger]");
+  const thumbnailPreview = form.querySelector("[data-request-thumbnail-preview]");
+  let thumbnailFile = null;
+  let thumbnailPreviewUrl = null;
 
-  loadRequestCategories();
+  loadRequestCategories().then(() => renderRequestSettingsSummary(form));
+  bindMarkdownImageUpload();
+  bindPortfolioMarkdownPreview();
+  bindRequestSettingsModal(form);
 
-  fileInput?.addEventListener("change", () => {
-    selectedFiles = [...selectedFiles, ...Array.from(fileInput.files || [])];
-    fileInput.value = "";
-    renderPostEditorFiles(selectedFileList, [], selectedFiles, "request");
-    updateSelectedPostFileSummary(fileName, [], selectedFiles, "의뢰");
+  thumbnailTrigger?.addEventListener("click", () => thumbnailInput?.click());
+
+  thumbnailInput?.addEventListener("change", () => {
+    const message = form.querySelector("[data-request-create-message]");
+    thumbnailFile = thumbnailInput.files[0] || null;
+    if (thumbnailFile && !isImageFile(thumbnailFile)) {
+      if (message) message.textContent = "대표 이미지는 이미지 파일만 선택할 수 있습니다.";
+      thumbnailFile = null;
+      thumbnailInput.value = "";
+    } else if (message) {
+      message.textContent = "";
+    }
+    if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
+    thumbnailPreviewUrl = thumbnailFile ? URL.createObjectURL(thumbnailFile) : null;
+    renderTalentThumbnailPreview(thumbnailPreview, [], thumbnailFile, thumbnailPreviewUrl);
   });
 
-  selectedFileList?.addEventListener("click", (event) => {
-    const removeButton = event.target.closest("[data-remove-selected-request-file]");
-    if (!removeButton) return;
-
-    selectedFiles.splice(Number(removeButton.dataset.removeSelectedRequestFile), 1);
-    renderPostEditorFiles(selectedFileList, [], selectedFiles, "request");
-    updateSelectedPostFileSummary(fileName, [], selectedFiles, "의뢰");
+  thumbnailPreview?.addEventListener("click", (event) => {
+    if (!event.target.closest("[data-remove-selected-talent-thumbnail]")) return;
+    thumbnailFile = null;
+    if (thumbnailInput) thumbnailInput.value = "";
+    if (thumbnailPreviewUrl) {
+      URL.revokeObjectURL(thumbnailPreviewUrl);
+      thumbnailPreviewUrl = null;
+    }
+    renderTalentThumbnailPreview(thumbnailPreview, [], thumbnailFile, thumbnailPreviewUrl);
   });
+
+  requestAnimationFrame(() => openRequestSettingsModal(form));
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const message = form.querySelector("[data-request-create-message]");
-    const formData = new FormData(form);
-    const budgetMin = Number(formData.get("budgetMin"));
-    const budgetMax = Number(formData.get("budgetMax"));
-
-    if (budgetMax < budgetMin) {
-      if (message) message.textContent = "최대 예산은 최소 예산보다 커야 합니다.";
+    const payload = buildRequestPayload(form);
+    if (!payload) {
+      if (message) message.textContent = "상세정보를 먼저 입력해 주세요.";
+      openRequestSettingsModal(form);
       return;
     }
 
     try {
       if (message) message.textContent = "";
-      const request = await createRequest({
-        title: formData.get("title"),
-        content: formData.get("content"),
-        categoryId: Number(formData.get("categoryId")),
-        budgetMin,
-        budgetMax,
-      });
-      for (const file of selectedFiles) {
-        await uploadRequestFile(request.requestPostId, file);
+      const request = await createRequest(payload);
+      if (thumbnailFile) {
+        const thumbnail = await uploadRequestFile(request.requestPostId, thumbnailFile);
+        await setRequestThumbnail(request.requestPostId, thumbnail.requestPostFileId);
       }
+      if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
       window.location.hash = `/request/${request.requestPostId}`;
     } catch (error) {
       if (message) message.textContent = error.message;
@@ -398,11 +407,103 @@ async function loadRequestCategories() {
   try {
     const categories = await fetchCategories();
     select.innerHTML = categories.length
-      ? categories.map((category) => `<option value="${category.categoryId}">${escapeHtml(category.name)}</option>`).join("")
+      ? `<option value="">카테고리 선택</option>${categories.map((category) => `<option value="${category.categoryId}">${escapeHtml(category.name)}</option>`).join("")}`
       : `<option value="">등록된 카테고리가 없습니다</option>`;
   } catch {
     select.innerHTML = `<option value="">카테고리를 불러오지 못했습니다</option>`;
   }
+}
+
+function bindRequestSettingsModal(form) {
+  const renderSelected = () => renderRequestSettingsSummary(form);
+
+  form.querySelector("[data-request-settings-open]")?.addEventListener("click", () => {
+    openRequestSettingsModal(form);
+  });
+
+  form.querySelectorAll("[data-request-settings-close]").forEach((button) => {
+    button.addEventListener("click", () => closeRequestSettingsModal(form));
+  });
+
+  form.querySelector("[data-request-settings-save]")?.addEventListener("click", () => {
+    const message = form.querySelector("[data-request-create-message]");
+    if (!validateRequestSettings(form)) {
+      if (message) message.textContent = "카테고리와 예산을 확인해 주세요.";
+      return;
+    }
+    if (message) message.textContent = "";
+    renderRequestSettingsSummary(form);
+    closeRequestSettingsModal(form);
+  });
+
+  form.querySelector("[data-request-settings-modal]")?.addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) closeRequestSettingsModal(form);
+  });
+
+  form.querySelector("[data-request-category-select]")?.addEventListener("change", renderSelected);
+  form.querySelector('input[name="budgetMin"]')?.addEventListener("input", renderSelected);
+  form.querySelector('input[name="budgetMax"]')?.addEventListener("input", renderSelected);
+  form.querySelector('input[name="dueDate"]')?.addEventListener("input", renderSelected);
+  renderRequestSettingsSummary(form);
+}
+
+function openRequestSettingsModal(form) {
+  const modal = form.querySelector("[data-request-settings-modal]");
+  if (!modal) return;
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+  form.querySelector("[data-request-category-select]")?.focus();
+}
+
+function closeRequestSettingsModal(form) {
+  const modal = form.querySelector("[data-request-settings-modal]");
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
+function buildRequestPayload(form) {
+  if (!validateRequestSettings(form)) return null;
+  const formData = new FormData(form);
+  return {
+    title: formData.get("title"),
+    content: formData.get("content"),
+    categoryId: Number(formData.get("categoryId")),
+    budgetMin: Number(formData.get("budgetMin")),
+    budgetMax: Number(formData.get("budgetMax")),
+    dueDate: formData.get("dueDate") || null,
+  };
+}
+
+function validateRequestSettings(form) {
+  const formData = new FormData(form);
+  const categoryId = Number(formData.get("categoryId"));
+  const budgetMin = Number(formData.get("budgetMin"));
+  const budgetMax = Number(formData.get("budgetMax"));
+  return Boolean(
+    Number.isFinite(categoryId) && categoryId > 0 &&
+    Number.isFinite(budgetMin) && budgetMin >= 0 &&
+    Number.isFinite(budgetMax) && budgetMax >= budgetMin
+  );
+}
+
+function renderRequestSettingsSummary(form) {
+  const summary = form.querySelector("[data-request-detail-summary]");
+  if (!summary) return;
+
+  if (!validateRequestSettings(form)) {
+    summary.innerHTML = `<span>상세 설정을 입력해 주세요.</span>`;
+    return;
+  }
+
+  const formData = new FormData(form);
+  const category = selectedOptionText(form.querySelector("[data-request-category-select]"));
+  const dueDate = formData.get("dueDate");
+  summary.innerHTML = `
+    <span>${escapeHtml(category)}</span>
+    <strong>${formatMoney(Number(formData.get("budgetMin")))} - ${formatMoney(Number(formData.get("budgetMax")))}</strong>
+    <span>${dueDate ? `마감 ${escapeHtml(dueDate)}` : "일정 협의"}</span>
+  `;
 }
 
 async function loadCategoryTabs(tabRows) {
@@ -598,10 +699,12 @@ function renderTalentCard(talent) {
   const thumbnail = getTalentPreviewImage(talent.files || []);
   return `
     <article class="talent-card">
-      <a class="visual ${thumbnail ? "has-image" : talentVisualClass(talent)}" href="#/talent/${talent.talentPostId}" aria-label="${escapeHtml(talent.title)} 상세">
-        ${thumbnail ? `<img src="${escapeHtml(thumbnail.fileUrl)}" alt="" />` : ""}
+      ${thumbnail ? `
+      <a class="visual has-image" href="#/talent/${talent.talentPostId}" aria-label="${escapeHtml(talent.title)} 상세">
+        <img src="${escapeHtml(thumbnail.fileUrl)}" alt="" />
         <span>${escapeHtml(talent.categoryName || "Talent")}</span>
       </a>
+      ` : ""}
       <div class="card-body">
         <div class="meta-line">
           <span>작성자 #${escapeHtml(talent.userId)}</span>
@@ -626,13 +729,10 @@ function renderTalentDetail(talent, files = []) {
   setText("[data-talent-category]", talent.categoryName || "Talent");
   setText("[data-talent-meta]", `${talent.categoryName || "재능"} · 등록일 ${formatDate(talent.createdAt)}`);
   setText("[data-talent-title]", talent.title);
-  setText("[data-talent-author]", `작성자 #${talent.userId}`);
-  setText("[data-talent-status]", `${talent.status || "-"} · ${talent.portfolioId ? `포트폴리오 #${talent.portfolioId}` : "포트폴리오 미연결"}`);
+  renderTalentAuthor(talent);
+  hideTalentAuthorMeta();
   setText("[data-talent-price]", formatOptionalMoney(talent.price));
   setText("[data-talent-duration]", `예상 작업기간 ${formatDuration(talent)}`);
-
-  const avatar = document.querySelector("[data-talent-avatar]");
-  if (avatar) avatar.textContent = String(talent.userId || "?").charAt(0);
 
   const content = document.querySelector("[data-talent-content]");
   if (content) content.innerHTML = renderMarkdown("", talent.content || "");
@@ -648,6 +748,28 @@ function renderTalentDetail(talent, files = []) {
       `
       : `<span data-talent-category>${escapeHtml(talent.categoryName || "Talent")}</span>`;
   }
+}
+
+function renderTalentAuthor(talent) {
+  const name = talent.authorNickname || `작성자 #${talent.userId}`;
+  setText("[data-talent-author]", name);
+
+  const avatar = document.querySelector("[data-talent-avatar]");
+  if (!avatar) return;
+
+  if (talent.authorProfileImageUrl) {
+    avatar.innerHTML = `<img src="${escapeHtml(talent.authorProfileImageUrl)}" alt="" />`;
+    return;
+  }
+
+  avatar.textContent = String(talent.authorNickname || talent.userId || "?").charAt(0).toUpperCase();
+}
+
+function hideTalentAuthorMeta() {
+  const status = document.querySelector("[data-talent-status]");
+  if (!status) return;
+  status.textContent = "";
+  status.hidden = true;
 }
 
 async function bindTalentDetailActions(talent) {
@@ -970,37 +1092,6 @@ function isImageFile(file) {
   return String(file?.type || "").startsWith("image/");
 }
 
-function renderPostEditorFiles(container, existingFiles, selectedFiles, type) {
-  if (!container) return;
-
-  container.hidden = existingFiles.length + selectedFiles.length === 0;
-  container.innerHTML = selectedFiles
-    .map((file, index) => renderSelectedPostFile(file, index, type))
-    .join("");
-}
-
-function renderSelectedPostFile(file, index, type) {
-  const label = type === "request" ? "의뢰 자료" : "자료";
-  return `
-    <div class="selected-file-item">
-      <div>
-        <strong>${escapeHtml(file.name)}</strong>
-        <small>${label} 추가 예정 · ${escapeHtml(file.type || "file")} · ${formatFileSize(file.size)}</small>
-      </div>
-      <button type="button" aria-label="${escapeHtml(file.name)} 제거" data-remove-selected-${escapeHtml(type)}-file="${index}">x</button>
-    </div>
-  `;
-}
-
-function updateSelectedPostFileSummary(element, existingFiles, selectedFiles, label) {
-  if (!element) return;
-
-  const totalLength = existingFiles.length + selectedFiles.length;
-  element.textContent = totalLength
-    ? `기존 ${existingFiles.length}개 · ${label} 자료 추가 ${selectedFiles.length}개`
-    : `선택사항 · ${label} 대표 이미지와 참고 자료를 함께 올릴 수 있습니다.`;
-}
-
 function renderTalentThumbnailPreview(container, existingFiles, thumbnailFile = null, previewUrl = null) {
   if (!container) return;
 
@@ -1135,14 +1226,6 @@ function formatOptionalMoney(value) {
 function durationUnitLabel(unit) {
   const labels = { DAY: "일", WEEK: "주", MONTH: "개월" };
   return labels[unit] || "일";
-}
-
-function talentVisualClass(talent) {
-  const category = String(talent.categoryName || "").toLowerCase();
-  if (category.includes("개발") || category.includes("dev")) return "development";
-  if (category.includes("글") || category.includes("write")) return "writing";
-  if (category.includes("마케팅") || category.includes("market")) return "marketing";
-  return "";
 }
 
 function renderRequestCard(request) {
