@@ -2,6 +2,7 @@ package org.example.link.auth.controller;
 
 import com.nimbusds.oauth2.sdk.TokenResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.config.AuthProperties;
@@ -11,6 +12,8 @@ import org.example.link.auth.dto.LoginResponse;
 import org.example.link.auth.dto.RefreshRequest;
 import org.example.link.auth.dto.RefreshResponse;
 import org.example.link.auth.service.AuthService;
+import org.example.link.common.exception.CustomException;
+import org.example.link.common.exception.ErrorCode;
 import org.example.link.common.response.ApiResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -37,14 +40,12 @@ public class AuthController {
 
         ResponseCookie accessCookie =
                 cookieUtil.createAccessTokenCookie(
-                        tokens.accessToken(),
-                        authProperties.jwt().accessTokenExpiry()
+                        tokens.accessToken()
                 );
 
         ResponseCookie refreshCookie =
                 cookieUtil.createRefreshTokenCookie(
-                        tokens.refreshToken(),
-                        authProperties.jwt().refreshTokenExpiry()
+                        tokens.refreshToken()
                 );
 
         return ResponseEntity.ok()
@@ -71,11 +72,33 @@ public class AuthController {
 
     @PostMapping("/refresh")
     @Operation(summary = "액세스 토큰 재발급")
-    public ApiResponse<RefreshResponse> refresh(
-            @Valid @RequestBody RefreshRequest request
-    ){
-        return ApiResponse.ok(
-                authService.refresh(request)
-        );
+    public ResponseEntity<ApiResponse<Void>> refresh(
+            HttpServletRequest request
+    ) {
+
+        String refreshToken =
+                cookieUtil.getCookieValue(
+                        request,
+                        CookieUtil.REFRESH_TOKEN_COOKIE
+                ).orElseThrow(() ->
+                        new CustomException(
+                                ErrorCode.INVALID_REFRESH_TOKEN
+                        )
+                );
+
+        RefreshResponse response =
+                authService.refresh(refreshToken);
+
+        ResponseCookie accessCookie =
+                cookieUtil.createAccessTokenCookie(
+                        response.accessToken()
+                );
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.SET_COOKIE,
+                        accessCookie.toString()
+                )
+                .body(ApiResponse.ok(null));
     }
 }

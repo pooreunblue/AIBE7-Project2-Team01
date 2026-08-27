@@ -2,6 +2,8 @@ package org.example.link.auth.cookie;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.example.link.auth.config.AuthProperties;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
@@ -10,33 +12,45 @@ import java.util.Arrays;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class CookieUtil {
     public static final String ACCESS_TOKEN_COOKIE = "accessToken";
     public static final String REFRESH_TOKEN_COOKIE = "refreshToken";
+    private final AuthProperties authProperties;
 
     public ResponseCookie createAccessTokenCookie(
-            String token,
-            Duration expiry
+            String token
     ) {
-        return ResponseCookie.from("accessToken", token)
+        return ResponseCookie.from(
+                ACCESS_TOKEN_COOKIE,
+                        token
+                )
                 .httpOnly(true)
                 .secure(false) // 로컬 개발
                 .sameSite("Lax")
                 .path("/")
-                .maxAge(expiry)
+                .maxAge(authProperties
+                        .jwt()
+                        .accessTokenExpiry()
+                )
                 .build();
     }
 
     public ResponseCookie createRefreshTokenCookie(
-            String token,
-            Duration expiry
+            String token
     ) {
-        return ResponseCookie.from("refreshToken", token)
+        return ResponseCookie.from(
+                REFRESH_TOKEN_COOKIE,
+                        token
+                )
                 .httpOnly(true)
                 .secure(false)
                 .sameSite("Lax")
                 .path("/auth")
-                .maxAge(expiry)
+                .maxAge(authProperties
+                        .jwt()
+                        .refreshTokenExpiry()
+                )
                 .build();
     }
 
