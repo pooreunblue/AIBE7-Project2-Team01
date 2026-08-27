@@ -1520,6 +1520,7 @@ dd {
   gap: 6px;
 }
 
+.inline-file-actions a,
 .inline-file-actions label,
 .inline-file-actions button {
   display: inline-flex;
@@ -1541,6 +1542,7 @@ dd {
   display: none;
 }
 
+.inline-file-actions a:hover,
 .inline-file-actions label:hover,
 .inline-file-actions button:hover {
   border-color: #c7d7fe;

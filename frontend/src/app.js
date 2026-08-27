@@ -920,7 +920,14 @@ function getTalentEditId() {
 function markdownExcerpt(markdown) {
   return String(markdown || "")
     .replace(/!\[[^\]]*]\([^)]*\)/g, "")
-    .replace(/[#*_`>~-]/g, "")
+    .replace(/\[([^\]]+)]\([^)]*\)/g, "$1")
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^#{1,6}\s*/gm, "")
+    .replace(/^>\s*/gm, "")
+    .replace(/[*_~]/g, "")
+    .replace(/^\s*[-+]\s+/gm, "")
+    .replace(/^\s*\d+\.\s+/gm, "")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 120);
@@ -1109,17 +1116,24 @@ function bindPortfolioForm() {
   fileInput?.addEventListener("change", () => {
     selectedFiles = [...selectedFiles, ...Array.from(fileInput.files || [])];
     fileInput.value = "";
-    renderPortfolioEditorFiles(selectedFileList, existingFiles, selectedFiles);
+    renderPortfolioEditorFiles(selectedFileList, existingFiles, selectedFiles, portfolioId);
     updateSelectedPortfolioFileSummary(fileName, existingFiles, selectedFiles);
   });
 
   selectedFileList?.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-remove-selected-file]");
-    if (!button) return;
+    const removeButton = event.target.closest("[data-remove-selected-file]");
+    if (removeButton) {
+      selectedFiles.splice(Number(removeButton.dataset.removeSelectedFile), 1);
+      renderPortfolioEditorFiles(selectedFileList, existingFiles, selectedFiles, portfolioId);
+      updateSelectedPortfolioFileSummary(fileName, existingFiles, selectedFiles);
+      return;
+    }
 
-    selectedFiles.splice(Number(button.dataset.removeSelectedFile), 1);
-    renderPortfolioEditorFiles(selectedFileList, existingFiles, selectedFiles);
-    updateSelectedPortfolioFileSummary(fileName, existingFiles, selectedFiles);
+    bindPortfolioEditorExistingFileAction(event, portfolioId, async () => {
+      existingFiles = await getPortfolioFiles(portfolioId);
+      renderPortfolioEditorFiles(selectedFileList, existingFiles, selectedFiles, portfolioId);
+      updateSelectedPortfolioFileSummary(fileName, existingFiles, selectedFiles);
+    });
   });
 
   form.addEventListener("submit", async (event) => {
@@ -1148,7 +1162,7 @@ function bindPortfolioForm() {
       }
       form.reset();
       selectedFiles = [];
-      renderPortfolioEditorFiles(selectedFileList, [], selectedFiles);
+      renderPortfolioEditorFiles(selectedFileList, [], selectedFiles, portfolioId);
       updateSelectedPortfolioFileSummary(fileName, [], selectedFiles);
       const list = document.querySelector("[data-portfolio-list]");
       if (list) {
@@ -1190,7 +1204,7 @@ async function loadPortfolioEditForm({
       descriptionInput.dispatchEvent(new Event("input", { bubbles: true }));
     }
 
-    renderPortfolioEditorFiles(selectedFileList, files, []);
+    renderPortfolioEditorFiles(selectedFileList, files, [], portfolioId);
     updateSelectedPortfolioFileSummary(fileName, files, []);
     if (message) message.textContent = "";
     return files;
@@ -1256,7 +1270,7 @@ function renderPortfolioPreviewCards(portfolios, options = {}) {
           ${renderPortfolioPreviewMedia(portfolio)}
           <div>
             <h3>${escapeHtml(portfolio.title)}</h3>
-            <p>${escapeHtml(portfolio.description)}</p>
+            <p>${escapeHtml(markdownExcerpt(portfolio.description || ""))}</p>
           </div>
         </button>
       </article>
@@ -1369,10 +1383,7 @@ function getPortfolioModal() {
 }
 
 function renderPortfolioModalContent(portfolio) {
-  const image = getPortfolioPreviewImage(portfolio);
-
   return `
-    ${image ? `<img class="portfolio-detail-cover" src="${escapeHtml(image.fileUrl)}" alt="" />` : ""}
     <div class="markdown-preview portfolio-detail-markdown">
       ${renderMarkdown(portfolio.title, portfolio.description || "")}
     </div>
@@ -1411,7 +1422,16 @@ function renderPortfolioPreviewMedia(portfolio) {
 
 function getPortfolioPreviewImage(portfolio) {
   const imageFiles = (portfolio.files || []).filter((file) => String(file.contentType || "").startsWith("image/"));
-  return imageFiles.find((file) => file.thumbnail) || imageFiles[0] || null;
+  const fileImage = imageFiles.find((file) => file.thumbnail) || imageFiles[0] || null;
+  if (fileImage) return fileImage;
+
+  const markdownImageUrl = getFirstMarkdownImageUrl(portfolio.description);
+  return markdownImageUrl
+    ? {
+      fileUrl: markdownImageUrl,
+      thumbnail: false,
+    }
+    : null;
 }
 
 function renderPortfolioManageCard(portfolio) {
@@ -1420,7 +1440,7 @@ function renderPortfolioManageCard(portfolio) {
       <div>
         <span class="kicker">Portfolio</span>
         <h2>${escapeHtml(portfolio.title)}</h2>
-        <p>${escapeHtml(portfolio.description)}</p>
+        <p>${escapeHtml(markdownExcerpt(portfolio.description || ""))}</p>
         ${renderPortfolioFiles(portfolio.portfolioId, portfolio.files || [])}
       </div>
       <div class="card-action">
@@ -1506,24 +1526,82 @@ function updateSelectedPortfolioFileSummary(element, existingFiles, selectedFile
     : "선택사항 · 여러 이미지와 작업 자료를 함께 올릴 수 있습니다.";
 }
 
-function renderPortfolioEditorFiles(container, existingFiles, selectedFiles) {
+async function bindPortfolioEditorExistingFileAction(event, portfolioId, refresh) {
+  if (!portfolioId) return;
+
+  const deleteButton = event.target.closest("[data-portfolio-file-delete]");
+  const thumbnailButton = event.target.closest("[data-portfolio-file-thumbnail]");
+  const updateInput = event.target.closest("[data-portfolio-file-update]");
+
+  if (deleteButton) {
+    deleteButton.disabled = true;
+    try {
+      await deletePortfolioFile(portfolioId, deleteButton.dataset.portfolioFileDelete);
+      await refresh();
+    } catch (error) {
+      alert(error.message);
+      deleteButton.disabled = false;
+    }
+    return;
+  }
+
+  if (thumbnailButton) {
+    thumbnailButton.disabled = true;
+    try {
+      await setPortfolioThumbnail(portfolioId, thumbnailButton.dataset.portfolioFileThumbnail);
+      await refresh();
+    } catch (error) {
+      alert(error.message);
+      thumbnailButton.disabled = false;
+    }
+    return;
+  }
+
+  if (updateInput) {
+    const file = updateInput.files[0];
+    if (!file) return;
+    try {
+      await updatePortfolioFile(portfolioId, updateInput.dataset.portfolioFileUpdate, file);
+      updateInput.value = "";
+      await refresh();
+    } catch (error) {
+      alert(error.message);
+      updateInput.value = "";
+    }
+  }
+}
+
+function renderPortfolioEditorFiles(container, existingFiles, selectedFiles, portfolioId = null) {
   if (!container) return;
 
   container.hidden = existingFiles.length + selectedFiles.length === 0;
   container.innerHTML = [
-    ...existingFiles.map(renderExistingPortfolioEditorFile),
+    ...existingFiles.map((file) => renderExistingPortfolioEditorFile(file, portfolioId)),
     ...selectedFiles.map((file, index) => renderSelectedPortfolioFile(file, index)),
   ].join("");
 }
 
-function renderExistingPortfolioEditorFile(file) {
+function renderExistingPortfolioEditorFile(file, portfolioId) {
+  const isImage = String(file.contentType || "").startsWith("image/");
+
   return `
-    <a class="selected-file-item existing-file-item" href="${escapeHtml(file.fileUrl)}" target="_blank" rel="noreferrer">
+    <div class="selected-file-item existing-file-item">
       <div>
         <strong>${escapeHtml(file.originalFileName)}</strong>
-        <small>기존 파일 · ${escapeHtml(file.contentType || "file")} · ${formatFileSize(Number(file.fileSize || 0))}</small>
+        <small>기존 파일 · ${escapeHtml(file.contentType || "file")} · ${formatFileSize(Number(file.fileSize || 0))}${file.thumbnail ? " · 대표" : ""}</small>
       </div>
-    </a>
+      <div class="inline-file-actions">
+        <a href="${escapeHtml(file.fileUrl)}" target="_blank" rel="noreferrer">보기</a>
+        ${portfolioId && isImage && !file.thumbnail ? `<button type="button" data-portfolio-file-thumbnail="${escapeHtml(file.portfolioFileId)}">대표</button>` : ""}
+        ${portfolioId ? `
+          <label>
+            교체
+            <input type="file" data-portfolio-file-update="${escapeHtml(file.portfolioFileId)}" />
+          </label>
+          <button type="button" data-portfolio-file-delete="${escapeHtml(file.portfolioFileId)}">삭제</button>
+        ` : ""}
+      </div>
+    </div>
   `;
 }
 
@@ -1542,6 +1620,11 @@ function renderSelectedPortfolioFile(file, index) {
 function markdownImageText(fileName, url) {
   const alt = fileName.replace(/\.[^.]+$/, "") || "portfolio image";
   return `\n![${alt}](${url})\n`;
+}
+
+function getFirstMarkdownImageUrl(markdown) {
+  const match = String(markdown || "").match(/!\[[^\]]*]\(([^)\s]+)(?:\s+"[^"]*")?\)/);
+  return match ? match[1] : null;
 }
 
 function insertTextAtCursor(textarea, text) {
