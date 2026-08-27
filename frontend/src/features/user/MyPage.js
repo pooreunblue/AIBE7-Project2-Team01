@@ -13,7 +13,7 @@ export function MyPage() {
       </aside>
       <div class="dashboard-main">
         <div class="profile-summary" data-my-page-summary>
-          <div class="avatar large">A</div>
+          <div class="avatar large" data-my-page-avatar>A</div>
           <div>
             <h1 data-my-page-nickname>계정 정보를 불러오는 중입니다.</h1>
             <p data-my-page-email>계정 정보를 불러오는 중입니다.</p>
@@ -45,12 +45,12 @@ export function MyPage() {
             </div>
           </form>
         </div>
-        <div class="dashboard-section">
+        <div class="dashboard-section mypage-portfolio-section">
           <div class="section-head">
             <h2>포트폴리오</h2>
             <a href="#/portfolios">전체보기</a>
           </div>
-          <div class="portfolio-card-grid" data-portfolio-preview>
+          <div class="portfolio-card-grid mypage-portfolio-grid" data-portfolio-preview>
             <article class="portfolio-card">
               <span>LOAD</span>
               <h3>포트폴리오를 불러오는 중입니다.</h3>

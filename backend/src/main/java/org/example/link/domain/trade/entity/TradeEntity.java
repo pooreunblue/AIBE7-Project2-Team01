@@ -53,6 +53,16 @@ public class TradeEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    public TradeEntity(Long chatRoomId, Long requestPostId, Long talentPostId, Long payerId, Long payeeId, BigDecimal amount) {
+        this.chatRoomId = chatRoomId;
+        this.requestPostId = requestPostId;
+        this.talentPostId = talentPostId;
+        this.payerId = payerId;
+        this.payeeId = payeeId;
+        this.amount = amount;
+        this.status = TradeStatus.PENDING;
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();

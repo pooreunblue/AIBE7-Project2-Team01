@@ -6,6 +6,7 @@ import org.example.link.domain.request.util.RequestPostStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Builder
 public record RequestPostResponseDto(
@@ -17,6 +18,7 @@ public record RequestPostResponseDto(
         String content,
         Long budgetMin,
         Long budgetMax,
+        LocalDate dueDate,
         RequestPostStatus status,
         BigDecimal aiConfidence,
         Instant createdAt,
@@ -32,6 +34,7 @@ public record RequestPostResponseDto(
                 .content(requestPostEntity.getContent())
                 .budgetMin(requestPostEntity.getBudgetMin())
                 .budgetMax(requestPostEntity.getBudgetMax())
+                .dueDate(requestPostEntity.getDueDate())
                 .status(requestPostEntity.getStatus())
                 .aiConfidence(requestPostEntity.getAiConfidence())
                 .createdAt(requestPostEntity.getCreatedAt())

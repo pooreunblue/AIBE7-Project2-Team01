@@ -11,6 +11,12 @@ public enum ErrorCode {
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."),
     DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "이미 존재하는 데이터입니다."),
 
+    //storage
+    INVALID_FILE(HttpStatus.BAD_REQUEST, "유효하지 않은 파일입니다."),
+    FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다."),
+    FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일 삭제에 실패했습니다."),
+    UNSUPPORTED_FILE_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 형식입니다."),
+
     //auth
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
@@ -32,10 +38,19 @@ public enum ErrorCode {
     PORTFOLIO_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "포트폴리오 파일을 찾을 수 없습니다."),
     INVALID_PORTFOLIO_FILE(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 형식입니다."),
     PORTFOLIO_FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "파일 크기가 허용 범위를 초과했습니다."),
+    INVALID_THUMBNAIL(HttpStatus.BAD_REQUEST, "이미지 파일만 썸네일로 지정할 수 있습니다."),
 
     //chat
     CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
     CHAT_ROOM_ACCESS_DENIED(HttpStatus.FORBIDDEN, "채팅방에 접근할 권한이 없습니다."),
+    CHAT_MESSAGE_NOT_FOUND(HttpStatus.BAD_REQUEST, "채팅 내역이 없어 거래를 생성할 수 없습니다."),
+
+    //trade
+    TRADE_NOT_FOUND(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다."),
+    TRADE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "거래에 접근할 권한이 없습니다."),
+    TRADE_ALREADY_IN_PROGRESS(HttpStatus.CONFLICT, "이미 진행 중인 거래가 있습니다."),
+    INVALID_TRADE_STATUS(HttpStatus.BAD_REQUEST, "현재 거래 상태에서는 처리할 수 없습니다."),
+    TALENT_TRADE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "재능글 기반 거래는 아직 지원하지 않습니다."),
 
     //category
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 카테고리입니다."),

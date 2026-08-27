@@ -27,3 +27,8 @@ export function createOrGetChatRoom({ requestPostId, talentPostId, otherUserId }
 function unwrapApiResponse(response) {
   return response?.data ?? response;
 }
+
+// 채팅방 나가기. 내 참가 기록만 지워지고 상대방 쪽 대화는 그대로 남음(서버에서 처리).
+export function leaveChatRoom(chatRoomId) {
+  return apiRequest(`/chatrooms/${chatRoomId}`, { method: "DELETE" });
+}
