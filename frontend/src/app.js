@@ -6,6 +6,7 @@ import { setAccessToken, setRefreshToken } from "./auth/tokenStorage.js";
 import { fetchCategories } from "./features/category/categoryApi.js";
 import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
 import { startChat } from "./features/chat/startChat.js";
+import { initCheckoutPage } from "./features/payment/CheckoutPage.js";
 import {
   createPortfolio,
   deletePortfolio,
@@ -49,6 +50,7 @@ function bindPageEvents() {
   bindRequestDetailPage();
   bindRequestCreatePage();
   initChatPage();
+  initCheckoutPage();
 
   document.querySelectorAll("form").forEach((form) => {
     form.addEventListener("submit", (event) => {

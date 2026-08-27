@@ -1,17 +1,24 @@
 package org.example.link.domain.chat.controller;
 
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.response.ApiResponse;
 import org.example.link.domain.chat.dto.ChatMessageResponse;
 import org.example.link.domain.chat.dto.ChatRoomCreateRequest;
 import org.example.link.domain.chat.dto.ChatRoomResponse;
 import org.example.link.domain.chat.service.ChatService;
+import org.example.link.domain.trade.dto.TradeCreateRequest;
+import org.example.link.domain.trade.dto.TradeResponse;
+import org.example.link.domain.trade.service.TradeService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +35,7 @@ import java.util.List;
 public class ChatRoomController {
 
     private final ChatService chatService;
+    private final TradeService tradeService;
 
     @PostMapping
     @Operation(summary = "채팅방 생성")
@@ -55,5 +63,24 @@ public class ChatRoomController {
     ) {
         Pageable pageable = PageRequest.of(page, size);
         return ApiResponse.ok(chatService.getMessages(authentication.getName(), id, pageable));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> leave(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        chatService.leaveRoom(authentication.getName(), id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{chatRoomId}/trades")
+    public ResponseEntity<ApiResponse<TradeResponse>> createTrade(
+            @PathVariable Long chatRoomId,
+            @Valid @RequestBody TradeCreateRequest request,
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        TradeResponse response = tradeService.createTrade(user.getUserId(), chatRoomId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
     }
 }
