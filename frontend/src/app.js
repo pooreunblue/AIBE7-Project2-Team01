@@ -3,6 +3,7 @@ import { uploadTempImage } from "./api/uploadApi.js";
 import { parseRoute, resolvePage } from "./router.js";
 import { login, logout, signup } from "./features/auth/authApi.js";
 import { setAccessToken, setRefreshToken } from "./auth/tokenStorage.js";
+import { getCurrentUserId } from "./auth/currentUser.js";
 import { fetchCategories } from "./features/category/categoryApi.js";
 import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
 import { startChat } from "./features/chat/startChat.js";
@@ -19,6 +20,19 @@ import {
   uploadPortfolioFile,
 } from "./features/portfolio/portfolioApi.js";
 import { createRequest, fetchRequest, fetchRequests } from "./features/request/requestApi.js";
+import {
+  createTalent,
+  deleteTalent,
+  deleteTalentFile,
+  fetchTalent,
+  fetchTalents,
+  getTalentFiles,
+  inactiveTalent,
+  setTalentThumbnail,
+  updateTalent,
+  updateTalentFile,
+  uploadTalentFile,
+} from "./features/talent/talentApi.js";
 import { getMyPage } from "./features/user/userApi.js";
 import { chargeWallet } from "./features/wallet/walletApi.js";
 
@@ -45,6 +59,9 @@ function bindPageEvents() {
   bindMyPage();
   bindPortfolioPage();
   bindCategoryTabs();
+  bindTalentListPage();
+  bindTalentDetailPage();
+  bindTalentCreatePage();
   bindRequestListPage();
   bindRequestDetailPage();
   bindRequestCreatePage();
@@ -197,6 +214,7 @@ function bindPortfolioPage() {
   if (list) {
     loadPortfolioList();
   }
+  if (!list && !document.querySelector("[data-portfolio-form]")) return;
   bindPortfolioForm();
   bindMarkdownImageUpload();
   bindPortfolioMarkdownPreview();
@@ -221,7 +239,7 @@ function bindMarkdownImageUpload() {
   const trigger = document.querySelector("[data-markdown-image-trigger]");
   const input = document.querySelector("[data-markdown-image-input]");
   const textarea = document.querySelector(".portfolio-content-input");
-  const message = document.querySelector("[data-portfolio-message]");
+  const message = document.querySelector("[data-portfolio-message], [data-talent-message]");
   if (!trigger || !input || !textarea) return;
 
   trigger.addEventListener("click", () => {
@@ -372,6 +390,614 @@ async function loadCategoryTabs(tabRows) {
       row.innerHTML = `<a class="tab active" href="${href}">All</a>`;
     });
   }
+}
+
+function bindTalentListPage() {
+  const list = document.querySelector("[data-list='talents']");
+  if (!list) return;
+
+  const searchForm = document.querySelector("[data-list-search]");
+  loadTalentList();
+
+  searchForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const keyword = new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "";
+    loadTalentList(String(keyword));
+  });
+}
+
+function bindTalentDetailPage() {
+  const detail = document.querySelector("[data-talent-detail]");
+  if (!detail) return;
+
+  loadTalentDetail(detail.dataset.talentDetail);
+}
+
+function bindTalentCreatePage() {
+  const form = document.querySelector("[data-talent-form]");
+  if (!form) return;
+
+  const fileInput = form.querySelector('input[name="talentFiles"]');
+  const fileName = form.querySelector("[data-talent-file-name]");
+  const selectedFileList = form.querySelector("[data-selected-talent-files]");
+  let selectedFiles = [];
+  let existingFiles = [];
+
+  bindMarkdownImageUpload();
+  bindPortfolioMarkdownPreview();
+  bindTalentSettingsModal(form);
+
+  fileInput?.addEventListener("change", () => {
+    selectedFiles = [...selectedFiles, ...Array.from(fileInput.files || [])];
+    fileInput.value = "";
+    renderTalentEditorFiles(selectedFileList, existingFiles, selectedFiles, getTalentEditId());
+    updateSelectedTalentFileSummary(fileName, existingFiles, selectedFiles);
+  });
+
+  selectedFileList?.addEventListener("click", (event) => {
+    const removeButton = event.target.closest("[data-remove-selected-talent-file]");
+    if (removeButton) {
+      selectedFiles.splice(Number(removeButton.dataset.removeSelectedTalentFile), 1);
+      renderTalentEditorFiles(selectedFileList, existingFiles, selectedFiles, getTalentEditId());
+      updateSelectedTalentFileSummary(fileName, existingFiles, selectedFiles);
+      return;
+    }
+
+    bindTalentEditorExistingFileAction(event, async () => {
+      existingFiles = await getTalentFiles(getTalentEditId());
+      renderTalentEditorFiles(selectedFileList, existingFiles, selectedFiles, getTalentEditId());
+      updateSelectedTalentFileSummary(fileName, existingFiles, selectedFiles);
+    });
+  });
+
+  const talentPostId = getTalentEditId();
+  loadTalentSettingsOptions(form).then(() => {
+    if (talentPostId) {
+      loadTalentEditForm(form, talentPostId).then((files) => {
+        existingFiles = files;
+        renderTalentEditorFiles(selectedFileList, existingFiles, selectedFiles, talentPostId);
+        updateSelectedTalentFileSummary(fileName, existingFiles, selectedFiles);
+      });
+    } else {
+      requestAnimationFrame(() => openTalentSettingsModal(form));
+      renderTalentEditorFiles(selectedFileList, existingFiles, selectedFiles, null);
+      updateSelectedTalentFileSummary(fileName, existingFiles, selectedFiles);
+    }
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const message = form.querySelector("[data-talent-message]");
+    const payload = buildTalentPayload(form);
+
+    if (!payload) {
+      if (message) message.textContent = "상세정보를 먼저 입력해 주세요.";
+      openTalentSettingsModal(form);
+      return;
+    }
+
+    try {
+      if (message) message.textContent = "";
+      const talent = talentPostId
+        ? await updateTalent(talentPostId, payload)
+        : await createTalent(payload);
+      if (selectedFiles.length) {
+        for (const file of selectedFiles) {
+          await uploadTalentFile(talent.talentPostId, file);
+        }
+      }
+      window.location.hash = `/talent/${talent.talentPostId}`;
+    } catch (error) {
+      if (message) message.textContent = error.message;
+    }
+  });
+}
+
+async function loadTalentList(keyword = "") {
+  const list = document.querySelector("[data-list='talents']");
+  if (!list) return;
+
+  try {
+    const talents = await fetchTalents(keyword);
+    list.innerHTML = talents.length
+      ? talents.map(renderTalentCard).join("")
+      : `<article class="talent-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 재능글이 없습니다.</h3><p>첫 재능글을 작성해 보세요.</p></div></article>`;
+  } catch (error) {
+    list.innerHTML = `<article class="talent-card"><div class="card-body"><span class="kicker">ERROR</span><h3>재능글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`;
+  }
+}
+
+async function loadTalentDetail(talentPostId) {
+  try {
+    const [talent, files] = await Promise.all([
+      fetchTalent(talentPostId),
+      getTalentFiles(talentPostId),
+    ]);
+    renderTalentDetail(talent, files);
+    bindTalentDetailActions(talent);
+    loadLinkedPortfolio(talent);
+  } catch (error) {
+    setText("[data-talent-category]", "ERROR");
+    setText("[data-talent-meta]", "재능글을 불러오지 못했습니다.");
+    setText("[data-talent-title]", error.message);
+    const content = document.querySelector("[data-talent-content]");
+    if (content) content.innerHTML = "";
+  }
+}
+
+async function loadLinkedPortfolio(talent) {
+  const target = document.querySelector("[data-talent-linked-portfolio]");
+  if (!target) return;
+
+  if (!talent.portfolioId) {
+    target.innerHTML = "";
+    return;
+  }
+
+  try {
+    const [portfolio, files] = await Promise.all([
+      getPortfolio(talent.portfolioId),
+      getPortfolioFiles(talent.portfolioId),
+    ]);
+    target.innerHTML = renderLinkedPortfolio(portfolio, files);
+  } catch (error) {
+    target.innerHTML = `<section class="linked-portfolio-section"><span class="kicker">Portfolio</span><p>연결된 포트폴리오를 불러오지 못했습니다: ${escapeHtml(error.message)}</p></section>`;
+  }
+}
+
+function renderTalentCard(talent) {
+  return `
+    <article class="talent-card">
+      <a class="visual ${talentVisualClass(talent)}" href="#/talent/${talent.talentPostId}" aria-label="${escapeHtml(talent.title)} 상세">
+        <span>${escapeHtml(talent.categoryName || "Talent")}</span>
+      </a>
+      <div class="card-body">
+        <div class="meta-line">
+          <span>작성자 #${escapeHtml(talent.userId)}</span>
+          <strong>${escapeHtml(talent.status || "-")}</strong>
+        </div>
+        <h3><a href="#/talent/${talent.talentPostId}">${escapeHtml(talent.title)}</a></h3>
+        <p>${escapeHtml(markdownExcerpt(talent.content))}</p>
+        <div class="chip-row">
+          <span>${formatDuration(talent)}</span>
+          <span>${escapeHtml(talent.categoryName || "카테고리")}</span>
+        </div>
+        <div class="card-action">
+          <strong>${formatOptionalMoney(talent.price)}</strong>
+          <a class="button quiet" href="#/talent/${talent.talentPostId}">상세보기</a>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function renderTalentDetail(talent, files = []) {
+  setText("[data-talent-category]", talent.categoryName || "Talent");
+  setText("[data-talent-meta]", `${talent.categoryName || "재능"} · 등록일 ${formatDate(talent.createdAt)}`);
+  setText("[data-talent-title]", talent.title);
+  setText("[data-talent-author]", `작성자 #${talent.userId}`);
+  setText("[data-talent-status]", `${talent.status || "-"} · ${talent.portfolioId ? `포트폴리오 #${talent.portfolioId}` : "포트폴리오 미연결"}`);
+  setText("[data-talent-price]", formatOptionalMoney(talent.price));
+  setText("[data-talent-duration]", `예상 작업기간 ${formatDuration(talent)}`);
+
+  const avatar = document.querySelector("[data-talent-avatar]");
+  if (avatar) avatar.textContent = String(talent.userId || "?").charAt(0);
+
+  const content = document.querySelector("[data-talent-content]");
+  if (content) content.innerHTML = renderMarkdown("", talent.content || "");
+
+  const hero = document.querySelector(".detail-hero");
+  const cover = getTalentPreviewImage(files);
+  if (hero && cover) {
+    hero.classList.add("has-image");
+    hero.innerHTML = `<img src="${escapeHtml(cover.fileUrl)}" alt="" /><span>${escapeHtml(talent.categoryName || "Talent")}</span>`;
+  }
+
+  const fileTarget = document.querySelector("[data-talent-files]");
+  if (fileTarget) fileTarget.innerHTML = renderTalentDetailFiles(files);
+}
+
+function bindTalentDetailActions(talent) {
+  const actions = document.querySelector("[data-talent-actions]");
+  const chatButton = document.querySelector("[data-talent-chat]");
+  if (!actions || !chatButton) return;
+
+  const currentUserId = getCurrentUserId();
+  const isOwner = currentUserId != null && Number(talent.userId) === Number(currentUserId);
+
+  if (isOwner) {
+    chatButton.remove();
+    actions.insertAdjacentHTML("beforeend", `
+      <a class="button quiet" href="#/talent-new?id=${escapeHtml(talent.talentPostId)}">수정하기</a>
+      <button class="button quiet" type="button" data-talent-inactive="${escapeHtml(talent.talentPostId)}">비활성화</button>
+      <button class="button quiet danger" type="button" data-talent-delete="${escapeHtml(talent.talentPostId)}">삭제</button>
+    `);
+  } else {
+    chatButton.disabled = false;
+    chatButton.addEventListener("click", async () => {
+      chatButton.disabled = true;
+      try {
+        await startChat({
+          talentPostId: talent.talentPostId,
+          otherUserId: talent.userId,
+        });
+      } catch (error) {
+        alert(error.message);
+        chatButton.disabled = false;
+      }
+    });
+  }
+
+  actions.querySelector("[data-talent-inactive]")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      await inactiveTalent(button.dataset.talentInactive);
+      await loadTalentDetail(button.dataset.talentInactive);
+    } catch (error) {
+      alert(error.message);
+      button.disabled = false;
+    }
+  });
+
+  actions.querySelector("[data-talent-delete]")?.addEventListener("click", async (event) => {
+    if (!confirm("재능글을 삭제하시겠습니까?")) return;
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      await deleteTalent(button.dataset.talentDelete);
+      window.location.hash = "/talents";
+    } catch (error) {
+      alert(error.message);
+      button.disabled = false;
+    }
+  });
+}
+
+function bindTalentSettingsModal(form) {
+  form.querySelector("[data-talent-settings-open]")?.addEventListener("click", () => {
+    openTalentSettingsModal(form);
+  });
+
+  form.querySelectorAll("[data-talent-settings-close]").forEach((button) => {
+    button.addEventListener("click", () => closeTalentSettingsModal(form));
+  });
+
+  form.querySelector("[data-talent-settings-save]")?.addEventListener("click", () => {
+    const message = form.querySelector("[data-talent-message]");
+    if (!validateTalentSettings(form)) {
+      if (message) message.textContent = "카테고리를 선택해 주세요.";
+      return;
+    }
+    if (message) message.textContent = "";
+    renderTalentSettingsSummary(form);
+    closeTalentSettingsModal(form);
+  });
+
+  const modal = form.querySelector("[data-talent-settings-modal]");
+  modal?.addEventListener("click", (event) => {
+    if (event.target === modal) closeTalentSettingsModal(form);
+  });
+}
+
+async function loadTalentSettingsOptions(form) {
+  const categorySelect = form.querySelector("[data-talent-category-select]");
+  const portfolioSelect = form.querySelector("[data-talent-portfolio-select]");
+
+  const renderSelected = () => renderTalentSettingsSummary(form);
+
+  try {
+    const categories = await fetchCategories();
+    if (categorySelect) {
+      categorySelect.innerHTML = categories.length
+        ? `<option value="">카테고리 선택</option>${categories.map((category) => `<option value="${category.categoryId}">${escapeHtml(category.name)}</option>`).join("")}`
+        : `<option value="">등록된 카테고리가 없습니다</option>`;
+      categorySelect.addEventListener("change", renderSelected);
+    }
+  } catch {
+    if (categorySelect) categorySelect.innerHTML = `<option value="">카테고리를 불러오지 못했습니다</option>`;
+  }
+
+  try {
+    const portfolios = await getMyPortfolios();
+    if (portfolioSelect) {
+      portfolioSelect.innerHTML = portfolios.length
+        ? `<option value="">포트폴리오 선택</option>${portfolios.map((portfolio) => `<option value="${portfolio.portfolioId}">${escapeHtml(portfolio.title)}</option>`).join("")}`
+        : `<option value="">등록된 포트폴리오가 없습니다</option>`;
+      portfolioSelect.addEventListener("change", renderSelected);
+    }
+  } catch {
+    if (portfolioSelect) portfolioSelect.innerHTML = `<option value="">포트폴리오를 불러오지 못했습니다</option>`;
+  }
+
+  form.querySelector('input[name="price"]')?.addEventListener("input", renderSelected);
+  form.querySelector('input[name="estimatedDuration"]')?.addEventListener("input", renderSelected);
+  form.querySelector('select[name="durationUnit"]')?.addEventListener("change", renderSelected);
+  renderTalentSettingsSummary(form);
+}
+
+async function loadTalentEditForm(form, talentPostId) {
+  const message = form.querySelector("[data-talent-message]");
+  const submitButton = form.querySelector("[data-talent-submit]");
+
+  try {
+    if (message) message.textContent = "기존 재능글을 불러오는 중입니다.";
+    if (submitButton) submitButton.textContent = "수정하기";
+    const [talent, files] = await Promise.all([
+      fetchTalent(talentPostId),
+      getTalentFiles(talentPostId),
+    ]);
+
+    const titleInput = form.querySelector('input[name="title"]');
+    const contentInput = form.querySelector('textarea[name="content"]');
+    if (titleInput) {
+      titleInput.value = talent.title || "";
+      titleInput.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    if (contentInput) {
+      contentInput.value = talent.content || "";
+      contentInput.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    setFormValue(form, "categoryId", talent.categoryId);
+    setFormValue(form, "price", talent.price);
+    setFormValue(form, "estimatedDuration", talent.estimatedDuration);
+    setFormValue(form, "durationUnit", talent.durationUnit || "DAY");
+    setFormValue(form, "portfolioId", talent.portfolioId);
+    renderTalentSettingsSummary(form);
+    if (message) message.textContent = "";
+    return files;
+  } catch (error) {
+    if (message) message.textContent = error.message;
+    return [];
+  }
+}
+
+function openTalentSettingsModal(form) {
+  const modal = form.querySelector("[data-talent-settings-modal]");
+  if (!modal) return;
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+  form.querySelector("[data-talent-category-select]")?.focus();
+}
+
+function closeTalentSettingsModal(form) {
+  const modal = form.querySelector("[data-talent-settings-modal]");
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
+function buildTalentPayload(form) {
+  if (!validateTalentSettings(form)) return null;
+  const formData = new FormData(form);
+  return {
+    title: formData.get("title"),
+    content: formData.get("content"),
+    categoryId: Number(formData.get("categoryId")),
+    price: optionalNumber(formData.get("price")),
+    estimatedDuration: optionalNumber(formData.get("estimatedDuration")),
+    durationUnit: formData.get("estimatedDuration") ? (formData.get("durationUnit") || "DAY") : null,
+    portfolioId: optionalNumber(formData.get("portfolioId")),
+  };
+}
+
+function validateTalentSettings(form) {
+  const formData = new FormData(form);
+  const categoryId = Number(formData.get("categoryId"));
+  const rawPrice = formData.get("price");
+  const rawDuration = formData.get("estimatedDuration");
+  return Boolean(
+    Number.isFinite(categoryId) && categoryId > 0 &&
+    (!rawPrice || Number(rawPrice) >= 0) &&
+    (!rawDuration || Number(rawDuration) > 0)
+  );
+}
+
+function renderTalentSettingsSummary(form) {
+  const summary = form.querySelector("[data-talent-detail-summary]");
+  if (!summary) return;
+
+  const formData = new FormData(form);
+  const category = selectedOptionText(form.querySelector("[data-talent-category-select]"));
+  const portfolio = selectedOptionText(form.querySelector("[data-talent-portfolio-select]"));
+  const price = optionalNumber(formData.get("price"));
+  const duration = optionalNumber(formData.get("estimatedDuration"));
+  const durationUnit = durationUnitLabel(formData.get("durationUnit"));
+
+  if (!validateTalentSettings(form)) {
+    summary.innerHTML = `<span>상세 설정을 입력해 주세요.</span>`;
+    return;
+  }
+
+  summary.innerHTML = `
+    <span>${escapeHtml(category)}</span>
+    <strong>${formatOptionalMoney(price)}</strong>
+    <span>${duration ? `예상 ${duration}${durationUnit}` : "기간 협의"}</span>
+    <span>${portfolio ? escapeHtml(portfolio) : "포트폴리오 미연결"}</span>
+  `;
+}
+
+function optionalNumber(value) {
+  if (value == null || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+async function bindTalentEditorExistingFileAction(event, refresh) {
+  const deleteButton = event.target.closest("[data-talent-file-delete]");
+  const thumbnailButton = event.target.closest("[data-talent-file-thumbnail]");
+  const updateInput = event.target.closest("[data-talent-file-update]");
+
+  if (deleteButton) {
+    await deleteTalentFile(deleteButton.dataset.talentId, deleteButton.dataset.talentFileDelete);
+    await refresh();
+    return;
+  }
+
+  if (thumbnailButton) {
+    await setTalentThumbnail(thumbnailButton.dataset.talentId, thumbnailButton.dataset.talentFileThumbnail);
+    await refresh();
+    return;
+  }
+
+  if (updateInput) {
+    const file = updateInput.files[0];
+    if (!file) return;
+    await updateTalentFile(updateInput.dataset.talentId, updateInput.dataset.talentFileUpdate, file);
+    updateInput.value = "";
+    await refresh();
+  }
+}
+
+function renderTalentEditorFiles(container, existingFiles, selectedFiles, talentPostId) {
+  if (!container) return;
+
+  container.hidden = existingFiles.length + selectedFiles.length === 0;
+  container.innerHTML = [
+    ...existingFiles.map((file) => renderExistingTalentEditorFile(file, talentPostId)),
+    ...selectedFiles.map((file, index) => renderSelectedTalentFile(file, index)),
+  ].join("");
+}
+
+function renderExistingTalentEditorFile(file, talentPostId) {
+  const isImage = String(file.contentType || "").startsWith("image/");
+  return `
+    <div class="selected-file-item existing-file-item">
+      <div>
+        <strong>${escapeHtml(file.originalFileName)}</strong>
+        <small>기존 파일 · ${escapeHtml(file.contentType || "file")} · ${formatFileSize(Number(file.fileSize || 0))}${file.thumbnail ? " · 대표" : ""}</small>
+      </div>
+      <div class="inline-file-actions">
+        ${isImage && !file.thumbnail ? `<button type="button" data-talent-id="${escapeHtml(talentPostId)}" data-talent-file-thumbnail="${escapeHtml(file.talentPostFileId)}">대표</button>` : ""}
+        <label>
+          교체
+          <input type="file" data-talent-id="${escapeHtml(talentPostId)}" data-talent-file-update="${escapeHtml(file.talentPostFileId)}" />
+        </label>
+        <button type="button" data-talent-id="${escapeHtml(talentPostId)}" data-talent-file-delete="${escapeHtml(file.talentPostFileId)}">삭제</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderSelectedTalentFile(file, index) {
+  return `
+    <div class="selected-file-item">
+      <div>
+        <strong>${escapeHtml(file.name)}</strong>
+        <small>추가 예정 · ${escapeHtml(file.type || "file")} · ${formatFileSize(file.size)}</small>
+      </div>
+      <button type="button" aria-label="${escapeHtml(file.name)} 제거" data-remove-selected-talent-file="${index}">x</button>
+    </div>
+  `;
+}
+
+function updateSelectedTalentFileSummary(element, existingFiles, selectedFiles) {
+  if (!element) return;
+
+  const totalLength = existingFiles.length + selectedFiles.length;
+  element.textContent = totalLength
+    ? `기존 ${existingFiles.length}개 · 추가 ${selectedFiles.length}개`
+    : "선택사항 · 대표 이미지와 참고 자료를 함께 올릴 수 있습니다.";
+}
+
+function renderTalentDetailFiles(files) {
+  if (!files.length) return "";
+
+  return `
+    <section class="talent-file-section">
+      <h2>재능 자료</h2>
+      <div class="talent-file-grid">
+        ${files.map(renderTalentDetailFile).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderTalentDetailFile(file) {
+  const isImage = String(file.contentType || "").startsWith("image/");
+  return `
+    <a class="talent-file-card ${isImage ? "is-image" : ""}" href="${escapeHtml(file.fileUrl)}" target="_blank" rel="noreferrer">
+      ${isImage ? `<img src="${escapeHtml(file.fileUrl)}" alt="" />` : `<span>${fileIcon(file.contentType)}</span>`}
+      <div>
+        <strong>${escapeHtml(file.originalFileName)}</strong>
+        <small>${formatFileSize(Number(file.fileSize || 0))}${file.thumbnail ? " · 대표" : ""}</small>
+      </div>
+    </a>
+  `;
+}
+
+function renderLinkedPortfolio(portfolio, files) {
+  const image = getPortfolioPreviewImage({ files });
+  return `
+    <section class="linked-portfolio-section">
+      <div class="linked-portfolio-head">
+        <span class="kicker">Linked Portfolio</span>
+        <a class="button quiet" href="#/portfolios">내 포트폴리오 보기</a>
+      </div>
+      <article class="linked-portfolio-card">
+        ${image ? `<img src="${escapeHtml(image.fileUrl)}" alt="" />` : `<div class="linked-portfolio-empty">Portfolio</div>`}
+        <div>
+          <h2>${escapeHtml(portfolio.title)}</h2>
+          <p>${escapeHtml(markdownExcerpt(portfolio.description || ""))}</p>
+          <small>첨부 ${files.length}개 · 업데이트 ${formatDate(portfolio.updatedAt)}</small>
+        </div>
+      </article>
+    </section>
+  `;
+}
+
+function getTalentPreviewImage(files) {
+  const imageFiles = files.filter((file) => String(file.contentType || "").startsWith("image/"));
+  return imageFiles.find((file) => file.thumbnail) || imageFiles[0] || null;
+}
+
+function selectedOptionText(select) {
+  if (!select || !select.value) return "";
+  return select.options[select.selectedIndex]?.textContent || "";
+}
+
+function setFormValue(form, name, value) {
+  const input = form.elements[name];
+  if (!input || value == null) return;
+  input.value = String(value);
+  input.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function getTalentEditId() {
+  const query = window.location.hash.split("?")[1] || "";
+  return new URLSearchParams(query).get("id");
+}
+
+function markdownExcerpt(markdown) {
+  return String(markdown || "")
+    .replace(/!\[[^\]]*]\([^)]*\)/g, "")
+    .replace(/[#*_`>~-]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+}
+
+function formatDuration(talent) {
+  if (!talent.estimatedDuration) return "협의";
+  return `${Number(talent.estimatedDuration)}${durationUnitLabel(talent.durationUnit)}`;
+}
+
+function formatOptionalMoney(value) {
+  return value == null ? "가격 협의" : formatMoney(Number(value));
+}
+
+function durationUnitLabel(unit) {
+  const labels = { DAY: "일", WEEK: "주", MONTH: "개월" };
+  return labels[unit] || "일";
+}
+
+function talentVisualClass(talent) {
+  const category = String(talent.categoryName || "").toLowerCase();
+  if (category.includes("개발") || category.includes("dev")) return "development";
+  if (category.includes("글") || category.includes("write")) return "writing";
+  if (category.includes("마케팅") || category.includes("market")) return "marketing";
+  return "";
 }
 
 function renderRequestCard(request) {
