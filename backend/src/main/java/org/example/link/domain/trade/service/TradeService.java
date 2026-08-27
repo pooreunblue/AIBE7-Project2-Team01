@@ -8,6 +8,7 @@ import org.example.link.domain.chat.entity.ChatRoom;
 import org.example.link.domain.chat.repository.ChatMessageRepository;
 import org.example.link.domain.chat.repository.ChatParticipantRepository;
 import org.example.link.domain.chat.repository.ChatRoomRepository;
+import org.example.link.domain.chat.service.ChatMessagePublisher;
 import org.example.link.domain.request.entity.RequestPostEntity;
 import org.example.link.domain.request.repository.RequestPostRepository;
 import org.example.link.domain.talent.entity.TalentPostEntity;
@@ -17,6 +18,8 @@ import org.example.link.domain.trade.dto.TradeResponse;
 import org.example.link.domain.trade.entity.TradeEntity;
 import org.example.link.domain.trade.entity.TradeStatus;
 import org.example.link.domain.trade.repository.TradeRepository;
+import org.example.link.domain.user.entity.UserEntity;
+import org.example.link.domain.user.repository.UserRepository;
 import org.example.link.domain.wallet.service.WalletService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,7 +41,11 @@ public class TradeService {
     private final ChatMessageRepository chatMessageRepository;
     private final RequestPostRepository requestPostRepository;
     private final TalentPostRepository talentPostRepository;
+    private final UserRepository userRepository;
+    private final ChatMessagePublisher chatMessagePublisher;
     private final WalletService walletService;
+
+    private static final String TRADE_REQUEST_MESSAGE = "거래를 요청했습니다.";
 
     @Transactional
     public TradeResponse createTrade(Long userId, Long chatRoomId, TradeCreateRequest request) {
@@ -74,6 +81,12 @@ public class TradeService {
                 request.amount()
         );
         TradeEntity saved = tradeRepository.save(trade);
+
+        // 거래 요청 성공 시 채팅방에 거래 요청 카드 메시지를 자동 저장 + 브로드캐스트.
+        UserEntity requester = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        chatMessagePublisher.publishTradeRequest(chatRoom, requester, TRADE_REQUEST_MESSAGE, saved);
+
         return TradeResponse.from(saved);
     }
 
