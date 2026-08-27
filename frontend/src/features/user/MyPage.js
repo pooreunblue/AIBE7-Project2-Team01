@@ -13,7 +13,7 @@ export function MyPage() {
       </aside>
       <div class="dashboard-main">
         <div class="profile-summary" data-my-page-summary>
-          <div class="avatar large">A</div>
+          <div class="avatar large" data-my-page-avatar>A</div>
           <div>
             <h1 data-my-page-nickname>계정 정보를 불러오는 중입니다.</h1>
             <p data-my-page-email>계정 정보를 불러오는 중입니다.</p>

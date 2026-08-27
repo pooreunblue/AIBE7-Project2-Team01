@@ -3,6 +3,7 @@ import { SignupPage } from "./features/auth/SignupPage.js";
 import { ChatPage } from "./features/chat/ChatPage.js";
 import { HomePage } from "./features/home/HomePage.js";
 import { CheckoutPage } from "./features/payment/CheckoutPage.js";
+import { PortfolioCreatePage } from "./features/portfolio/PortfolioCreatePage.js";
 import { PortfolioPage } from "./features/portfolio/PortfolioPage.js";
 import { RequestCreatePage } from "./features/request/RequestCreatePage.js";
 import { RequestDetailPage } from "./features/request/RequestDetailPage.js";
@@ -25,6 +26,7 @@ const routes = {
   chat: ChatPage,
   mypage: MyPage,
   portfolios: PortfolioPage,
+  "portfolio-new": PortfolioCreatePage,
   checkout: CheckoutPage,
 };
 

@@ -5,6 +5,7 @@ import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
 import org.example.link.common.storage.config.SupabaseProperties;
 import org.example.link.common.storage.dto.StoredFile;
+import org.example.link.common.storage.type.FileType;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,8 @@ public class SupabaseStorageService
     @Override
     public StoredFile upload(
             MultipartFile file,
-            String directory
+            String directory,
+            FileType fileType
     ) {
         String originalFileName =
                 file.getOriginalFilename();
@@ -36,9 +38,15 @@ public class SupabaseStorageService
                     ErrorCode.INVALID_FILE
             );
         }
+
         String extension =
                 getExtension(originalFileName);
-        validateExtension(extension);
+        switch (fileType) {
+            case IMAGE ->
+                    validateImageExtension(extension);
+            case PORTFOLIO ->
+                    validatePortfolioExtension(extension);
+        }
 
         //uuid + content type
         String storedFileName =
@@ -100,24 +108,60 @@ public class SupabaseStorageService
     }
 
     //content type 검증
-    private void validateExtension(String extension) {
+    private void validateImageExtension(
+            String extension
+    ) {
 
-        String lowerExtension = extension.toLowerCase();
-
-        if (!ALLOWED_IMAGE_EXTENSIONS.contains(lowerExtension)) {
+        String lower =
+                extension.toLowerCase();
+        if (!IMAGE_EXTENSIONS.contains(lower)) {
             throw new CustomException(
                     ErrorCode.UNSUPPORTED_FILE_TYPE
             );
         }
     }
 
-    private static final Set<String> ALLOWED_IMAGE_EXTENSIONS = Set.of(
+    private void validatePortfolioExtension(
+            String extension
+    ) {
+
+        String lower =
+                extension.toLowerCase();
+
+        if (!PORTFOLIO_EXTENSIONS.contains(lower)) {
+            throw new CustomException(
+                    ErrorCode.UNSUPPORTED_FILE_TYPE
+            );
+        }
+    }
+
+    private static final Set<String> IMAGE_EXTENSIONS = Set.of(
             ".jpg",
             ".jpeg",
             ".png",
             ".gif",
             ".webp"
     );
+
+    private static final Set<String> PORTFOLIO_EXTENSIONS =
+            Set.of(
+                    ".pdf",
+
+                    ".jpg",
+                    ".jpeg",
+                    ".png",
+
+                    ".zip",
+
+                    ".ppt",
+                    ".pptx",
+
+                    ".doc",
+                    ".docx",
+
+                    ".xls",
+                    ".xlsx"
+            );
 
     private String buildUploadUrl(String path) {
         return properties.url()

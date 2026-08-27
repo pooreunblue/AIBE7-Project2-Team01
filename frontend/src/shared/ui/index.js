@@ -37,7 +37,7 @@ function accountControl(isLoggedIn, route) {
   return `
     <div class="account-nav">
       <button class="icon-link account-trigger ${isActive ? "active" : ""}" type="button" aria-label="Account menu" aria-expanded="false" aria-controls="account-menu" data-account-trigger>
-        <span aria-hidden="true">○</span>
+        <span aria-hidden="true" data-header-avatar>○</span>
       </button>
       <div class="account-menu" id="account-menu" data-account-menu hidden>
         <a href="#/portfolios">포트폴리오</a>

@@ -6,6 +6,7 @@ import org.example.link.common.exception.ErrorCode;
 import org.example.link.common.storage.dto.StoredFile;
 import org.example.link.common.storage.service.StorageService;
 import org.example.link.common.storage.service.SupabaseStorageService;
+import org.example.link.common.storage.type.FileType;
 import org.example.link.domain.user.dto.MyPageResponse;
 import org.example.link.domain.user.dto.SignupRequest;
 import org.example.link.domain.user.dto.SignupResponse;
@@ -64,7 +65,8 @@ public class UserService {
             StoredFile storedFile =
                     storageService.upload(
                             profileImage,
-                            "profiles/" + savedUser.getId()
+                            "profiles/" + savedUser.getId(),
+                            FileType.IMAGE
                     );
             savedUser.updateProfileImage(
                     storedFile.url(),
@@ -106,7 +108,8 @@ public class UserService {
         StoredFile storedFile =
                 storageService.upload(
                         file,
-                        "profiles/" + userId
+                        "profiles/" + userId,
+                        FileType.IMAGE
                 );
 
         user.updateProfileImage(

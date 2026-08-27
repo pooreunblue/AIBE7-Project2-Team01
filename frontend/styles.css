@@ -79,9 +79,27 @@ a.button {
   place-items: center;
   border: 1px solid transparent;
   border-radius: 50%;
+  padding: 0;
+  overflow: hidden;
   color: var(--blue);
   background: transparent;
   font-weight: 800;
+}
+
+.icon-link span {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.icon-link img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .icon-link:hover,
@@ -706,9 +724,18 @@ a.button {
   min-width: 44px;
   place-items: center;
   border-radius: 50%;
+  overflow: hidden;
   background: #eaf2ff;
   color: var(--blue);
   font-weight: 900;
+}
+
+.avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
 }
 
 .avatar.large {
@@ -813,6 +840,98 @@ a.button {
 .profile-upload small {
   max-width: 100%;
   overflow-wrap: anywhere;
+}
+
+.profile-upload-field {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.profile-image-picker {
+  position: relative;
+  display: block;
+  width: 108px;
+  height: 108px;
+  cursor: pointer;
+}
+
+.profile-image-picker input {
+  display: none;
+}
+
+.signup-avatar {
+  display: grid;
+  width: 108px;
+  height: 108px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #c7d7fe;
+  border-radius: 50%;
+  background: #eaf2ff;
+  color: var(--blue);
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.signup-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
+.profile-edit-button {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 8px 18px rgba(8, 102, 216, 0.28);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.profile-upload-field small {
+  max-width: 100%;
+  color: var(--muted);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.file-drop-zone {
+  display: grid;
+  gap: 6px;
+  min-height: 104px;
+  place-items: center;
+  border: 1px dashed #c4ccda;
+  border-radius: var(--radius);
+  background: #f8fafc;
+  color: var(--muted);
+  text-align: center;
+  cursor: pointer;
+}
+
+.file-drop-zone span {
+  color: var(--blue);
+  font-weight: 900;
+}
+
+.file-drop-zone small {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.file-drop-zone input {
+  display: none;
 }
 
 .form-actions,
@@ -1111,15 +1230,126 @@ dd {
   gap: 14px;
 }
 
+.portfolio-page-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.portfolio-page-head {
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.portfolio-page-head .page-title {
+  margin-bottom: 0;
+}
+
+.portfolio-write-section {
+  width: min(860px, 100%);
+  margin: 0 auto;
+}
+
+.portfolio-write-form {
+  display: grid;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 28px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.portfolio-title-input,
+.portfolio-content-input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+}
+
+.portfolio-title-input {
+  min-height: 64px;
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.portfolio-title-input::placeholder,
+.portfolio-content-input::placeholder {
+  color: #a3acba;
+}
+
+.portfolio-title-rule {
+  width: 68px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--text);
+}
+
+.portfolio-content-input {
+  min-height: 420px;
+  resize: vertical;
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.portfolio-write-upload {
+  min-height: 96px;
+}
+
+.portfolio-write-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
 .portfolio-card {
   display: grid;
   gap: 10px;
   min-height: 150px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
+  overflow: hidden;
   padding: 18px;
   background: var(--panel);
   box-shadow: var(--shadow);
+}
+
+.portfolio-card.has-media {
+  padding: 0;
+}
+
+.portfolio-card.has-media > div:not(.portfolio-card-media),
+.portfolio-card.text-only {
+  padding: 18px;
+}
+
+.portfolio-card-media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #eaf2ff;
+}
+
+.portfolio-card-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.portfolio-card-media small {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 900;
 }
 
 .portfolio-card span {
@@ -1140,6 +1370,20 @@ dd {
 .portfolio-card p {
   color: var(--muted);
   line-height: 1.5;
+}
+
+.portfolio-card.has-media p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.portfolio-card.text-only p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
 }
 
 .modal-backdrop {
@@ -1250,6 +1494,85 @@ dd {
   margin: 8px 0 0;
   color: var(--muted);
   line-height: 1.5;
+}
+
+.portfolio-file-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.portfolio-file-list.empty {
+  padding: 12px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.portfolio-file-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #f8fafc;
+}
+
+.portfolio-file-link {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.portfolio-file-link img,
+.portfolio-file-link > span {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: var(--radius);
+  background: #eaf2ff;
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 900;
+  object-fit: cover;
+}
+
+.portfolio-file-link strong {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portfolio-file-link small {
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: #eaf2ff;
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.portfolio-file-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.portfolio-file-actions .button {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.portfolio-file-actions input {
+  display: none;
 }
 
 .empty-state {
@@ -1386,5 +1709,31 @@ dd {
 
   .detail-hero {
     min-height: 220px;
+  }
+
+  .portfolio-file-item,
+  .portfolio-file-link {
+    grid-template-columns: 1fr;
+  }
+
+  .portfolio-file-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .portfolio-write-form {
+    padding: 20px;
+  }
+
+  .portfolio-title-input {
+    font-size: 28px;
+  }
+
+  .portfolio-content-input {
+    min-height: 320px;
+  }
+
+  .portfolio-write-actions {
+    display: grid;
   }
 }
