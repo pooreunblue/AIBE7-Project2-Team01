@@ -26,6 +26,12 @@ public class UserEntity extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String nickname;
 
+    @Column
+    private String profileImageUrl;
+
+    @Column
+    private String profileImagePath;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AuthProvider provider = AuthProvider.LOCAL;
@@ -70,6 +76,19 @@ public class UserEntity extends BaseEntity {
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void updateProfileImage(
+            String profileImageUrl,
+            String profileImagePath
+    ) {
+        this.profileImageUrl = profileImageUrl;
+        this.profileImagePath = profileImagePath;
+    }
+
+    public void deleteProfileImage() {
+        this.profileImageUrl = null;
+        this.profileImagePath = null;
     }
 }
 

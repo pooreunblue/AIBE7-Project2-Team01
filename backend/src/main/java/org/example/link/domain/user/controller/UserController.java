@@ -12,10 +12,12 @@ import org.example.link.domain.user.dto.UpdateUserRequest;
 import org.example.link.domain.user.service.MyPageService;
 import org.example.link.domain.user.service.UserService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,15 +26,38 @@ public class UserController {
     private final UserService userService;
     private final MyPageService myPageService;
 
-    @PostMapping("/signup")
-    @Operation(summary = "회원가입")
+    @PostMapping(
+            value = "/signup",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public ResponseEntity<ApiResponse<SignupResponse>> signUp(
-           @Valid @RequestBody SignupRequest request
+            @Valid @RequestPart("request") SignupRequest request,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
     ) {
-        SignupResponse response = userService.signUp(request);
+        SignupResponse response =
+                userService.signUp(
+                        request,
+                        profileImage
+                );
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(response));
+    }
+
+    @PatchMapping(
+            value = "/me/profile-image",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ApiResponse<MyPageResponse> updateProfileImage(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestPart("file") MultipartFile file
+    ) {
+        return ApiResponse.ok(
+                userService.updateProfileImage(
+                        user.getUserId(),
+                        file
+                )
+        );
     }
 
     @GetMapping("/me")
