@@ -6,6 +6,7 @@ export function RequestDetailPage(id) {
         <span class="kicker" data-request-category>LOAD</span>
         <h1 data-request-title>의뢰글을 불러오는 중입니다.</h1>
         <p data-request-content>잠시만 기다려 주세요.</p>
+        <div data-request-files></div>
       </article>
       <aside class="checkout-card">
         <span>Estimated Budget</span>

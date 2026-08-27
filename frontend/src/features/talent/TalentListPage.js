@@ -1,9 +1,8 @@
-import { listToolbar, talentCard } from "../../shared/ui/index.js";
-import { talents } from "../../shared/data/mock.js";
+import { listToolbar } from "../../shared/ui/index.js";
 
 export function TalentListPage() {
   return `
-    <section class="section">
+    <section class="section talent-page">
       <div class="list-heading">
         <div>
           <span class="kicker">Experts</span>
@@ -19,11 +18,20 @@ export function TalentListPage() {
       </div>
       ${listToolbar("전문가", "All", "#/talents")}
       <div class="talent-grid" data-list="talents">
-        ${talents.map((talent) => talentCard(talent)).join("")}
+        <article class="talent-card">
+          <div class="card-body">
+            <span class="kicker">LOAD</span>
+            <h3>재능글을 불러오는 중입니다.</h3>
+            <p>잠시만 기다려 주세요.</p>
+          </div>
+        </article>
       </div>
       <div class="center-action">
-        <button class="button secondary" type="button">Load More</button>
+        <button class="button secondary" type="button" disabled>Load More</button>
       </div>
+      <a class="floating-create-button" href="#/talent-new" aria-label="새 재능글 작성">
+        <span aria-hidden="true">+</span>
+      </a>
     </section>
   `;
 }

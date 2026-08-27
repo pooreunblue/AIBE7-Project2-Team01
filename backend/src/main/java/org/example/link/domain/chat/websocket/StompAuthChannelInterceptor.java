@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -59,14 +60,20 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
 
     private String resolveToken(StompHeaderAccessor accessor) {
         List<String> authHeaders = accessor.getNativeHeader("Authorization");
-        if (authHeaders == null || authHeaders.isEmpty()) {
+        if (authHeaders != null && !authHeaders.isEmpty()) {
+            String header = authHeaders.get(0);
+            if (header != null && header.startsWith("Bearer ")) {
+                return header.substring(7);
+            }
+        }
+
+        Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+        if (sessionAttributes == null) {
             return null;
         }
-        String header = authHeaders.get(0);
-        if (header == null || !header.startsWith("Bearer ")) {
-            return null;
-        }
-        return header.substring(7);
+
+        Object token = sessionAttributes.get(WebSocketCookieHandshakeInterceptor.ACCESS_TOKEN_ATTRIBUTE);
+        return token instanceof String value ? value : null;
     }
         private record StompPrincipal(
                 Long userId,

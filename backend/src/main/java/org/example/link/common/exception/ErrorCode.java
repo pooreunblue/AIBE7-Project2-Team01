@@ -58,7 +58,9 @@ public enum ErrorCode {
     //post
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 게시물입니다."),
     TALENT_POST_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 재능 게시물입니다."),
-    POST_ACCESS_DENIED(HttpStatus.FORBIDDEN, "게시글 작성자만 거래를 생성할 수 있습니다.");
+    POST_ACCESS_DENIED(HttpStatus.FORBIDDEN, "게시글 작성자만 거래를 생성할 수 있습니다."),
+    INVALID_POST_FILE(HttpStatus.BAD_REQUEST, "게시글에 속하지 않는 파일입니다.");
+
 
     private final HttpStatus status;
     private final String message;

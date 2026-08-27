@@ -55,11 +55,27 @@ CREATE TABLE talent_posts (
     title             VARCHAR NOT NULL,
     content           TEXT,
     price             NUMERIC,
+    estimated_duration INTEGER,
+    duration_unit     VARCHAR,
+    portfolio_id      BIGINT,
     status            VARCHAR,
     category_source   VARCHAR,
     ai_confidence     NUMERIC,
     created_at        TIMESTAMP NOT NULL DEFAULT now(),
     updated_at        TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE TABLE talent_post_files (
+    talent_post_file_id  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    talent_post_id        BIGINT NOT NULL REFERENCES talent_posts (talent_post_id),
+    original_file_name    VARCHAR NOT NULL,
+    storage_path          VARCHAR NOT NULL,
+    file_url              VARCHAR NOT NULL,
+    content_type          VARCHAR NOT NULL,
+    file_size             BIGINT NOT NULL,
+    thumbnail             BOOLEAN NOT NULL DEFAULT false,
+    created_at            TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at            TIMESTAMP NOT NULL DEFAULT now()
 );
 
 -- =========================================================

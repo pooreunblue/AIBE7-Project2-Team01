@@ -86,13 +86,13 @@ function renderRoomList(rooms, activeRoomId) {
     .join("");
 }
 
-function openRoom(panelEl, room) {
+async function openRoom(panelEl, room) {
   teardownChatPage();
 
   panelEl.innerHTML = panelTemplate(room);
   const streamEl = panelEl.querySelector("[data-message-stream]");
   const formEl = panelEl.querySelector("[data-compose-form]");
-  const currentUserId = getCurrentUserId();
+  const currentUserId = await getCurrentUserId({ optional: true });
 
   loadHistory(streamEl, room.chatRoomId, currentUserId);
 

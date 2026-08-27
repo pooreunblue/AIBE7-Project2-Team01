@@ -1,12 +1,3 @@
-import {
-  getAccessToken,
-  getRefreshToken,
-  removeAccessToken,
-  removeRefreshToken,
-  setAccessToken,
-  setRefreshToken,
-} from "../auth/tokenStorage.js";
-
 const API_BASE_URL = window.__API_BASE_URL__ || "/api";
 
 export async function apiRequest(path, options = {}) {
@@ -22,7 +13,9 @@ async function request(path, options, hasRetried) {
 
   const refreshed = await refreshAccessToken();
   if (!refreshed) {
-    clearTokensAndRedirect();
+    if (!options.authOptional) {
+      redirectToLogin();
+    }
     throw new Error("Authentication expired.");
   }
 
@@ -40,11 +33,6 @@ function buildUrl(path) {
 
 function buildOptions(options) {
   const headers = new Headers(options.headers || {});
-  const accessToken = getAccessToken();
-
-  if (accessToken) {
-    headers.set("Authorization", `Bearer ${accessToken}`);
-  }
 
   if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
@@ -52,36 +40,21 @@ function buildOptions(options) {
 
   return {
     ...options,
+    credentials: options.credentials || "include",
     headers,
   };
 }
 
 async function refreshAccessToken() {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) {
-    return false;
-  }
-
   const response = await fetch(buildUrl("/auth/refresh"), {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ refreshToken }),
+    credentials: "include",
   });
 
   if (!response.ok) {
     return false;
   }
 
-  const responseData = await response.json();
-  const data = responseData.data || responseData;
-  if (!data.accessToken) {
-    return false;
-  }
-
-  setAccessToken(data.accessToken);
-  setRefreshToken(data.refreshToken || refreshToken);
   return true;
 }
 
@@ -106,8 +79,6 @@ async function parseResponse(response) {
   return data;
 }
 
-function clearTokensAndRedirect() {
-  removeAccessToken();
-  removeRefreshToken();
+function redirectToLogin() {
   window.location.href = "login.html";
 }

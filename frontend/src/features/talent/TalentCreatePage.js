@@ -1,25 +1,80 @@
-import { button, formField, pageTitle } from "../../shared/ui/index.js";
-
-const categoryOptions = ["Design", "Development", "Writing", "Consulting"]
-  .map((item) => `<option>${item}</option>`)
-  .join("");
-
 export function TalentCreatePage() {
   return `
-    <section class="form-page">
-      ${pageTitle("Create Service", "내가 제공할 수 있는 재능/서비스 등록", "가격과 예상 작업기간, 포트폴리오를 함께 연결해 주세요.")}
-      <form class="editor-card">
-        ${formField("제목", `<input type="text" placeholder="예: 반응형 웹 프론트엔드 개발" />`)}
-        ${formField("설명", `<textarea rows="6" placeholder="제공 가능한 서비스 범위와 진행 방식을 입력하세요."></textarea>`)}
-        ${formField("카테고리", `<select>${categoryOptions}</select>`)}
-        ${formField("가격", `<input type="text" placeholder="예: 800,000원" />`)}
-        ${formField("예상 작업기간", `<input type="text" placeholder="예: 7일" />`)}
-        ${formField("포트폴리오 연결", `<input type="url" placeholder="https://portfolio.example.com" />`)}
-        <div class="form-actions">
-          ${button("Cancel", "#/home", "quiet")}
-          <button class="button primary" type="submit">Post Talent</button>
+    <section class="portfolio-write-section talent-write-section">
+      <form class="portfolio-write-form" data-talent-form>
+        <div class="portfolio-editor-pane">
+          <input class="portfolio-title-input" name="title" type="text" maxlength="100" required placeholder="재능글 제목을 입력하세요" aria-label="재능글 제목" data-portfolio-title-input />
+          <div class="portfolio-title-rule" aria-hidden="true"></div>
+          <div class="portfolio-write-toolbar talent-write-toolbar">
+            <button class="button quiet" type="button" data-talent-settings-open>상세정보 수정</button>
+            <button class="button quiet" type="button" data-markdown-image-trigger>이미지 삽입</button>
+            <input name="markdownImage" type="file" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" data-markdown-image-input />
+          </div>
+          <div class="talent-detail-summary" data-talent-detail-summary>
+            <span>상세 설정을 입력해 주세요.</span>
+          </div>
+          <textarea class="portfolio-content-input" name="content" required placeholder="제공 범위, 진행 방식, 산출물, 수정 가능 범위를 마크다운으로 작성하세요." aria-label="재능글 설명" data-portfolio-markdown-input></textarea>
+          <label class="file-drop-zone portfolio-write-upload">
+            <span>재능 자료 추가</span>
+            <small data-talent-file-name>선택사항 · 대표 이미지와 참고 자료를 함께 올릴 수 있습니다.</small>
+            <input name="talentFiles" type="file" multiple />
+          </label>
+          <div class="selected-file-list" data-selected-talent-files hidden></div>
+          <p class="form-message" data-talent-message aria-live="polite"></p>
+          <div class="portfolio-write-actions">
+            <a class="button quiet" href="#/talents">나가기</a>
+            <button class="button primary" type="submit" data-talent-submit>출간하기</button>
+          </div>
         </div>
-      </form>
+        <div class="portfolio-preview-pane">
+          <article class="markdown-preview" data-markdown-preview>
+            <p>작성한 내용이 여기에 미리보기로 표시됩니다.</p>
+          </article>
+        </div>
+        <div class="modal-backdrop" data-talent-settings-modal hidden>
+          <div class="charge-modal talent-settings-modal" role="dialog" aria-modal="true" aria-label="재능글 상세 설정">
+            <div class="modal-head">
+              <div>
+                <span class="kicker">Service Settings</span>
+                <h2>상세정보</h2>
+              </div>
+              <button class="modal-close" type="button" data-talent-settings-close aria-label="상세정보 팝업 닫기">x</button>
+            </div>
+            <label class="field">
+              <span>카테고리</span>
+              <select name="categoryId" data-talent-category-select>
+                <option value="">카테고리를 불러오는 중...</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>가격</span>
+              <input name="price" type="number" min="0" step="1000" placeholder="예: 800000" />
+            </label>
+            <label class="field">
+              <span>예상 작업기간</span>
+              <input name="estimatedDuration" type="number" min="1" step="1" placeholder="예: 7" />
+            </label>
+            <label class="field">
+              <span>기간 단위</span>
+              <select name="durationUnit">
+                <option value="DAY">일</option>
+                <option value="WEEK">주</option>
+                <option value="MONTH">개월</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>연결 포트폴리오</span>
+              <select name="portfolioId" data-talent-portfolio-select>
+                <option value="">포트폴리오를 불러오는 중...</option>
+              </select>
+            </label>
+            <div class="form-actions">
+              <button class="button quiet" type="button" data-talent-settings-close>취소</button>
+              <button class="button primary" type="button" data-talent-settings-save>저장</button>
+            </div>
+          </div>
+        </div>
+      </form> 
     </section>
   `;
 }
