@@ -1,12 +1,14 @@
 package org.example.link.domain.portfolio.dto;
 
+import java.util.UUID;
+
 import org.example.link.domain.portfolio.entity.PortfolioEntity;
 
 import java.time.Instant;
 
 public record PortfolioResponse(
-        Long portfolioId,
-        Long userId,
+        UUID portfolioId,
+        UUID userId,
         String title,
         String description,
         Instant createdAt,

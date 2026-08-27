@@ -1,5 +1,7 @@
 package org.example.link.domain.trade.controller;
 
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.response.ApiResponse;
@@ -20,7 +22,7 @@ public class TradeController {
 
     @GetMapping("/{tradeId}")
     public ApiResponse<TradeResponse> getTrade(
-            @PathVariable Long tradeId,
+            @PathVariable UUID tradeId,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
         return ApiResponse.ok(tradeService.getTrade(user.getUserId(), tradeId));
@@ -37,7 +39,7 @@ public class TradeController {
 
     @PostMapping("/{tradeId}/pay")
     public ApiResponse<TradeResponse> pay(
-            @PathVariable Long tradeId,
+            @PathVariable UUID tradeId,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
         return ApiResponse.ok(tradeService.pay(user.getUserId(), tradeId));
@@ -45,7 +47,7 @@ public class TradeController {
 
     @PatchMapping("/{tradeId}/complete")
     public ApiResponse<TradeResponse> complete(
-            @PathVariable Long tradeId,
+            @PathVariable UUID tradeId,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
         return ApiResponse.ok(tradeService.complete(user.getUserId(), tradeId));
@@ -53,7 +55,7 @@ public class TradeController {
 
     @PatchMapping("/{tradeId}/cancel")
     public ApiResponse<TradeResponse> cancel(
-            @PathVariable Long tradeId,
+            @PathVariable UUID tradeId,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
         return ApiResponse.ok(tradeService.cancel(user.getUserId(), tradeId));

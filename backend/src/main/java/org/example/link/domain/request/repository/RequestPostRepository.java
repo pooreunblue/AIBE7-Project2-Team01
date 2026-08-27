@@ -1,5 +1,7 @@
 package org.example.link.domain.request.repository;
 
+import java.util.UUID;
+
 import org.example.link.domain.request.entity.RequestPostEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface RequestPostRepository extends JpaRepository<RequestPostEntity, Long> {
+public interface RequestPostRepository extends JpaRepository<RequestPostEntity, UUID> {
     @Query("""
     SELECT r
     FROM RequestPostEntity r

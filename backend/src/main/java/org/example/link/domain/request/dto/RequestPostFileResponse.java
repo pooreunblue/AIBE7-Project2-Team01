@@ -1,9 +1,11 @@
 package org.example.link.domain.request.dto;
 
+import java.util.UUID;
+
 import org.example.link.domain.request.entity.RequestPostFileEntity;
 
 public record RequestPostFileResponse(
-        Long requestPostFileId,
+        UUID requestPostFileId,
         String originalFileName,
         String fileUrl,
         String contentType,

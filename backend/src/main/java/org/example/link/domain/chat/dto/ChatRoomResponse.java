@@ -1,15 +1,17 @@
 package org.example.link.domain.chat.dto;
 
+import java.util.UUID;
+
 import org.example.link.domain.chat.entity.ChatRoom;
 import org.example.link.domain.user.entity.UserEntity;
 
 import java.time.Instant;
 
 public record ChatRoomResponse(
-        Long chatRoomId,
-        Long requestPostId,
-        Long talentPostId,
-        Long otherUserId,
+        UUID chatRoomId,
+        UUID requestPostId,
+        UUID talentPostId,
+        UUID otherUserId,
         String otherUserNickname,
         Instant createdAt
 ) {

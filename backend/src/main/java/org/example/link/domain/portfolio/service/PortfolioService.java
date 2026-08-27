@@ -1,5 +1,7 @@
 package org.example.link.domain.portfolio.service;
 
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
@@ -25,7 +27,7 @@ public class PortfolioService {
     //포트폴리오 생성
     @Transactional
     public PortfolioResponse createPortfolio(
-            Long userId,
+            UUID userId,
             CreatePortfolioRequest request
     ) {
         UserEntity user = userService.getUserEntity(userId);
@@ -43,12 +45,12 @@ public class PortfolioService {
     }
 
     // 내 포트폴리오 조회
-    public List<PortfolioResponse> getMyPortfolios(Long userId) {
+    public List<PortfolioResponse> getMyPortfolios(UUID userId) {
         return getUserPortfolios(userId); // 재사용
     }
 
     //유저 지정 포트폴리오 조회
-    public List<PortfolioResponse> getUserPortfolios(Long userId) {
+    public List<PortfolioResponse> getUserPortfolios(UUID userId) {
         return portfolioRepository
                 .findByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
@@ -57,7 +59,7 @@ public class PortfolioService {
     }
 
     //포트폴리오 가져오기
-    public PortfolioResponse getPortfolio(Long portfolioId) {
+    public PortfolioResponse getPortfolio(UUID portfolioId) {
         return PortfolioResponse.from(
                 getPortfolioEntity(portfolioId)
         );
@@ -66,8 +68,8 @@ public class PortfolioService {
     //수정
     @Transactional
     public PortfolioResponse updatePortfolio(
-            Long userId,
-            Long portfolioId,
+            UUID userId,
+            UUID portfolioId,
             UpdatePortfolioRequest request
     ) {
         PortfolioEntity portfolio =
@@ -86,8 +88,8 @@ public class PortfolioService {
     //삭제
     @Transactional
     public void deletePortfolio(
-            Long userId,
-            Long portfolioId
+            UUID userId,
+            UUID portfolioId
     ) {
         PortfolioEntity portfolio =
                 getPortfolioEntity(portfolioId);
@@ -98,7 +100,7 @@ public class PortfolioService {
     }
 
     //검증 로직
-    private PortfolioEntity getPortfolioEntity(Long portfolioId) {
+    private PortfolioEntity getPortfolioEntity(UUID portfolioId) {
         return portfolioRepository.findById(portfolioId)
                 .orElseThrow(() ->
                         new CustomException(
@@ -110,7 +112,7 @@ public class PortfolioService {
     //작성자 검증
     private void validateOwner(
             PortfolioEntity portfolio,
-            Long userId
+            UUID userId
     ) {
         if (!portfolio.getUser().getId().equals(userId)) {
             throw new CustomException(

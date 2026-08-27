@@ -1,5 +1,7 @@
 package org.example.link.domain.user.entity;
 
+import java.util.UUID;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -13,9 +15,9 @@ import org.example.link.common.entity.BaseEntity;
 @Table(name = "users")
 public class UserEntity extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "user_id")
-    private Long id;
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     private String email;

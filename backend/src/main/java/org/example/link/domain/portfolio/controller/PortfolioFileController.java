@@ -1,5 +1,7 @@
 package org.example.link.domain.portfolio.controller;
 
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
@@ -26,7 +28,7 @@ public class PortfolioFileController {
     @Operation(summary = "포트폴리오 파일 업로드")
     public ResponseEntity<ApiResponse<PortfolioFileResponse>> uploadFile(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long portfolioId,
+            @PathVariable UUID portfolioId,
             @RequestPart("file") MultipartFile file
     ) {
         PortfolioFileResponse response =
@@ -44,7 +46,7 @@ public class PortfolioFileController {
     @Operation(summary = "포트폴리오 파일 목록 조회")
     public ApiResponse<List<PortfolioFileResponse>> getFiles(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long portfolioId
+            @PathVariable UUID portfolioId
     ) {
         return ApiResponse.ok(
                 portfolioFileService.getFiles(
@@ -58,8 +60,8 @@ public class PortfolioFileController {
     @Operation(summary = "포트폴리오 파일 삭제")
     public ResponseEntity<ApiResponse<Void>> deleteFile(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long portfolioId,
-            @PathVariable Long fileId
+            @PathVariable UUID portfolioId,
+            @PathVariable UUID fileId
     ) {
 
         portfolioFileService.deleteFile(
@@ -80,8 +82,8 @@ public class PortfolioFileController {
     @Operation(summary = "포트폴리오 파일 교체")
     public ResponseEntity<ApiResponse<PortfolioFileResponse>> updateFile(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long portfolioId,
-            @PathVariable Long fileId,
+            @PathVariable UUID portfolioId,
+            @PathVariable UUID fileId,
             @RequestPart("file") MultipartFile file
     ) {
 
@@ -102,8 +104,8 @@ public class PortfolioFileController {
     @Operation(summary = "포트폴리오 대표 이미지 지정")
     public ApiResponse<PortfolioFileResponse> changeThumbnail(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long portfolioId,
-            @PathVariable Long fileId
+            @PathVariable UUID portfolioId,
+            @PathVariable UUID fileId
     ) {
         return ApiResponse.ok(
                 portfolioFileService.changeThumbnail(

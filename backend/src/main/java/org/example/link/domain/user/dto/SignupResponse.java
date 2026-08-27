@@ -1,7 +1,9 @@
 package org.example.link.domain.user.dto;
 
+import java.util.UUID;
+
 public record SignupResponse(
-        Long id,
+        UUID id,
         String email,
         String nickname
 ) {
