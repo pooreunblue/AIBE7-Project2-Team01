@@ -24,6 +24,20 @@ export function createOrGetChatRoom({ requestPostId, talentPostId, otherUserId }
   }).then(unwrapApiResponse);
 }
 
+/**
+ * 채팅방에 이미지 전송 (백엔드: POST /chatrooms/{id}/images, multipart).
+ * 서버가 업로드 후 STOMP로 메시지를 브로드캐스트하므로, 반환값을 화면에 직접 그릴 필요는 없다
+ * (구독 중인 onMessage 로 도착함).
+ */
+export function uploadChatImage(chatRoomId, file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  return apiRequest(`/chatrooms/${chatRoomId}/images`, {
+    method: "POST",
+    body: formData,
+  }).then(unwrapApiResponse);
+}
+
 function unwrapApiResponse(response) {
   return response?.data ?? response;
 }

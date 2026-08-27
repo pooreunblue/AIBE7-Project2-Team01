@@ -1,6 +1,6 @@
 import { button } from "../../shared/ui/index.js";
 import { getCurrentUserId } from "../../auth/currentUser.js";
-import { fetchMyChatRooms, fetchChatMessages, leaveChatRoom } from "./chatApi.js";
+import { fetchMyChatRooms, fetchChatMessages, leaveChatRoom, uploadChatImage } from "./chatApi.js";
 import { connectChatRoom, sendChatMessage } from "./chatSocket.js";
 
 let activeClient = null;
@@ -120,6 +120,23 @@ function openRoom(panelEl, room) {
     }
   });
 
+  const imageInputEl = formEl.querySelector("[data-image-input]");
+  imageInputEl?.addEventListener("change", async () => {
+    const file = imageInputEl.files?.[0];
+    if (!file) return;
+
+    formEl.classList.add("uploading");
+    try {
+      // 업로드만 하면 서버가 STOMP 로 메시지를 브로드캐스트 → onMessage 에서 화면에 그려짐.
+      await uploadChatImage(room.chatRoomId, file);
+    } catch (error) {
+      alert(`이미지 전송 실패: ${error.message}`);
+    } finally {
+      formEl.classList.remove("uploading");
+      imageInputEl.value = "";
+    }
+  });
+
   const leaveButtonEl = panelEl.querySelector("[data-leave-room]");
   leaveButtonEl?.addEventListener("click", () => handleLeaveRoom(room.chatRoomId));
 }
@@ -170,6 +187,10 @@ function panelTemplate(room) {
       <p>메시지를 불러오는 중...</p>
     </div>
     <form class="message-compose" data-compose-form>
+      <label class="compose-attach" title="사진 보내기">
+        <input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp" data-image-input hidden />
+        <span aria-hidden="true">📷</span>
+      </label>
       <input type="text" name="content" placeholder="메시지를 입력하세요..." aria-label="Message" autocomplete="off" />
       <button type="submit">Send</button>
     </form>
@@ -178,7 +199,16 @@ function panelTemplate(room) {
 
 function renderBubble(message, currentUserId) {
   const mine = currentUserId != null && Number(message.senderId) === Number(currentUserId);
-  return `<p class="bubble ${mine ? "me" : ""}">${escapeHtml(message.content)}</p>`;
+  const mineClass = mine ? "me" : "";
+
+  if (message.messageType === "IMAGE") {
+    const src = escapeHtml(message.content);
+    return `<a class="bubble bubble-image ${mineClass}" href="${src}" target="_blank" rel="noopener">
+      <img src="${src}" alt="첨부 이미지" loading="lazy" />
+    </a>`;
+  }
+
+  return `<p class="bubble ${mineClass}">${escapeHtml(message.content)}</p>`;
 }
 
 function postLabel(room) {

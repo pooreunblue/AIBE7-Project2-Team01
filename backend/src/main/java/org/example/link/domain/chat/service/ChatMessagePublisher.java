@@ -25,11 +25,17 @@ public class ChatMessagePublisher {
     private final SimpMessagingTemplate messagingTemplate;
 
     public ChatMessageResponse publishTradeRequest(ChatRoom chatRoom, UserEntity sender, String content, TradeEntity trade) {
-        ChatMessage saved = chatMessageRepository.save(
-                new ChatMessage(chatRoom, sender, content, ChatMessage.MessageType.TRADE_REQUEST, trade)
-        );
+        return publish(new ChatMessage(chatRoom, sender, content, ChatMessage.MessageType.TRADE_REQUEST, trade));
+    }
+
+    public ChatMessageResponse publishImage(ChatRoom chatRoom, UserEntity sender, String imageUrl, String attachmentPath) {
+        return publish(ChatMessage.image(chatRoom, sender, imageUrl, attachmentPath));
+    }
+
+    private ChatMessageResponse publish(ChatMessage message) {
+        ChatMessage saved = chatMessageRepository.save(message);
         ChatMessageResponse response = ChatMessageResponse.from(saved);
-        messagingTemplate.convertAndSend(TOPIC_PREFIX + chatRoom.getId(), response);
+        messagingTemplate.convertAndSend(TOPIC_PREFIX + saved.getChatRoom().getId(), response);
         return response;
     }
 }
