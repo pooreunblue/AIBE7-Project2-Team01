@@ -1187,6 +1187,22 @@ dd {
   color: #fff;
 }
 
+.bubble-image {
+  padding: 4px;
+  display: block;
+  line-height: 0;
+}
+
+.bubble-image img {
+  display: block;
+  max-width: 240px;
+  max-height: 320px;
+  width: auto;
+  height: auto;
+  border-radius: calc(var(--radius) - 4px);
+  object-fit: cover;
+}
+
 .shared-card {
   display: grid;
   width: 230px;
@@ -1203,19 +1219,43 @@ dd {
 
 .message-compose {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
   gap: 10px;
   flex-shrink: 0;
   padding: 14px;
   border-top: 1px solid var(--line);
 }
 
-.message-compose input {
+.message-compose input[type="text"],
+.message-compose input[type="search"] {
   min-width: 0;
   height: 42px;
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 0 16px;
+}
+
+.compose-attach {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 18px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.compose-attach:hover {
+  background: #f2f4f7;
+}
+
+.message-compose.uploading {
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .dashboard-layout {

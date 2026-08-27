@@ -3,6 +3,9 @@ package org.example.link.domain.chat.service;
 import lombok.RequiredArgsConstructor;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
+import org.example.link.common.storage.dto.StoredFile;
+import org.example.link.common.storage.service.StorageService;
+import org.example.link.common.storage.type.FileType;
 import org.example.link.domain.chat.dto.ChatMessageResponse;
 import org.example.link.domain.chat.dto.ChatRoomCreateRequest;
 import org.example.link.domain.chat.dto.ChatRoomResponse;
@@ -21,6 +24,7 @@ import org.example.link.domain.user.repository.UserRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -36,6 +40,8 @@ public class ChatService {
     private final ChatParticipantRepository chatParticipantRepository;
     private final UserRepository userRepository;
     private final TradeRepository tradeRepository;
+    private final StorageService storageService;
+    private final ChatMessagePublisher chatMessagePublisher;
     private final RequestPostRepository requestPostRepository;
     private final TalentPostRepository talentPostRepository;
 
@@ -45,6 +51,7 @@ public class ChatService {
                 .orElseThrow(() -> new CustomException(ErrorCode.CHAT_ROOM_NOT_FOUND));
         UserEntity sender = userRepository.findByEmail(senderEmail)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        requireParticipant(chatRoom.getId(), sender.getId());
 
         ChatMessage message = new ChatMessage(
                 chatRoom,
@@ -54,6 +61,29 @@ public class ChatService {
         );
         ChatMessage savedMessage = chatMessageRepository.save(message);
         return ChatMessageResponse.from(savedMessage);
+    }
+
+    // 이미지 바이너리는 REST 멀티파트로 받아 Supabase 버킷에 저장하고,
+    // 생성된 메시지는 텍스트와 동일하게 /topic/chat-rooms/{id} 로 브로드캐스트한다.
+    @Transactional
+    public ChatMessageResponse sendImage(String senderEmail, Long chatRoomId, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_FILE);
+        }
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CHAT_ROOM_NOT_FOUND));
+        UserEntity sender = userRepository.findByEmail(senderEmail)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        requireParticipant(chatRoomId, sender.getId());
+
+        StoredFile stored = storageService.upload(file, "chat/" + chatRoomId, FileType.IMAGE);
+        return chatMessagePublisher.publishImage(chatRoom, sender, stored.url(), stored.path());
+    }
+
+    private void requireParticipant(Long chatRoomId, Long userId) {
+        if (!chatParticipantRepository.existsByChatRoomIdAndUserId(chatRoomId, userId)) {
+            throw new CustomException(ErrorCode.CHAT_ROOM_ACCESS_DENIED);
+        }
     }
 
     @Transactional
@@ -92,15 +122,25 @@ public class ChatService {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        if (!chatParticipantRepository.existsByChatRoomIdAndUserId(chatRoomId, user.getId())) {
-            throw new CustomException(ErrorCode.CHAT_ROOM_ACCESS_DENIED);
-        }
+        requireParticipant(chatRoomId, user.getId());
         chatParticipantRepository.deleteByChatRoomIdAndUserId(chatRoomId, user.getId());
 
         boolean noParticipantsLeft = chatParticipantRepository.countByChatRoomId(chatRoomId) == 0;
         if (noParticipantsLeft && !tradeRepository.existsByChatRoomId(chatRoomId)) {
+            deleteAttachments(chatRoomId);
             chatMessageRepository.deleteByChatRoomId(chatRoomId);
             chatRoomRepository.deleteById(chatRoomId);
+        }
+    }
+
+    // 방이 완전히 삭제될 때 버킷에 남는 orphan 이미지를 정리한다. 정리 실패가 방 삭제를 막지 않도록 best-effort.
+    private void deleteAttachments(Long chatRoomId) {
+        for (String path : chatMessageRepository.findAttachmentPathsByChatRoomId(chatRoomId)) {
+            try {
+                storageService.delete(path);
+            } catch (RuntimeException ignored) {
+                // 로깅만 하고 진행 (스토리지 정리는 방 삭제 성공보다 우선순위 낮음)
+            }
         }
     }
 
@@ -143,9 +183,7 @@ public class ChatService {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        if (!chatParticipantRepository.existsByChatRoomIdAndUserId(chatRoomId, user.getId())) {
-            throw new CustomException(ErrorCode.CHAT_ROOM_ACCESS_DENIED);
-        }
+        requireParticipant(chatRoomId, user.getId());
 
         return chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, pageable)
                 .map(ChatMessageResponse::from)

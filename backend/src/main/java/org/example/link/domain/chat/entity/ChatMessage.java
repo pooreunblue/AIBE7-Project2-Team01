@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.link.domain.trade.entity.TradeEntity;
 import org.example.link.domain.user.entity.UserEntity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -48,18 +49,42 @@ public class ChatMessage {
     @Column(name = "message_type", nullable = false)
     private MessageType messageType;
 
+    // 거래 요청(TRADE_REQUEST) 메시지에만 연결됨. 그 외 타입은 null.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "trade_id")
+    private TradeEntity trade;
+
+    // 이미지(IMAGE) 메시지의 Supabase 스토리지 경로. 방 삭제 시 버킷 정리용. 그 외 타입은 null.
+    @Column(name = "attachment_path")
+    private String attachmentPath;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
     public ChatMessage(ChatRoom chatRoom, UserEntity sender, String content, MessageType messageType) {
+        this(chatRoom, sender, content, messageType, null, null);
+    }
+
+    public ChatMessage(ChatRoom chatRoom, UserEntity sender, String content, MessageType messageType, TradeEntity trade) {
+        this(chatRoom, sender, content, messageType, trade, null);
+    }
+
+    private ChatMessage(ChatRoom chatRoom, UserEntity sender, String content, MessageType messageType,
+                        TradeEntity trade, String attachmentPath) {
         this.chatRoom = chatRoom;
         this.sender = sender;
         this.content = content;
         this.messageType = messageType;
+        this.trade = trade;
+        this.attachmentPath = attachmentPath;
+    }
+
+    public static ChatMessage image(ChatRoom chatRoom, UserEntity sender, String imageUrl, String attachmentPath) {
+        return new ChatMessage(chatRoom, sender, imageUrl, MessageType.IMAGE, null, attachmentPath);
     }
 
     public enum MessageType {
-        TEXT, IMAGE, SYSTEM
+        TEXT, IMAGE, SYSTEM, TRADE_REQUEST
     }
 }
