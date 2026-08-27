@@ -12,6 +12,8 @@ public interface PortfolioFileRepository
                 Long
                 > {
     List<PortfolioFileEntity> findAllByPortfolioId(Long portfolioId);
+    List<PortfolioFileEntity> findAllByPortfolioIdOrderByIdAsc(Long portfolioId);
+
     Optional<PortfolioFileEntity> findByPortfolioIdAndThumbnailTrue(
             Long portfolioId
     );

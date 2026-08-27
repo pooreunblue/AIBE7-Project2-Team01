@@ -13,6 +13,19 @@ export async function createPortfolio(payload) {
   return response.data || response;
 }
 
+export async function getPortfolio(portfolioId) {
+  const response = await apiRequest(`/portfolios/${portfolioId}`);
+  return response.data || response;
+}
+
+export async function updatePortfolio(portfolioId, payload) {
+  const response = await apiRequest(`/portfolios/${portfolioId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+  return response.data || response;
+}
+
 export async function uploadPortfolioFile(portfolioId, file) {
   const formData = new FormData();
   formData.append("file", file);

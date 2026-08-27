@@ -45,12 +45,12 @@ export function MyPage() {
             </div>
           </form>
         </div>
-        <div class="dashboard-section">
+        <div class="dashboard-section mypage-portfolio-section">
           <div class="section-head">
             <h2>포트폴리오</h2>
             <a href="#/portfolios">전체보기</a>
           </div>
-          <div class="portfolio-card-grid" data-portfolio-preview>
+          <div class="portfolio-card-grid mypage-portfolio-grid" data-portfolio-preview>
             <article class="portfolio-card">
               <span>LOAD</span>
               <h3>포트폴리오를 불러오는 중입니다.</h3>
