@@ -1,6 +1,7 @@
 package org.example.link.domain.chat.controller;
 
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.response.ApiResponse;
@@ -37,6 +38,7 @@ public class ChatRoomController {
     private final TradeService tradeService;
 
     @PostMapping
+    @Operation(summary = "채팅방 생성")
     public ResponseEntity<ApiResponse<ChatRoomResponse>> create(
             @RequestBody ChatRoomCreateRequest request,
             Authentication authentication
@@ -46,11 +48,13 @@ public class ChatRoomController {
     }
 
     @GetMapping
+    @Operation(summary = "내 채팅방 목록 조회")
     public ApiResponse<List<ChatRoomResponse>> myRooms(Authentication authentication) {
         return ApiResponse.ok(chatService.getMyRooms(authentication.getName()));
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "채팅 메시지 목록 조회")
     public ApiResponse<List<ChatMessageResponse>> messages(
             @PathVariable Long id,
             @RequestParam(defaultValue = "0") int page,

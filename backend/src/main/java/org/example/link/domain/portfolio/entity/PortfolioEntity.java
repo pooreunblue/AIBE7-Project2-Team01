@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import org.example.link.common.entity.BaseEntity;
 import org.example.link.domain.user.entity.UserEntity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -27,6 +30,13 @@ public class PortfolioEntity extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @OneToMany(
+            mappedBy = "portfolio",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<PortfolioFileEntity> files = new ArrayList<>();
 
     private PortfolioEntity(
             UserEntity user,
