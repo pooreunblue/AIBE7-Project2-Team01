@@ -1136,6 +1136,7 @@ dd {
 }
 
 .chat-panel {
+  position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100%;
@@ -1201,6 +1202,73 @@ dd {
   height: auto;
   border-radius: calc(var(--radius) - 4px);
   object-fit: cover;
+}
+
+.trade-bubble {
+  display: grid;
+  gap: 8px;
+  min-width: 240px;
+}
+
+.trade-bubble span {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.trade-bubble strong {
+  font-size: 22px;
+}
+
+.trade-bubble p,
+.trade-bubble small {
+  margin: 0;
+  color: var(--muted);
+}
+
+.trade-bubble.me span,
+.trade-bubble.me p,
+.trade-bubble.me small {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.trade-bubble .button {
+  width: fit-content;
+  margin-top: 4px;
+}
+
+.trade-bubble.me .button.primary {
+  background: #fff;
+  color: var(--blue);
+}
+
+.chat-modal-backdrop {
+  position: absolute;
+}
+
+.chat-trade-modal {
+  width: min(460px, 100%);
+}
+
+.trade-modal-form,
+.trade-payment-detail {
+  display: grid;
+  gap: 14px;
+}
+
+.trade-payment-detail dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.trade-payment-detail dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 10px;
 }
 
 .shared-card {

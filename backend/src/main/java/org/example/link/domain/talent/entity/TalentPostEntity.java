@@ -56,7 +56,7 @@ public class TalentPostEntity extends BaseEntity {
     private DurationUnit durationUnit;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "portfolio_id", nullable = false)
+    @JoinColumn(name = "portfolio_id")
     private PortfolioEntity portfolio;
 
     @Enumerated(EnumType.STRING)

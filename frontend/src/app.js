@@ -46,7 +46,7 @@ let accountMenuOutsideHandler = null;
 const portfolioCache = new Map();
 let renderSequence = 0;
 
-handleOAuthSuccess();
+const isHandlingOAuthSuccess = handleOAuthSuccess();
 
 async function render() {
   const sequence = ++renderSequence;
@@ -2079,15 +2079,34 @@ function bindHomeFlow() {
   });
 }
 
-if (!window.location.hash) {
+if (!isHandlingOAuthSuccess && !window.location.hash) {
   window.location.hash = "/home";
 }
 
-window.addEventListener("hashchange", render);
-render();
+if (!isHandlingOAuthSuccess) {
+  window.addEventListener("hashchange", render);
+  render();
+}
 
 function handleOAuthSuccess() {
-  if (window.location.pathname !== "/oauth2/success") return;
+  if (window.location.pathname !== "/oauth2/success") return false;
 
-  window.history.replaceState(null, "", "/index.html#/home");
+  refreshAfterOAuth()
+    .catch(() => {
+      // refreshToken만 먼저 저장된 상황이어도 홈 진입 후 기존 인증 복구 로직이 다시 처리한다.
+    })
+    .finally(() => {
+      window.location.replace("/index.html#/home");
+    });
+
+  return true;
+}
+
+async function refreshAfterOAuth() {
+  const apiBaseUrl = window.__API_BASE_URL__ || "/api";
+  const baseUrl = apiBaseUrl.endsWith("/") ? apiBaseUrl.slice(0, -1) : apiBaseUrl;
+  await fetch(`${baseUrl}/auth/refresh`, {
+    method: "POST",
+    credentials: "include",
+  });
 }

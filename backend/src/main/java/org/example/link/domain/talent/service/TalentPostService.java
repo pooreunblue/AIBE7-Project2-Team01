@@ -104,7 +104,11 @@ public class TalentPostService {
                 .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
-    private @NonNull PortfolioEntity getPortfolio(TalentPostRequestDto talentPostRequestDto) {
+    private PortfolioEntity getPortfolio(TalentPostRequestDto talentPostRequestDto) {
+        if (talentPostRequestDto.portfolioId() == null) {
+            return null;
+        }
+
         return portfolioRepository.findById(talentPostRequestDto.portfolioId())
                 .orElseThrow(() -> new CustomException(ErrorCode.PORTFOLIO_NOT_FOUND));
     }
