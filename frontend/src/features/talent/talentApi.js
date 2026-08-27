@@ -37,9 +37,6 @@ export async function inactiveTalent(talentPostId) {
   return unwrapApiResponse(response);
 }
 
-/*
-TODO(talent-files): 백엔드 재능 파일 API 구현 후 재활성화.
-
 export async function uploadTalentFile(talentPostId, file) {
   const formData = new FormData();
   formData.append("file", file);
@@ -77,7 +74,6 @@ export async function setTalentThumbnail(talentPostId, fileId) {
 export async function deleteTalentFile(talentPostId, fileId) {
   await apiRequest(`/talents/${talentPostId}/files/${fileId}`, { method: "DELETE" });
 }
-*/
 
 function unwrapApiResponse(response) {
   return response?.data ?? response;

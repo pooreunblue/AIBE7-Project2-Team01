@@ -19,14 +19,28 @@ import {
   updatePortfolioFile,
   uploadPortfolioFile,
 } from "./features/portfolio/portfolioApi.js";
-import { createRequest, fetchRequest, fetchRequests } from "./features/request/requestApi.js";
+import {
+  createRequest,
+  deleteRequestFile,
+  fetchRequest,
+  fetchRequests,
+  getRequestFiles,
+  setRequestThumbnail,
+  updateRequestFile,
+  uploadRequestFile,
+} from "./features/request/requestApi.js";
 import {
   createTalent,
   deleteTalent,
   fetchTalent,
   fetchTalents,
+  deleteTalentFile,
+  getTalentFiles,
   inactiveTalent,
+  setTalentThumbnail,
   updateTalent,
+  updateTalentFile,
+  uploadTalentFile,
 } from "./features/talent/talentApi.js";
 import { getMyPage } from "./features/user/userApi.js";
 import { chargeWallet } from "./features/wallet/walletApi.js";
@@ -298,7 +312,28 @@ function bindRequestCreatePage() {
   const form = document.querySelector("[data-request-create-form]");
   if (!form) return;
 
+  const fileInput = form.querySelector('input[name="requestFiles"]');
+  const fileName = form.querySelector("[data-request-file-name]");
+  const selectedFileList = form.querySelector("[data-selected-request-files]");
+  let selectedFiles = [];
+
   loadRequestCategories();
+
+  fileInput?.addEventListener("change", () => {
+    selectedFiles = [...selectedFiles, ...Array.from(fileInput.files || [])];
+    fileInput.value = "";
+    renderPostEditorFiles(selectedFileList, [], selectedFiles, "request");
+    updateSelectedPostFileSummary(fileName, [], selectedFiles, "의뢰");
+  });
+
+  selectedFileList?.addEventListener("click", (event) => {
+    const removeButton = event.target.closest("[data-remove-selected-request-file]");
+    if (!removeButton) return;
+
+    selectedFiles.splice(Number(removeButton.dataset.removeSelectedRequestFile), 1);
+    renderPostEditorFiles(selectedFileList, [], selectedFiles, "request");
+    updateSelectedPostFileSummary(fileName, [], selectedFiles, "의뢰");
+  });
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -322,6 +357,9 @@ function bindRequestCreatePage() {
         budgetMin,
         budgetMax,
       });
+      for (const file of selectedFiles) {
+        await uploadRequestFile(request.requestPostId, file);
+      }
       window.location.hash = `/request/${request.requestPostId}`;
     } catch (error) {
       if (message) message.textContent = error.message;
