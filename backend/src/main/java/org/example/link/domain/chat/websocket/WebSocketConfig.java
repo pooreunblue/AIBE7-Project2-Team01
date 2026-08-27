@@ -14,10 +14,12 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final StompAuthChannelInterceptor stompAuthChannelInterceptor;
+    private final WebSocketCookieHandshakeInterceptor webSocketCookieHandshakeInterceptor;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
+                .addInterceptors(webSocketCookieHandshakeInterceptor)
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
