@@ -58,4 +58,13 @@ public class RequestPostFileController {
             @RequestPart("file") MultipartFile file) {
         return ApiResponse.ok(requestPostFileService.updateFile(user, requestPostId, fileId, file));
     }
+
+    @PatchMapping("/{fileId}/thumbnail")
+    @Operation(summary = "의뢰글 대표 이미지 지정")
+    public ApiResponse<RequestPostFileResponse> changeThumbnail(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @PathVariable Long requestPostId,
+            @PathVariable Long fileId) {
+        return ApiResponse.ok(requestPostFileService.changeThumbnail(user, requestPostId, fileId));
+    }
 }

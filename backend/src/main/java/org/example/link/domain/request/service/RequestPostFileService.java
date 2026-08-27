@@ -30,8 +30,10 @@ public class RequestPostFileService {
         RequestPostEntity post = findPost(postId);
         validateOwner(post, user.getUserId());
         StoredFile stored = storageService.upload(file, "requests/" + user.getUserId() + "/" + postId, FileType.PORTFOLIO);
-        return RequestPostFileResponse.from(requestPostFileRepository.save(RequestPostFileEntity.create(
-                post, stored.originalFileName(), stored.path(), stored.url(), stored.contentType(), stored.fileSize())));
+        RequestPostFileEntity saved = requestPostFileRepository.save(RequestPostFileEntity.create(
+                post, stored.originalFileName(), stored.path(), stored.url(), stored.contentType(), stored.fileSize()));
+        setDefaultThumbnailIfAbsent(postId);
+        return RequestPostFileResponse.from(saved);
     }
 
     @Transactional(readOnly = true)
@@ -50,6 +52,8 @@ public class RequestPostFileService {
         validateBelongsToPost(file, postId);
         storageService.delete(file.getStoragePath());
         requestPostFileRepository.delete(file);
+        requestPostFileRepository.flush();
+        setDefaultThumbnailIfAbsent(postId);
     }
 
     @Transactional
@@ -61,6 +65,27 @@ public class RequestPostFileService {
         StoredFile stored = storageService.upload(newFile, "requests/" + user.getUserId() + "/" + postId, FileType.PORTFOLIO);
         storageService.delete(file.getStoragePath());
         file.updateFile(stored.originalFileName(), stored.path(), stored.url(), stored.contentType(), stored.fileSize());
+        if (!isImageFile(file)) {
+            file.unsetThumbnail();
+        }
+        setDefaultThumbnailIfAbsent(postId);
+        return RequestPostFileResponse.from(file);
+    }
+
+    @Transactional
+    public RequestPostFileResponse changeThumbnail(CustomUserDetails user, Long postId, Long fileId) {
+        RequestPostEntity post = findPost(postId);
+        validateOwner(post, user.getUserId());
+        RequestPostFileEntity file = findFile(fileId);
+        validateBelongsToPost(file, postId);
+        if (!isImageFile(file)) {
+            throw new CustomException(ErrorCode.INVALID_THUMBNAIL);
+        }
+
+        requestPostFileRepository.findByRequestPostIdAndThumbnailTrue(postId)
+                .ifPresent(RequestPostFileEntity::unsetThumbnail);
+        file.setThumbnail();
+
         return RequestPostFileResponse.from(file);
     }
 
@@ -84,5 +109,21 @@ public class RequestPostFileService {
         if (!file.getRequestPost().getId().equals(postId)) {
             throw new CustomException(ErrorCode.INVALID_POST_FILE);
         }
+    }
+
+    private void setDefaultThumbnailIfAbsent(Long postId) {
+        if (requestPostFileRepository.findByRequestPostIdAndThumbnailTrue(postId).isPresent()) {
+            return;
+        }
+
+        requestPostFileRepository.findAllByRequestPostIdOrderByIdAsc(postId)
+                .stream()
+                .filter(this::isImageFile)
+                .findFirst()
+                .ifPresent(RequestPostFileEntity::setThumbnail);
+    }
+
+    private boolean isImageFile(RequestPostFileEntity file) {
+        return file.getContentType() != null && file.getContentType().startsWith("image/");
     }
 }

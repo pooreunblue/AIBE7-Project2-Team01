@@ -88,4 +88,12 @@ public class RequestPostFileEntity extends BaseEntity {
         this.fileSize = fileSize;
     }
 
+    public void setThumbnail() {
+        this.thumbnail = true;
+    }
+
+    public void unsetThumbnail() {
+        this.thumbnail = false;
+    }
+
 }

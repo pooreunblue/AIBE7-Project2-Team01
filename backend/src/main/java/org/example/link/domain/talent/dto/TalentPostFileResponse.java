@@ -7,7 +7,8 @@ public record TalentPostFileResponse(
         String originalFileName,
         String fileUrl,
         String contentType,
-        Long fileSize
+        Long fileSize,
+        boolean thumbnail
 ) {
     public static TalentPostFileResponse from(TalentPostFileEntity file) {
         return new TalentPostFileResponse(
@@ -15,7 +16,8 @@ public record TalentPostFileResponse(
                 file.getOriginalFileName(),
                 file.getFileUrl(),
                 file.getContentType(),
-                file.getFileSize()
+                file.getFileSize(),
+                file.isThumbnail()
         );
     }
 }
