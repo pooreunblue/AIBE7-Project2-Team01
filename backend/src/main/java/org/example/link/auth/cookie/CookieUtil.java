@@ -1,9 +1,13 @@
 package org.example.link.auth.cookie;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.Optional;
 
 @Component
 public class CookieUtil {
@@ -52,5 +56,21 @@ public class CookieUtil {
                 .path("/auth")
                 .maxAge(0)
                 .build();
+    }
+
+    public Optional<String> getCookieValue(
+            HttpServletRequest request,
+            String name
+    ) {
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies == null) {
+            return Optional.empty();
+        }
+
+        return Arrays.stream(cookies)
+                .filter(cookie -> name.equals(cookie.getName()))
+                .map(Cookie::getValue)
+                .findFirst();
     }
 }
