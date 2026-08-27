@@ -11,6 +11,8 @@ import java.util.Optional;
 
 @Component
 public class CookieUtil {
+    public static final String ACCESS_TOKEN_COOKIE = "accessToken";
+    public static final String REFRESH_TOKEN_COOKIE = "refreshToken";
 
     public ResponseCookie createAccessTokenCookie(
             String token,
