@@ -46,7 +46,7 @@ public class CookieUtil {
                 .httpOnly(true)
                 .secure(false)
                 .sameSite("Lax")
-                .path("/auth")
+                .path("/")
                 .maxAge(authProperties
                         .jwt()
                         .refreshTokenExpiry()
@@ -69,7 +69,7 @@ public class CookieUtil {
                 .httpOnly(true)
                 .secure(false)
                 .sameSite("Lax")
-                .path("/auth")
+                .path("/")
                 .maxAge(0)
                 .build();
     }

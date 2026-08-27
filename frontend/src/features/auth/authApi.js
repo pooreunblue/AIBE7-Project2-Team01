@@ -1,22 +1,13 @@
 import { apiRequest } from "../../api/api.js";
-import {
-  removeAccessToken,
-  removeRefreshToken,
-  setAccessToken,
-  setRefreshToken,
-} from "../../auth/tokenStorage.js";
+import { clearCurrentUser, getCurrentUser } from "../../auth/currentUser.js";
 
 export async function login(credentials) {
-  const response = await apiRequest("/auth/login", {
+  await apiRequest("/auth/login", {
     method: "POST",
     body: JSON.stringify(credentials),
     skipAuthRefresh: true,
   });
-  const data = response.data || response;
-
-  setAccessToken(data.accessToken);
-  setRefreshToken(data.refreshToken);
-  return data;
+  return getCurrentUser({ force: true });
 }
 
 export async function signup(payload) {
@@ -49,10 +40,9 @@ export async function logout() {
   try {
     await apiRequest("/auth/logout", {
       method: "POST",
-      skipAuthRefresh: true,
+      authOptional: true,
     });
   } finally {
-    removeAccessToken();
-    removeRefreshToken();
+    clearCurrentUser();
   }
 }

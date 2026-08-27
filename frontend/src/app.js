@@ -2,8 +2,7 @@ import { formatMoney, shell } from "./shared/ui/index.js";
 import { uploadTempImage } from "./api/uploadApi.js";
 import { parseRoute, resolvePage } from "./router.js";
 import { login, logout, signup } from "./features/auth/authApi.js";
-import { setAccessToken, setRefreshToken } from "./auth/tokenStorage.js";
-import { getCurrentUserId } from "./auth/currentUser.js";
+import { getCurrentUser, getCurrentUserId } from "./auth/currentUser.js";
 import { fetchCategories } from "./features/category/categoryApi.js";
 import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
 import { startChat } from "./features/chat/startChat.js";
@@ -35,13 +34,17 @@ import { chargeWallet } from "./features/wallet/walletApi.js";
 const app = document.querySelector("#app");
 let accountMenuOutsideHandler = null;
 const portfolioCache = new Map();
+let renderSequence = 0;
 
 handleOAuthSuccess();
 
-function render() {
+async function render() {
+  const sequence = ++renderSequence;
   teardownChatPage();
   const { route, content } = resolvePage(parseRoute());
-  app.innerHTML = shell(content, route);
+  const currentUser = await getCurrentUser({ optional: true });
+  if (sequence !== renderSequence) return;
+  app.innerHTML = shell(content, route, { isLoggedIn: Boolean(currentUser) });
   bindPageEvents();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -546,12 +549,12 @@ function renderTalentDetail(talent) {
   // TODO(talent-files): 백엔드 재능 파일 API 구현 후 대표 이미지/재능 자료 렌더링을 재활성화.
 }
 
-function bindTalentDetailActions(talent) {
+async function bindTalentDetailActions(talent) {
   const actions = document.querySelector("[data-talent-actions]");
   const chatButton = document.querySelector("[data-talent-chat]");
   if (!actions || !chatButton) return;
 
-  const currentUserId = getCurrentUserId();
+  const currentUserId = await getCurrentUserId({ optional: true });
   const isOwner = currentUserId != null && Number(talent.userId) === Number(currentUserId);
 
   if (isOwner) {
@@ -1787,15 +1790,6 @@ render();
 
 function handleOAuthSuccess() {
   if (window.location.pathname !== "/oauth2/success") return;
-
-  const params = new URLSearchParams(window.location.search);
-  const accessToken = params.get("accessToken");
-  const refreshToken = params.get("refreshToken");
-
-  if (accessToken && refreshToken) {
-    setAccessToken(accessToken);
-    setRefreshToken(refreshToken);
-  }
 
   window.history.replaceState(null, "", "/index.html#/home");
 }

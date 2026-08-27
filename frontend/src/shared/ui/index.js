@@ -1,15 +1,12 @@
-import { getAccessToken } from "../../auth/tokenStorage.js";
-
 export function formatMoney(value) {
   return `${value.toLocaleString("ko-KR")}원`;
 }
 
-export function shell(content, route) {
+export function shell(content, route, { isLoggedIn = false } = {}) {
   const links = [
     ["home", "⌂", "Home"],
     ["chat", "□", "Chat"],
   ];
-  const isLoggedIn = Boolean(getAccessToken());
   const headerTitle = getHeaderTitle(route);
 
   return `

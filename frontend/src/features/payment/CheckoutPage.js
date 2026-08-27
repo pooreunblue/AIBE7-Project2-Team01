@@ -40,7 +40,7 @@ export async function initCheckoutPage() {
   const chatRoomId = Number(root.dataset.checkoutPage);
   const summaryEl = root.querySelector("[data-checkout-summary]");
   const panelEl = root.querySelector("[data-checkout-panel]");
-  const currentUserId = getCurrentUserId();
+  const currentUserId = await getCurrentUserId({ optional: true });
 
   let room;
   try {
