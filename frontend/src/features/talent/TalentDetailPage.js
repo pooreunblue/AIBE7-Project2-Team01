@@ -11,7 +11,7 @@ export function TalentDetailPage(id) {
           <div class="markdown-preview portfolio-detail-markdown" data-talent-content>
             <p>내용을 확인하고 있습니다.</p>
           </div>
-          <div data-talent-files></div>
+          <!-- TODO(talent-files): 백엔드 재능 파일 API 구현 후 <div data-talent-files></div> 재활성화. -->
           <div data-talent-linked-portfolio></div>
           <div class="seller-box">
             <div class="avatar" data-talent-avatar>?</div>

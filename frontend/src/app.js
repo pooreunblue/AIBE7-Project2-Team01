@@ -24,15 +24,10 @@ import { createRequest, fetchRequest, fetchRequests } from "./features/request/r
 import {
   createTalent,
   deleteTalent,
-  deleteTalentFile,
   fetchTalent,
   fetchTalents,
-  getTalentFiles,
   inactiveTalent,
-  setTalentThumbnail,
   updateTalent,
-  updateTalentFile,
-  uploadTalentFile,
 } from "./features/talent/talentApi.js";
 import { getMyPage } from "./features/user/userApi.js";
 import { chargeWallet } from "./features/wallet/walletApi.js";
@@ -419,51 +414,18 @@ function bindTalentCreatePage() {
   const form = document.querySelector("[data-talent-form]");
   if (!form) return;
 
-  const fileInput = form.querySelector('input[name="talentFiles"]');
-  const fileName = form.querySelector("[data-talent-file-name]");
-  const selectedFileList = form.querySelector("[data-selected-talent-files]");
-  let selectedFiles = [];
-  let existingFiles = [];
-
   bindMarkdownImageUpload();
   bindPortfolioMarkdownPreview();
   bindTalentSettingsModal(form);
 
-  fileInput?.addEventListener("change", () => {
-    selectedFiles = [...selectedFiles, ...Array.from(fileInput.files || [])];
-    fileInput.value = "";
-    renderTalentEditorFiles(selectedFileList, existingFiles, selectedFiles, getTalentEditId());
-    updateSelectedTalentFileSummary(fileName, existingFiles, selectedFiles);
-  });
-
-  selectedFileList?.addEventListener("click", (event) => {
-    const removeButton = event.target.closest("[data-remove-selected-talent-file]");
-    if (removeButton) {
-      selectedFiles.splice(Number(removeButton.dataset.removeSelectedTalentFile), 1);
-      renderTalentEditorFiles(selectedFileList, existingFiles, selectedFiles, getTalentEditId());
-      updateSelectedTalentFileSummary(fileName, existingFiles, selectedFiles);
-      return;
-    }
-
-    bindTalentEditorExistingFileAction(event, async () => {
-      existingFiles = await getTalentFiles(getTalentEditId());
-      renderTalentEditorFiles(selectedFileList, existingFiles, selectedFiles, getTalentEditId());
-      updateSelectedTalentFileSummary(fileName, existingFiles, selectedFiles);
-    });
-  });
+  // TODO(talent-files): 백엔드 재능 파일 API 구현 후 파일 선택/기존 파일 관리 바인딩을 다시 연결.
 
   const talentPostId = getTalentEditId();
   loadTalentSettingsOptions(form).then(() => {
     if (talentPostId) {
-      loadTalentEditForm(form, talentPostId).then((files) => {
-        existingFiles = files;
-        renderTalentEditorFiles(selectedFileList, existingFiles, selectedFiles, talentPostId);
-        updateSelectedTalentFileSummary(fileName, existingFiles, selectedFiles);
-      });
+      loadTalentEditForm(form, talentPostId);
     } else {
       requestAnimationFrame(() => openTalentSettingsModal(form));
-      renderTalentEditorFiles(selectedFileList, existingFiles, selectedFiles, null);
-      updateSelectedTalentFileSummary(fileName, existingFiles, selectedFiles);
     }
   });
 
@@ -483,11 +445,7 @@ function bindTalentCreatePage() {
       const talent = talentPostId
         ? await updateTalent(talentPostId, payload)
         : await createTalent(payload);
-      if (selectedFiles.length) {
-        for (const file of selectedFiles) {
-          await uploadTalentFile(talent.talentPostId, file);
-        }
-      }
+      // TODO(talent-files): 백엔드 재능 파일 API 구현 후 선택 파일 업로드를 재활성화.
       window.location.hash = `/talent/${talent.talentPostId}`;
     } catch (error) {
       if (message) message.textContent = error.message;
@@ -511,11 +469,8 @@ async function loadTalentList(keyword = "") {
 
 async function loadTalentDetail(talentPostId) {
   try {
-    const [talent, files] = await Promise.all([
-      fetchTalent(talentPostId),
-      getTalentFiles(talentPostId),
-    ]);
-    renderTalentDetail(talent, files);
+    const talent = await fetchTalent(talentPostId);
+    renderTalentDetail(talent);
     bindTalentDetailActions(talent);
     loadLinkedPortfolio(talent);
   } catch (error) {
@@ -573,7 +528,7 @@ function renderTalentCard(talent) {
   `;
 }
 
-function renderTalentDetail(talent, files = []) {
+function renderTalentDetail(talent) {
   setText("[data-talent-category]", talent.categoryName || "Talent");
   setText("[data-talent-meta]", `${talent.categoryName || "재능"} · 등록일 ${formatDate(talent.createdAt)}`);
   setText("[data-talent-title]", talent.title);
@@ -588,15 +543,7 @@ function renderTalentDetail(talent, files = []) {
   const content = document.querySelector("[data-talent-content]");
   if (content) content.innerHTML = renderMarkdown("", talent.content || "");
 
-  const hero = document.querySelector(".detail-hero");
-  const cover = getTalentPreviewImage(files);
-  if (hero && cover) {
-    hero.classList.add("has-image");
-    hero.innerHTML = `<img src="${escapeHtml(cover.fileUrl)}" alt="" /><span>${escapeHtml(talent.categoryName || "Talent")}</span>`;
-  }
-
-  const fileTarget = document.querySelector("[data-talent-files]");
-  if (fileTarget) fileTarget.innerHTML = renderTalentDetailFiles(files);
+  // TODO(talent-files): 백엔드 재능 파일 API 구현 후 대표 이미지/재능 자료 렌더링을 재활성화.
 }
 
 function bindTalentDetailActions(talent) {
@@ -725,10 +672,7 @@ async function loadTalentEditForm(form, talentPostId) {
   try {
     if (message) message.textContent = "기존 재능글을 불러오는 중입니다.";
     if (submitButton) submitButton.textContent = "수정하기";
-    const [talent, files] = await Promise.all([
-      fetchTalent(talentPostId),
-      getTalentFiles(talentPostId),
-    ]);
+    const talent = await fetchTalent(talentPostId);
 
     const titleInput = form.querySelector('input[name="title"]');
     const contentInput = form.querySelector('textarea[name="content"]');
@@ -748,10 +692,8 @@ async function loadTalentEditForm(form, talentPostId) {
     setFormValue(form, "portfolioId", talent.portfolioId);
     renderTalentSettingsSummary(form);
     if (message) message.textContent = "";
-    return files;
   } catch (error) {
     if (message) message.textContent = error.message;
-    return [];
   }
 }
 
@@ -825,6 +767,9 @@ function optionalNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
 }
+
+/*
+TODO(talent-files): 백엔드에 재능 파일 테이블/API가 붙으면 아래 파일 관리 함수를 다시 활성화.
 
 async function bindTalentEditorExistingFileAction(event, refresh) {
   const deleteButton = event.target.closest("[data-talent-file-delete]");
@@ -953,6 +898,7 @@ function getTalentPreviewImage(files) {
   const imageFiles = files.filter((file) => String(file.contentType || "").startsWith("image/"));
   return imageFiles.find((file) => file.thumbnail) || imageFiles[0] || null;
 }
+*/
 
 function selectedOptionText(select) {
   if (!select || !select.value) return "";

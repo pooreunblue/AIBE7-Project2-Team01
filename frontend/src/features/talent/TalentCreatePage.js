@@ -14,12 +14,15 @@ export function TalentCreatePage() {
             <span>상세 설정을 입력해 주세요.</span>
           </div>
           <textarea class="portfolio-content-input" name="content" required placeholder="제공 범위, 진행 방식, 산출물, 수정 가능 범위를 마크다운으로 작성하세요." aria-label="재능글 설명" data-portfolio-markdown-input></textarea>
+          <!--
+          TODO(talent-files): 백엔드 재능 파일 API 구현 후 재활성화.
           <label class="file-drop-zone portfolio-write-upload">
             <span>재능 자료 추가</span>
             <small data-talent-file-name>선택사항 · 대표 이미지와 참고 자료를 함께 올릴 수 있습니다.</small>
             <input name="talentFiles" type="file" multiple />
           </label>
           <div class="selected-file-list" data-selected-talent-files hidden></div>
+          -->
           <p class="form-message" data-talent-message aria-live="polite"></p>
           <div class="portfolio-write-actions">
             <a class="button quiet" href="#/talents">나가기</a>
