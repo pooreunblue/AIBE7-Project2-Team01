@@ -92,16 +92,24 @@ public class RequestPostService {
     }
 
     @Transactional
-    public void delete(Long requestPostId) {
+    public void delete(Long requestPostId, CustomUserDetails userDetails) throws AccessDeniedException {
+        Long userId = userDetails.getUserId();
         RequestPostEntity requestPostEntity = requestPostRepository.findById(requestPostId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        if (!requestPostEntity.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("작성자만 삭제할 수 있습니다.");
+        }
         requestPostRepository.delete(requestPostEntity);
     }
 
     @Transactional
-    public RequestPostEntity closeStatus(Long requestPostId) {
+    public RequestPostEntity closeStatus(Long requestPostId, CustomUserDetails userDetails) throws AccessDeniedException {
+        Long userId = userDetails.getUserId();
         RequestPostEntity requestPostEntity = requestPostRepository.findById(requestPostId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        if (!requestPostEntity.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("작성자만 상태를 변경할 수 있습니다.");
+        }
         requestPostEntity.closeStatus();
         return requestPostEntity;
     }

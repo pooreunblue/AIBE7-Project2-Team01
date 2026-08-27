@@ -85,18 +85,20 @@ public class RequestPostController {
     @DeleteMapping("/{requestPostId}")
     @Operation(summary = "의뢰글 삭제")
     public ApiResponse<Void> delete(
-            @PathVariable Long requestPostId
-    ) {
-        requestPostService.delete(requestPostId);
+            @PathVariable Long requestPostId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) throws AccessDeniedException {
+        requestPostService.delete(requestPostId, userDetails);
         return ApiResponse.ok();
     }
 
     @PatchMapping("/{requestPostId}/close")
     @Operation(summary = "의뢰글 마감")
     public ApiResponse<RequestPostResponseDto> close(
-            @PathVariable Long requestPostId
-    ) {
-        RequestPostEntity closed = requestPostService.closeStatus(requestPostId);
+            @PathVariable Long requestPostId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) throws AccessDeniedException {
+        RequestPostEntity closed = requestPostService.closeStatus(requestPostId, userDetails);
         return ApiResponse.ok(RequestPostResponseDto.toDto(closed));
     }
 }
