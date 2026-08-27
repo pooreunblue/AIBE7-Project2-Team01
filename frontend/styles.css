@@ -573,6 +573,22 @@ a.button {
     linear-gradient(145deg, #fee2e2 0%, #ffffff 45%, #fde68a 100%);
 }
 
+.visual.has-image {
+  background: #eef2f8;
+}
+
+.visual.has-image::before,
+.visual.has-image::after {
+  display: none;
+}
+
+.visual.has-image img {
+  display: block;
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+}
+
 .visual span {
   position: absolute;
   right: 14px;
@@ -1456,6 +1472,65 @@ dd {
   min-height: 96px;
 }
 
+.talent-thumbnail-preview {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px;
+  background: #fff;
+}
+
+.talent-thumbnail-preview[hidden] {
+  display: none;
+}
+
+.talent-thumbnail-preview img {
+  width: 140px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  background: #eef2f8;
+}
+
+.talent-thumbnail-preview div {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.talent-thumbnail-preview span {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.talent-thumbnail-preview strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.talent-thumbnail-preview button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: #f8fafc;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.talent-thumbnail-preview button:hover {
+  border-color: #c7d7fe;
+  background: #edf4ff;
+  color: var(--blue);
+}
+
 .selected-file-list {
   display: grid;
   gap: 8px;
@@ -1601,6 +1676,90 @@ dd {
   width: min(520px, 100%);
 }
 
+.talent-portfolio-modal {
+  width: min(680px, 100%);
+}
+
+.talent-portfolio-list {
+  display: grid;
+  gap: 10px;
+  max-height: 430px;
+  overflow: auto;
+}
+
+.talent-portfolio-list p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.talent-portfolio-option {
+  display: grid;
+  width: 100%;
+  min-height: 76px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0;
+  background: #fff;
+  color: var(--text);
+  text-align: left;
+}
+
+.talent-portfolio-option.has-media {
+  grid-template-columns: 88px minmax(0, 1fr);
+}
+
+.talent-portfolio-option.text-only {
+  grid-template-columns: 1fr;
+}
+
+.talent-portfolio-thumb {
+  display: block;
+  width: 88px;
+  height: 76px;
+  overflow: hidden;
+  background: #eef2f8;
+}
+
+.talent-portfolio-thumb img {
+  display: block;
+  max-width: none;
+  width: 88px;
+  height: 76px;
+  object-fit: cover;
+}
+
+.talent-portfolio-option div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding: 10px 12px;
+}
+
+.talent-portfolio-option strong,
+.talent-portfolio-option span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.talent-portfolio-option span,
+.talent-portfolio-option small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.talent-portfolio-option:hover,
+.talent-portfolio-option:focus-visible {
+  border-color: #b7c9ea;
+  box-shadow: 0 10px 24px rgba(29, 41, 57, 0.08);
+}
+
+.talent-portfolio-option.is-selected {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.12);
+}
+
 .talent-file-section,
 .linked-portfolio-section {
   display: grid;
@@ -1681,14 +1840,35 @@ dd {
 
 .linked-portfolio-card {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
+  width: min(520px, 100%);
+  min-height: 150px;
+  padding: 0;
   color: var(--text);
+  text-align: left;
+}
+
+.linked-portfolio-card.has-media {
+  grid-template-columns: 180px minmax(0, 1fr);
+}
+
+.linked-portfolio-card.text-only {
+  grid-template-columns: 1fr;
+}
+
+.linked-portfolio-card.text-only div {
+  padding: 18px;
+}
+
+.linked-portfolio-card:hover,
+.linked-portfolio-card:focus-visible {
+  border-color: #b7c9ea;
+  box-shadow: 0 12px 28px rgba(29, 41, 57, 0.08);
 }
 
 .linked-portfolio-card img,
 .linked-portfolio-empty {
-  height: 100%;
-  min-height: 170px;
+  height: 150px;
+  min-height: 150px;
 }
 
 .linked-portfolio-card p {
@@ -2335,6 +2515,25 @@ body.modal-open {
     min-height: 320px;
   }
 
+  .talent-thumbnail-preview {
+    grid-template-columns: 96px minmax(0, 1fr) auto;
+  }
+
+  .talent-thumbnail-preview img {
+    width: 96px;
+    height: 68px;
+  }
+
+  .talent-portfolio-option.has-media {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .talent-portfolio-thumb,
+  .talent-portfolio-thumb img {
+    width: 72px;
+    height: 68px;
+  }
+
   .portfolio-write-actions {
     display: grid;
   }
@@ -2346,13 +2545,14 @@ body.modal-open {
   }
 
   .linked-portfolio-card {
+    width: 100%;
     grid-template-columns: 1fr;
   }
 
   .linked-portfolio-card img,
   .linked-portfolio-empty {
-    height: 180px;
-    min-height: 180px;
+    height: 140px;
+    min-height: 140px;
   }
 
   .floating-create-button {
