@@ -54,20 +54,34 @@ public class ChatMessage {
     @JoinColumn(name = "trade_id")
     private TradeEntity trade;
 
+    // 이미지(IMAGE) 메시지의 Supabase 스토리지 경로. 방 삭제 시 버킷 정리용. 그 외 타입은 null.
+    @Column(name = "attachment_path")
+    private String attachmentPath;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
     public ChatMessage(ChatRoom chatRoom, UserEntity sender, String content, MessageType messageType) {
-        this(chatRoom, sender, content, messageType, null);
+        this(chatRoom, sender, content, messageType, null, null);
     }
 
     public ChatMessage(ChatRoom chatRoom, UserEntity sender, String content, MessageType messageType, TradeEntity trade) {
+        this(chatRoom, sender, content, messageType, trade, null);
+    }
+
+    private ChatMessage(ChatRoom chatRoom, UserEntity sender, String content, MessageType messageType,
+                        TradeEntity trade, String attachmentPath) {
         this.chatRoom = chatRoom;
         this.sender = sender;
         this.content = content;
         this.messageType = messageType;
         this.trade = trade;
+        this.attachmentPath = attachmentPath;
+    }
+
+    public static ChatMessage image(ChatRoom chatRoom, UserEntity sender, String imageUrl, String attachmentPath) {
+        return new ChatMessage(chatRoom, sender, imageUrl, MessageType.IMAGE, null, attachmentPath);
     }
 
     public enum MessageType {
