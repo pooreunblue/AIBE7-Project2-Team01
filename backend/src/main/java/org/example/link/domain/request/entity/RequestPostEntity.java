@@ -4,11 +4,14 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.link.common.entity.BaseEntity;
 import org.example.link.domain.category.entity.CategoryEntity;
+import org.example.link.domain.portfolio.entity.PortfolioFileEntity;
 import org.example.link.domain.request.util.RequestPostStatus;
 import org.example.link.domain.user.entity.UserEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "request_posts")
@@ -35,6 +38,13 @@ public class RequestPostEntity extends BaseEntity {
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
+
+    @OneToMany(
+            mappedBy = "requestPost",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<RequestPostFileEntity> files = new ArrayList<>();
 
     @Column(name = "budget_min",nullable = false)
     private Long budgetMin;
