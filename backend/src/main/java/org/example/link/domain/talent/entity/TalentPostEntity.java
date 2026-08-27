@@ -37,6 +37,14 @@ public class TalentPostEntity extends BaseEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    @OneToMany(
+            mappedBy = "talentPost",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @Builder.Default
+    private java.util.List<TalentPostFileEntity> files = new java.util.ArrayList<>();
+
     @Column(nullable = false)
     private Long price;
 
