@@ -7,7 +7,6 @@ import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
 import org.example.link.domain.chat.entity.ChatParticipant;
 import org.example.link.domain.chat.entity.ChatRoom;
-import org.example.link.domain.chat.repository.ChatMessageRepository;
 import org.example.link.domain.chat.repository.ChatParticipantRepository;
 import org.example.link.domain.chat.repository.ChatRoomRepository;
 import org.example.link.domain.chat.service.ChatMessagePublisher;
@@ -40,7 +39,6 @@ public class TradeService {
     private final TradeRepository tradeRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatParticipantRepository chatParticipantRepository;
-    private final ChatMessageRepository chatMessageRepository;
     private final RequestPostRepository requestPostRepository;
     private final TalentPostRepository talentPostRepository;
     private final UserRepository userRepository;
@@ -62,10 +60,6 @@ public class TradeService {
 
         if (!chatParticipantRepository.existsByChatRoomIdAndUserId(chatRoomId, userId)) {
             throw new CustomException(ErrorCode.CHAT_ROOM_ACCESS_DENIED);
-        }
-
-        if (!chatMessageRepository.existsByChatRoomId(chatRoomId)) {
-            throw new CustomException(ErrorCode.CHAT_MESSAGE_NOT_FOUND);
         }
 
         if (tradeRepository.existsByChatRoomIdAndStatusIn(chatRoomId, ACTIVE_STATUSES)) {

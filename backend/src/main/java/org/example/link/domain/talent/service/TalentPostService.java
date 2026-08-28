@@ -52,7 +52,7 @@ public class TalentPostService {
     public TalentPostEntity readOne(UUID talentPostId) {
         return getTalentPostEntity(talentPostId);
     }
-    
+
     @Transactional(readOnly = true)
     public Page<TalentPostEntity> search(
             String keyword,

@@ -18,6 +18,8 @@ import org.example.link.domain.chat.entity.ChatRoom;
 import org.example.link.domain.chat.repository.ChatMessageRepository;
 import org.example.link.domain.chat.repository.ChatParticipantRepository;
 import org.example.link.domain.chat.repository.ChatRoomRepository;
+import org.example.link.domain.request.repository.RequestPostRepository;
+import org.example.link.domain.talent.repository.TalentPostRepository;
 import org.example.link.domain.trade.repository.TradeRepository;
 import org.example.link.domain.user.entity.UserEntity;
 import org.example.link.domain.user.repository.UserRepository;
@@ -42,6 +44,8 @@ public class ChatService {
     private final TradeRepository tradeRepository;
     private final StorageService storageService;
     private final ChatMessagePublisher chatMessagePublisher;
+    private final RequestPostRepository requestPostRepository;
+    private final TalentPostRepository talentPostRepository;
 
     @Transactional
     public ChatMessageResponse sendMessage(String senderEmail, ChatSendRequest request) {
@@ -101,7 +105,7 @@ public class ChatService {
                 request.requestPostId(), request.talentPostId(), creator.getId(), other.getId()
         ).orElse(null);
         if (existingRoom != null) {
-            return ChatRoomResponse.from(existingRoom, other);
+            return ChatRoomResponse.from(existingRoom, other, resolvePostTitle(existingRoom));
         }
 
         ChatRoom chatRoom = new ChatRoom(request.requestPostId(), request.talentPostId());
@@ -110,7 +114,7 @@ public class ChatService {
         chatParticipantRepository.save(new ChatParticipant(savedRoom, creator));
         chatParticipantRepository.save(new ChatParticipant(savedRoom, other));
 
-        return ChatRoomResponse.from(savedRoom, other);
+        return ChatRoomResponse.from(savedRoom, other, resolvePostTitle(savedRoom));
     }
 
     // 나가는 사람의 참가자 row만 지움 (메시지/방은 그대로 유지 — 상대방은 계속 볼 수 있어야 함).
@@ -157,8 +161,24 @@ public class ChatService {
 
         return myParticipations.stream()
                 .map(ChatParticipant::getChatRoom)
-                .map(room -> ChatRoomResponse.from(room, otherUserByRoomId.get(room.getId())))
+                .map(room -> ChatRoomResponse.from(room, otherUserByRoomId.get(room.getId()), resolvePostTitle(room)))
                 .toList();
+    }
+
+    private String resolvePostTitle(ChatRoom room) {
+        if (room.getTalentPostId() != null) {
+            return talentPostRepository.findById(room.getTalentPostId())
+                    .map(post -> post.getTitle())
+                    .orElse(null);
+        }
+
+        if (room.getRequestPostId() != null) {
+            return requestPostRepository.findById(room.getRequestPostId())
+                    .map(post -> post.getTitle())
+                    .orElse(null);
+        }
+
+        return null;
     }
 
     public List<ChatMessageResponse> getMessages(String email, UUID chatRoomId, Pageable pageable) {

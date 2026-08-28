@@ -116,7 +116,6 @@ public class RequestPostService {
         return requestPostRepository.findById(requestPostId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
     }
-    
     private void validateAuth(RequestPostEntity requestPostEntity, UUID userId) throws AccessDeniedException {
         if (!requestPostEntity.getUser().getId().equals(userId)) {
             throw new CustomException(ErrorCode.POST_ACCESS_DENIED);
