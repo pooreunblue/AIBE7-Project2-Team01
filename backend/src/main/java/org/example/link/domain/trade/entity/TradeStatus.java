@@ -5,4 +5,5 @@ public enum TradeStatus {
     PAID,
     COMPLETED,
     CANCELLED
+    // todo 작업 진행 상태 추가
 }
