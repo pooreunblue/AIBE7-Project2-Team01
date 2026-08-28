@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TalentPulse - AI Search</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "inverse-primary": "#adc6ff",
+                "surface-tint": "#005bc1",
+                "on-primary-container": "#fefcff",
+                "system-gray": "#8E8E93",
+                "surface-dim": "#d9dade",
+                "system-orange": "#FF9500",
+                "on-secondary-fixed-variant": "#46464b",
+                "tertiary-fixed-dim": "#53e16f",
+                "surface-container": "#ededf2",
+                "primary-fixed-dim": "#adc6ff",
+                "on-error-container": "#93000a",
+                "on-secondary": "#ffffff",
+                "tertiary": "#006b27",
+                "secondary-fixed-dim": "#c6c6cb",
+                "surface-container-high": "#e8e8ed",
+                "inverse-on-surface": "#f0f0f5",
+                "system-red": "#FF3B30",
+                "on-tertiary-fixed-variant": "#00531c",
+                "on-secondary-fixed": "#1a1b1f",
+                "system-green": "#34C759",
+                "on-background": "#1a1c1f",
+                "on-tertiary-fixed": "#002107",
+                "on-surface-variant": "#414755",
+                "secondary-container": "#e0dfe4",
+                "on-tertiary": "#ffffff",
+                "primary": "#0058bc",
+                "secondary": "#5d5e63",
+                "primary-container": "#0070eb",
+                "on-tertiary-container": "#f7fff2",
+                "surface-base": "#FFFFFF",
+                "tertiary-container": "#008733",
+                "outline-variant": "#c1c6d7",
+                "surface-container-low": "#f3f3f8",
+                "background": "#f9f9fe",
+                "on-primary-fixed": "#001a41",
+                "surface-container-highest": "#e2e2e7",
+                "surface-variant": "#e2e2e7",
+                "primary-fixed": "#d8e2ff",
+                "surface-grouped": "#F2F2F7",
+                "secondary-fixed": "#e3e2e7",
+                "outline": "#717786",
+                "on-primary-fixed-variant": "#004493",
+                "inverse-surface": "#2e3034",
+                "on-surface": "#1a1c1f",
+                "surface-container-lowest": "#ffffff",
+                "on-secondary-container": "#626267",
+                "tertiary-fixed": "#72fe88",
+                "on-primary": "#ffffff",
+                "on-error": "#ffffff",
+                "surface-bright": "#f9f9fe",
+                "error": "#ba1a1a",
+                "surface": "#f9f9fe",
+                "error-container": "#ffdad6"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-md": "16px",
+                "gutter": "16px",
+                "margin-desktop": "32px",
+                "unit": "8px",
+                "margin-mobile": "16px",
+                "stack-sm": "8px",
+                "stack-lg": "32px"
+        },
+        "fontFamily": {
+                "headline-md": [
+                        "Inter"
+                ],
+                "display-lg": [
+                        "Inter"
+                ],
+                "body-lg": [
+                        "Inter"
+                ],
+                "label-sm": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-md": [
+                        "22px",
+                        {
+                                "lineHeight": "28px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "34px",
+                        {
+                                "lineHeight": "41px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "17px",
+                        {
+                                "lineHeight": "22px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-sm": [
+                        "11px",
+                        {
+                                "lineHeight": "13px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "30px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-md": [
+                        "13px",
+                        {
+                                "lineHeight": "18px",
+                                "letterSpacing": "0.01em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-md": [
+                        "15px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "28px",
+                        {
+                                "lineHeight": "34px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .dark .glass-panel {
+            background: rgba(26, 27, 31, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .ai-gradient-text {
+            background: linear-gradient(135deg, #0070eb 0%, #0058bc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .search-pulse {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(0, 112, 235, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 112, 235, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 112, 235, 0); }
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col">
+<!-- Top Navigation (Hidden on Mobile) -->
+<nav class="hidden md:flex bg-white/80 dark:bg-surface/80 backdrop-blur-xl sticky top-0 w-full z-50 shadow-sm border-b border-black/5 dark:border-white/5 justify-between items-center px-margin-desktop py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-stack-md">
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">TalentPulse</div>
+</div>
+<div class="flex items-center gap-stack-lg">
+<a class="font-body-lg text-body-lg text-on-surface-variant font-medium hover:opacity-75 transition-opacity" href="#">Talent</a>
+<a class="font-body-lg text-body-lg text-on-surface-variant font-medium hover:opacity-75 transition-opacity" href="#">Requests</a>
+<a class="font-body-lg text-body-lg text-on-surface-variant font-medium hover:opacity-75 transition-opacity" href="#">Categories</a>
+</div>
+<div class="flex items-center gap-stack-md">
+<button class="hover:opacity-75 transition-opacity text-primary dark:text-primary-fixed"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span></button>
+<button class="hover:opacity-75 transition-opacity text-primary dark:text-primary-fixed"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">chat</span></button>
+<button class="hover:opacity-75 transition-opacity text-primary dark:text-primary-fixed"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span></button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col gap-12">
+<!-- Search Header & Input Area -->
+<section class="flex flex-col items-center text-center gap-stack-lg w-full max-w-3xl mx-auto mt-stack-lg">
+<div>
+<h1 class="font-display-lg text-display-lg mb-unit"><span class="ai-gradient-text">What are you looking for?</span></h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Describe your needs naturally, and AI will find the best matches.</p>
+</div>
+<div class="w-full relative group">
+<div class="absolute inset-0 bg-primary-container/20 rounded-full blur-xl group-hover:bg-primary-container/30 transition-all duration-500"></div>
+<div class="relative flex items-center glass-panel rounded-full p-2 pl-6 shadow-sm border border-outline-variant/30 focus-within:border-primary transition-colors bg-white dark:bg-surface-container">
+<span class="material-symbols-outlined text-primary-container mr-unit search-pulse" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<input class="flex-grow bg-transparent border-none focus:ring-0 font-body-lg text-body-lg text-on-surface placeholder-on-surface-variant/50 outline-none w-full" placeholder="e.g. I need a freelance UX designer for a fintech app..." type="text" value="I need a freelance UX designer for a fintech app..."/>
+<button class="bg-primary-container text-white px-stack-md py-unit rounded-full font-label-md text-label-md ml-2 hover:opacity-90 transition-opacity flex items-center gap-unit">
+                        Search <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<div class="flex flex-wrap justify-center gap-unit mt-unit">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mr-2 self-center">Suggestions:</span>
+<button class="bg-surface-container-high rounded-full px-unit py-1 font-label-md text-label-md text-on-surface hover:bg-surface-variant transition-colors">Web Development</button>
+<button class="bg-surface-container-high rounded-full px-unit py-1 font-label-md text-label-md text-on-surface hover:bg-surface-variant transition-colors">Video Editing</button>
+<button class="bg-surface-container-high rounded-full px-unit py-1 font-label-md text-label-md text-on-surface hover:bg-surface-variant transition-colors">SEO Optimization</button>
+</div>
+</section>
+<!-- AI Interpretation & Results -->
+<section class="flex flex-col gap-stack-lg mt-stack-md">
+<div class="flex items-center gap-unit p-4 bg-tertiary/5 rounded-xl border border-tertiary/10">
+<span class="material-symbols-outlined text-tertiary">psychology</span>
+<div>
+<p class="font-label-md text-label-md text-tertiary font-bold">AI Insight</p>
+<p class="font-body-md text-body-md text-on-surface-variant">Looking for <strong>UX Design</strong> expertise specifically tailored for <strong>Financial Technology</strong>. Focusing on top-rated freelancers with fintech portfolio.</p>
+</div>
+</div>
+<!-- Bento Grid Results -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Talent (Sellers) -->
+<div class="md:col-span-8 flex flex-col gap-stack-md">
+<h2 class="font-headline-md text-headline-md flex items-center gap-unit"><span class="material-symbols-outlined text-primary">person</span> Top Talent Matches</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-stack-md">
+<!-- Card 1 -->
+<div class="bg-white rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col">
+<div class="relative w-full pb-[60%]">
+<img class="absolute inset-0 w-full h-full object-cover" data-alt="A modern, clean workspace featuring a sleek laptop displaying wireframes and user interface designs for a financial application. Soft, diffused lighting highlights the minimalist desk setup, suggesting a professional and premium work environment. The color palette is dominated by whites, light grays, and subtle tech-blue accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwZ_mALlJodYoBy5wiNLZWnNalB1pHcTb1MhhpKUyGfVR0z-1HzY-e4SF3Npn-ZW65AnTrnWl-C5UascaNe2V8jfT8ypsyxpJksd0yxmHFhEn5qB4_7cf-7UJpmgwgrc1rSZy1CT3XiCaoBeKs5UoGXOFoIV9vUFJLvUL_ybKpYh2u6MFEWb_cyn9ZywuojDeFduvZaYybDFDyBEblBtGRo_EM5hSOUCOcXCBJv6oIBKHYUH6sVS1L"/>
+<div class="absolute top-2 right-2 bg-white/90 backdrop-blur rounded-full px-2 py-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">4.9</span>
+</div>
+</div>
+<div class="p-stack-md flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-unit">
+<h3 class="font-headline-md text-headline-md text-on-surface">Sarah Jenkins</h3>
+<span class="font-label-md text-label-md text-primary bg-primary/10 px-2 py-1 rounded-full">$85/hr</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-stack-md flex-grow">Senior Product Designer specializing in Fintech &amp; Web3. Ex-Stripe.</p>
+<div class="flex flex-wrap gap-unit mb-stack-md">
+<span class="bg-surface-container-low px-2 py-1 rounded-full font-label-md text-label-md text-on-surface-variant border border-outline-variant/30">UX/UI</span>
+<span class="bg-surface-container-low px-2 py-1 rounded-full font-label-md text-label-md text-on-surface-variant border border-outline-variant/30">Figma</span>
+<span class="bg-surface-container-low px-2 py-1 rounded-full font-label-md text-label-md text-on-surface-variant border border-outline-variant/30">Fintech</span>
+</div>
+<button class="w-full bg-primary-container/10 text-primary-container font-label-md text-label-md font-bold py-2 rounded-xl hover:bg-primary-container/20 transition-colors">View Profile</button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-white rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col">
+<div class="relative w-full pb-[60%]">
+<img class="absolute inset-0 w-full h-full object-cover" data-alt="An abstract visualization of digital user experience design, featuring glowing, transparent layers of interfaces floating in a clean, minimalist 3D space. The aesthetic is highly polished and futuristic, using a light mode palette of pristine whites and subtle pastel orange and blue hues to convey premium digital craftsmanship." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHNs100VcoIk1XNBtztmF57Jy85hgGFwa-LSzpVjms2SGHSFTwUsNsmnpUp25uXXL4kIRCRZ0JYniW0Zart2reZo6VHbBZZKCReEaUzBgb1buNKbHBAT7lyFutBpnS3xERUIyefvObYWRRxz9GI5CQFwVhIWFQ0eGD_TQYwVJXF8gZSvU_D7IGgGi6RPYc9EN-_TSFpgAZFhgj1obshmQYdfr8cMasjBmWxWN2BCXcZkkhNErq3be3"/>
+<div class="absolute top-2 right-2 bg-white/90 backdrop-blur rounded-full px-2 py-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">5.0</span>
+</div>
+</div>
+<div class="p-stack-md flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-unit">
+<h3 class="font-headline-md text-headline-md text-on-surface">David Chen</h3>
+<span class="font-label-md text-label-md text-primary bg-primary/10 px-2 py-1 rounded-full">$95/hr</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-stack-md flex-grow">UX Researcher &amp; Interface Designer for banking platforms.</p>
+<div class="flex flex-wrap gap-unit mb-stack-md">
+<span class="bg-surface-container-low px-2 py-1 rounded-full font-label-md text-label-md text-on-surface-variant border border-outline-variant/30">User Research</span>
+<span class="bg-surface-container-low px-2 py-1 rounded-full font-label-md text-label-md text-on-surface-variant border border-outline-variant/30">Prototyping</span>
+</div>
+<button class="w-full bg-primary-container/10 text-primary-container font-label-md text-label-md font-bold py-2 rounded-xl hover:bg-primary-container/20 transition-colors">View Profile</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Requests (Buyers) -->
+<div class="md:col-span-4 flex flex-col gap-stack-md">
+<h2 class="font-headline-md text-headline-md flex items-center gap-unit"><span class="material-symbols-outlined text-secondary">assignment</span> Similar Requests</h2>
+<div class="flex flex-col gap-stack-md">
+<!-- Request Card 1 -->
+<div class="bg-white rounded-xl border border-outline-variant/30 shadow-sm p-stack-md hover:shadow-md transition-shadow duration-300">
+<div class="flex items-center gap-unit mb-unit">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-on-surface-variant">business</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">NeoBank Startup</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Posted 2h ago</p>
+</div>
+</div>
+<h3 class="font-headline-md text-headline-md mb-unit text-base text-on-surface">UX Redesign for Mobile Banking App</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-stack-md">We need an experienced designer to revamp our core transfer flow to increase conversion.</p>
+<div class="flex justify-between items-center mt-auto">
+<span class="font-label-md text-label-md font-bold text-on-surface">$2k - $5k Budget</span>
+<button class="text-primary font-label-md text-label-md hover:underline font-semibold">Apply</button>
+</div>
+</div>
+<!-- Request Card 2 -->
+<div class="bg-white rounded-xl border border-outline-variant/30 shadow-sm p-stack-md hover:shadow-md transition-shadow duration-300">
+<div class="flex items-center gap-unit mb-unit">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-on-surface-variant">storefront</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">FinInvest Corp</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Posted 1d ago</p>
+</div>
+</div>
+<h3 class="font-headline-md text-headline-md mb-unit text-base text-on-surface">Dashboard UI Kit creation</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-stack-md">Looking for a designer to create a comprehensive UI kit for our internal wealth management dashboard.</p>
+<div class="flex justify-between items-center mt-auto">
+<span class="font-label-md text-label-md font-bold text-on-surface">$50/hr est.</span>
+<button class="text-primary font-label-md text-label-md hover:underline font-semibold">Apply</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe md:hidden bg-white/80 dark:bg-surface/80 backdrop-blur-xl rounded-t-xl border-t border-black/5 dark:border-white/5 shadow-lg">
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold hover:text-primary/80 scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">explore</span>
+<span class="font-label-sm text-label-sm mt-1">Explore</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-label-sm text-label-sm mt-1">Requests</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined">add_circle</span>
+<span class="font-label-sm text-label-sm mt-1">Post</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="font-label-sm text-label-sm mt-1">Messages</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-sm text-label-sm mt-1">Profile</span>
+</a>
+</nav>
+<!-- Footer -->
+<footer class="hidden md:flex flex-col items-center justify-center gap-stack-md w-full border-t border-outline-variant bg-surface-container-low py-stack-lg mt-stack-lg">
+<div class="font-headline-md text-headline-md font-bold text-primary">TalentPulse</div>
+<div class="flex gap-stack-md">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Terms</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Privacy</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Help</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Contact</a>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant mt-unit">© 2024 TalentPulse. Premium Marketplace.</p>
+</footer>
+</body></html>

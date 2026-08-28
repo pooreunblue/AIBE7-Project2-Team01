@@ -1,195 +1,206 @@
 -- TalentPulse DB schema
--- ERD(mermaid)에 정의된 테이블/컬럼/관계 그대로 반영. 임의로 컬럼을 추가/삭제/변경하지 않음.
+-- 기준: docs/erd.md
 -- 대상: PostgreSQL (Neon)
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- =========================================================
 -- USERS
 -- =========================================================
 CREATE TABLE users (
-    user_id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    email               VARCHAR NOT NULL UNIQUE,
-    password            VARCHAR NOT NULL,
-    nickname            VARCHAR NOT NULL,
-    profile_image_url  VARCHAR,
-    status              VARCHAR,
-    created_at          TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at          TIMESTAMP NOT NULL DEFAULT now()
+    user_id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email               VARCHAR(255) NOT NULL UNIQUE,
+    nickname            VARCHAR(255) NOT NULL UNIQUE,
+    password            VARCHAR(255),
+    profile_image_path  VARCHAR(255),
+    profile_image_url   VARCHAR(255),
+    provider            VARCHAR(255) NOT NULL,
+    role                VARCHAR(255) NOT NULL,
+    created_at          TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- =========================================================
 -- CATEGORIES
 -- =========================================================
 CREATE TABLE categories (
-    category_id  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name          VARCHAR NOT NULL UNIQUE,
-    description   VARCHAR,
-    active        BOOLEAN,
-    created_at    TIMESTAMP NOT NULL DEFAULT now()
+    category_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name         VARCHAR(255) NOT NULL UNIQUE,
+    description  VARCHAR(255),
+    active       BOOLEAN
 );
 
 -- =========================================================
 -- REQUEST_POSTS
 -- =========================================================
 CREATE TABLE request_posts (
-    request_post_id  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id           BIGINT NOT NULL REFERENCES users (user_id),
-    category_id       BIGINT NOT NULL REFERENCES categories (category_id),
-    title             VARCHAR NOT NULL,
-    content           TEXT,
-    budget_min        NUMERIC,
-    budget_max        NUMERIC,
-    status            VARCHAR,
-    category_source   VARCHAR,
-    ai_confidence     NUMERIC,
-    created_at        TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at        TIMESTAMP NOT NULL DEFAULT now()
-);
-
--- =========================================================
--- TALENT_POSTS
--- =========================================================
-CREATE TABLE talent_posts (
-    talent_post_id   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id           BIGINT NOT NULL REFERENCES users (user_id),
-    category_id       BIGINT NOT NULL REFERENCES categories (category_id),
-    title             VARCHAR NOT NULL,
-    content           TEXT,
-    price             NUMERIC,
-    estimated_duration INTEGER,
-    duration_unit     VARCHAR,
-    portfolio_id      BIGINT,
-    status            VARCHAR,
-    category_source   VARCHAR,
-    ai_confidence     NUMERIC,
-    created_at        TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at        TIMESTAMP NOT NULL DEFAULT now()
-);
-
-CREATE TABLE talent_post_files (
-    talent_post_file_id  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    talent_post_id        BIGINT NOT NULL REFERENCES talent_posts (talent_post_id),
-    original_file_name    VARCHAR NOT NULL,
-    storage_path          VARCHAR NOT NULL,
-    file_url              VARCHAR NOT NULL,
-    content_type          VARCHAR NOT NULL,
-    file_size             BIGINT NOT NULL,
-    thumbnail             BOOLEAN NOT NULL DEFAULT false,
-    created_at            TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at            TIMESTAMP NOT NULL DEFAULT now()
+    request_post_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id          UUID NOT NULL REFERENCES users (user_id),
+    category_id      UUID NOT NULL REFERENCES categories (category_id),
+    title            VARCHAR(255) NOT NULL,
+    content          TEXT NOT NULL,
+    budget_min       BIGINT NOT NULL,
+    budget_max       BIGINT NOT NULL,
+    due_date         DATE,
+    status           VARCHAR(255) NOT NULL,
+    ai_confidence    NUMERIC(38, 2),
+    created_at       TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at       TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- =========================================================
 -- PORTFOLIOS
 -- =========================================================
 CREATE TABLE portfolios (
-    portfolio_id  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id        BIGINT NOT NULL REFERENCES users (user_id),
-    title          VARCHAR NOT NULL,
-    description    TEXT,
-    created_at     TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at     TIMESTAMP NOT NULL DEFAULT now()
+    portfolio_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id       UUID NOT NULL REFERENCES users (user_id),
+    title         VARCHAR(100) NOT NULL,
+    description   TEXT,
+    created_at    TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at    TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- =========================================================
+-- TALENT_POSTS
+-- =========================================================
+CREATE TABLE talent_posts (
+    talent_post_id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id              UUID NOT NULL REFERENCES users (user_id),
+    category_id          UUID NOT NULL REFERENCES categories (category_id),
+    portfolio_id         UUID NOT NULL REFERENCES portfolios (portfolio_id),
+    title                VARCHAR(255) NOT NULL,
+    content              TEXT NOT NULL,
+    price                BIGINT NOT NULL,
+    estimated_duration   INTEGER NOT NULL,
+    duration_unit        VARCHAR(255) NOT NULL,
+    status               VARCHAR(255) NOT NULL,
+    ai_confidence        NUMERIC(38, 2),
+    created_at           TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at           TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- =========================================================
 -- PORTFOLIO_FILES
 -- =========================================================
 CREATE TABLE portfolio_files (
-    portfolio_file_id    BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    portfolio_id          BIGINT NOT NULL REFERENCES portfolios (portfolio_id),
-    original_file_name    VARCHAR NOT NULL,
-    stored_file_name      VARCHAR NOT NULL,
-    file_url              VARCHAR NOT NULL,
-    content_type          VARCHAR,
-    file_size             BIGINT,
-    created_at             TIMESTAMP NOT NULL DEFAULT now()
+    portfolio_file_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    portfolio_id       UUID NOT NULL REFERENCES portfolios (portfolio_id),
+    original_file_name VARCHAR(255) NOT NULL,
+    storage_path       VARCHAR(255) NOT NULL,
+    file_url           VARCHAR(255) NOT NULL,
+    content_type       VARCHAR(255) NOT NULL,
+    file_size          BIGINT NOT NULL,
+    thumbnail          BOOLEAN NOT NULL DEFAULT false,
+    created_at         TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at         TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- =========================================================
+-- REQUEST_POST_FILES
+-- =========================================================
+CREATE TABLE request_post_files (
+    request_post_file_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_post_id       UUID NOT NULL REFERENCES request_posts (request_post_id),
+    original_file_name    VARCHAR(255) NOT NULL,
+    storage_path          VARCHAR(255) NOT NULL,
+    file_url              VARCHAR(255) NOT NULL,
+    content_type          VARCHAR(255) NOT NULL,
+    file_size             BIGINT NOT NULL,
+    thumbnail             BOOLEAN NOT NULL DEFAULT false,
+    created_at             TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at             TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- =========================================================
+-- TALENT_POST_FILES
+-- =========================================================
+CREATE TABLE talent_post_files (
+    talent_post_file_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    talent_post_id       UUID NOT NULL REFERENCES talent_posts (talent_post_id),
+    original_file_name   VARCHAR(255) NOT NULL,
+    storage_path         VARCHAR(255) NOT NULL,
+    file_url             VARCHAR(255) NOT NULL,
+    content_type         VARCHAR(255) NOT NULL,
+    file_size            BIGINT NOT NULL,
+    thumbnail            BOOLEAN NOT NULL DEFAULT false,
+    created_at            TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at            TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- =========================================================
 -- WALLETS
 -- =========================================================
 CREATE TABLE wallets (
-    wallet_id   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id      BIGINT NOT NULL UNIQUE REFERENCES users (user_id),
-    balance      NUMERIC NOT NULL DEFAULT 0,
-    created_at   TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at   TIMESTAMP NOT NULL DEFAULT now()
+    wallet_id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID NOT NULL UNIQUE REFERENCES users (user_id),
+    balance     NUMERIC(19, 2) NOT NULL DEFAULT 0,
+    created_at  TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at  TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- =========================================================
 -- CHAT_ROOMS
 -- =========================================================
 CREATE TABLE chat_rooms (
-    chat_room_id     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    request_post_id   BIGINT REFERENCES request_posts (request_post_id),
-    talent_post_id    BIGINT REFERENCES talent_posts (talent_post_id),
-    created_at        TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at        TIMESTAMP NOT NULL DEFAULT now()
+    chat_room_id    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_post_id UUID,
+    talent_post_id  UUID,
+    created_at      TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- =========================================================
 -- CHAT_PARTICIPANTS
 -- =========================================================
 CREATE TABLE chat_participants (
-    chat_participant_id  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    chat_room_id          BIGINT NOT NULL REFERENCES chat_rooms (chat_room_id),
-    user_id                BIGINT NOT NULL REFERENCES users (user_id),
-    joined_at              TIMESTAMP NOT NULL DEFAULT now()
-);
-
--- =========================================================
--- CHAT_MESSAGES
--- =========================================================
-CREATE TABLE chat_messages (
-    chat_message_id  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    chat_room_id      BIGINT NOT NULL REFERENCES chat_rooms (chat_room_id),
-    user_id            BIGINT NOT NULL REFERENCES users (user_id),
-    content            TEXT NOT NULL,
-    message_type       VARCHAR NOT NULL,
-    created_at         TIMESTAMP NOT NULL DEFAULT now()
+    chat_participant_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    chat_room_id         UUID NOT NULL REFERENCES chat_rooms (chat_room_id),
+    user_id              UUID NOT NULL REFERENCES users (user_id),
+    joined_at            TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- =========================================================
 -- TRADES
 -- =========================================================
 CREATE TABLE trades (
-    trade_id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    chat_room_id       BIGINT REFERENCES chat_rooms (chat_room_id),
-    request_post_id    BIGINT REFERENCES request_posts (request_post_id),
-    talent_post_id     BIGINT REFERENCES talent_posts (talent_post_id),
-    payer_id           BIGINT NOT NULL REFERENCES users (user_id),
-    payee_id           BIGINT NOT NULL REFERENCES users (user_id),
-    amount             NUMERIC NOT NULL,
-    status             VARCHAR,
-    paid_at            TIMESTAMP,
-    completed_at       TIMESTAMP,
-    cancelled_at       TIMESTAMP,
-    created_at         TIMESTAMP NOT NULL DEFAULT now()
+    trade_id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    chat_room_id    UUID,
+    request_post_id UUID,
+    talent_post_id  UUID,
+    payer_id        UUID NOT NULL REFERENCES users (user_id),
+    payee_id        UUID NOT NULL REFERENCES users (user_id),
+    amount          NUMERIC(19, 2) NOT NULL,
+    status          VARCHAR(255) NOT NULL,
+    paid_at         TIMESTAMP(6) WITH TIME ZONE,
+    completed_at    TIMESTAMP(6) WITH TIME ZONE,
+    cancelled_at    TIMESTAMP(6) WITH TIME ZONE,
+    created_at      TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- =========================================================
+-- CHAT_MESSAGES
+-- =========================================================
+CREATE TABLE chat_messages (
+    chat_message_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    chat_room_id    UUID NOT NULL REFERENCES chat_rooms (chat_room_id),
+    user_id         UUID NOT NULL REFERENCES users (user_id),
+    trade_id        UUID REFERENCES trades (trade_id),
+    content         TEXT NOT NULL,
+    message_type    VARCHAR(255) NOT NULL,
+    attachment_path VARCHAR(255),
+    created_at      TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- =========================================================
 -- WALLET_TRANSACTIONS
 -- =========================================================
 CREATE TABLE wallet_transactions (
-    wallet_transaction_id  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    wallet_id               BIGINT NOT NULL REFERENCES wallets (wallet_id),
-    trade_id                 BIGINT REFERENCES trades (trade_id),
-    transaction_type        VARCHAR NOT NULL,
-    amount                   NUMERIC NOT NULL,
-    balance_after            NUMERIC,
-    description              VARCHAR,
-    created_at                TIMESTAMP NOT NULL DEFAULT now()
-);
-
--- =========================================================
--- REVIEWS
--- =========================================================
-CREATE TABLE reviews (
-    review_id     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    trade_id       BIGINT NOT NULL REFERENCES trades (trade_id),
-    reviewer_id    BIGINT NOT NULL REFERENCES users (user_id),
-    reviewee_id    BIGINT NOT NULL REFERENCES users (user_id),
-    rating         INTEGER NOT NULL,
-    content        TEXT,
-    created_at     TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at     TIMESTAMP NOT NULL DEFAULT now()
+    wallet_transaction_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    wallet_id              UUID NOT NULL REFERENCES wallets (wallet_id),
+    trade_id               UUID REFERENCES trades (trade_id),
+    transaction_type       VARCHAR(255) NOT NULL,
+    amount                 NUMERIC(19, 2) NOT NULL,
+    balance_after          NUMERIC(19, 2) NOT NULL,
+    description            VARCHAR(255),
+    created_at             TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
 );

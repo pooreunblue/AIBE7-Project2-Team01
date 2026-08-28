@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>구매 요청 등록 - TalentPulse</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "inverse-primary": "#adc6ff",
+                "surface-tint": "#005bc1",
+                "on-primary-container": "#fefcff",
+                "system-gray": "#8E8E93",
+                "surface-dim": "#d9dade",
+                "system-orange": "#FF9500",
+                "on-secondary-fixed-variant": "#46464b",
+                "tertiary-fixed-dim": "#53e16f",
+                "surface-container": "#ededf2",
+                "primary-fixed-dim": "#adc6ff",
+                "on-error-container": "#93000a",
+                "on-secondary": "#ffffff",
+                "tertiary": "#006b27",
+                "secondary-fixed-dim": "#c6c6cb",
+                "surface-container-high": "#e8e8ed",
+                "inverse-on-surface": "#f0f0f5",
+                "system-red": "#FF3B30",
+                "on-tertiary-fixed-variant": "#00531c",
+                "on-secondary-fixed": "#1a1b1f",
+                "system-green": "#34C759",
+                "on-background": "#1a1c1f",
+                "on-tertiary-fixed": "#002107",
+                "on-surface-variant": "#414755",
+                "secondary-container": "#e0dfe4",
+                "on-tertiary": "#ffffff",
+                "primary": "#0058bc",
+                "secondary": "#5d5e63",
+                "primary-container": "#0070eb",
+                "on-tertiary-container": "#f7fff2",
+                "surface-base": "#FFFFFF",
+                "tertiary-container": "#008733",
+                "outline-variant": "#c1c6d7",
+                "surface-container-low": "#f3f3f8",
+                "background": "#f9f9fe",
+                "on-primary-fixed": "#001a41",
+                "surface-container-highest": "#e2e2e7",
+                "surface-variant": "#e2e2e7",
+                "primary-fixed": "#d8e2ff",
+                "surface-grouped": "#F2F2F7",
+                "secondary-fixed": "#e3e2e7",
+                "outline": "#717786",
+                "on-primary-fixed-variant": "#004493",
+                "inverse-surface": "#2e3034",
+                "on-surface": "#1a1c1f",
+                "surface-container-lowest": "#ffffff",
+                "on-secondary-container": "#626267",
+                "tertiary-fixed": "#72fe88",
+                "on-primary": "#ffffff",
+                "on-error": "#ffffff",
+                "surface-bright": "#f9f9fe",
+                "error": "#ba1a1a",
+                "surface": "#f9f9fe",
+                "error-container": "#ffdad6"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-md": "16px",
+                "gutter": "16px",
+                "margin-desktop": "32px",
+                "unit": "8px",
+                "margin-mobile": "16px",
+                "stack-sm": "8px",
+                "stack-lg": "32px"
+        },
+        "fontFamily": {
+                "headline-md": [
+                        "Inter"
+                ],
+                "display-lg": [
+                        "Inter"
+                ],
+                "body-lg": [
+                        "Inter"
+                ],
+                "label-sm": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-md": [
+                        "22px",
+                        {
+                                "lineHeight": "28px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "34px",
+                        {
+                                "lineHeight": "41px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "17px",
+                        {
+                                "lineHeight": "22px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-sm": [
+                        "11px",
+                        {
+                                "lineHeight": "13px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "30px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-md": [
+                        "13px",
+                        {
+                                "lineHeight": "18px",
+                                "letterSpacing": "0.01em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-md": [
+                        "15px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "28px",
+                        {
+                                "lineHeight": "34px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- Top Navigation (Web) -->
+<header class="sticky top-0 w-full z-50 bg-white/80 dark:bg-surface/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5 shadow-sm">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-7xl mx-auto hidden md:flex">
+<div class="flex items-center gap-8">
+<a class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed" href="#">TalentPulse</a>
+<nav class="flex items-center gap-4">
+<a class="text-on-surface-variant font-medium hover:opacity-75 transition-opacity font-body-lg text-body-lg" href="#">Talent</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 hover:opacity-75 transition-opacity font-body-lg text-body-lg" href="#">Requests</a>
+<a class="text-on-surface-variant font-medium hover:opacity-75 transition-opacity font-body-lg text-body-lg" href="#">Categories</a>
+</nav>
+</div>
+<div class="flex items-center gap-2">
+<!-- Search Bar Placeholder -->
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-colors w-64 font-body-md text-body-md" placeholder="Search..." type="text"/>
+</div>
+<button class="p-2 text-primary dark:text-primary-fixed hover:opacity-75 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+<button class="p-2 text-primary dark:text-primary-fixed hover:opacity-75 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">chat</span>
+</button>
+<button class="p-2 text-primary dark:text-primary-fixed hover:opacity-75 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop py-8 md:py-12">
+<!-- Header Section -->
+<div class="mb-8 md:mb-12 text-center max-w-2xl mx-auto">
+<h1 class="font-display-lg text-display-lg md:hidden mb-2 text-on-background">Post a Request</h1>
+<h1 class="hidden md:block font-display-lg text-display-lg mb-3 text-on-background">Post a Request</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Describe what you need, set your budget, and connect with the right talent to get it done.</p>
+</div>
+<!-- Form Container (Bento/Card Style) -->
+<div class="max-w-3xl mx-auto bg-surface-container-lowest rounded-xl shadow-sm border border-black/5 p-6 md:p-8">
+<form action="#" class="space-y-8" method="POST">
+<!-- Title Field -->
+<div class="space-y-4">
+<label class="block font-label-md text-label-md text-on-surface" for="request-title">Request Title</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:bg-white focus:ring-2 focus:ring-primary transition-colors" id="request-title" name="title" placeholder="e.g. Need a logo design for my new coffee shop" required="" type="text"/>
+</div>
+<!-- Category Field -->
+<div class="space-y-4">
+<label class="block font-label-md text-label-md text-on-surface" for="request-category">Category</label>
+<div class="relative">
+<select class="w-full bg-surface-container-low border-none rounded-lg pl-4 pr-10 py-3 font-body-md text-body-md text-on-surface appearance-none focus:bg-white focus:ring-2 focus:ring-primary transition-colors" id="request-category" name="category" required="">
+<option disabled="" selected="" value="">Select a category</option>
+<option value="design">Design &amp; Creative</option>
+<option value="development">Development &amp; IT</option>
+<option value="writing">Writing &amp; Translation</option>
+<option value="marketing">Digital Marketing</option>
+<option value="video">Video &amp; Animation</option>
+<option value="business">Business Consulting</option>
+<option value="other">Other</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" style="font-variation-settings: 'FILL' 0;">expand_more</span>
+</div>
+</div>
+<!-- Description Field -->
+<div class="space-y-4">
+<label class="block font-label-md text-label-md text-on-surface" for="request-description">Detailed Description</label>
+<p class="font-body-md text-body-md text-on-surface-variant mb-2">Provide as much detail as possible to get the best proposals.</p>
+<textarea class="w-full bg-surface-container-low border-none rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:bg-white focus:ring-2 focus:ring-primary transition-colors resize-y" id="request-description" name="description" placeholder="Describe your project scope, requirements, timeline, and any specific skills needed..." required="" rows="5"></textarea>
+</div>
+<!-- Budget Field -->
+<div class="space-y-4">
+<label class="block font-label-md text-label-md text-on-surface" for="request-budget">Desired Budget (Optional)</label>
+<div class="relative w-full md:w-1/2">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">attach_money</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-3 font-body-md text-body-md text-on-surface focus:bg-white focus:ring-2 focus:ring-primary transition-colors" id="request-budget" min="0" name="budget" placeholder="0.00" step="1" type="number"/>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Leave blank if you prefer to negotiate after receiving proposals.</p>
+</div>
+<!-- File Attachment (Visual Placeholder) -->
+<div class="space-y-4">
+<label class="block font-label-md text-label-md text-on-surface">Attachments (Optional)</label>
+<div class="border-2 border-dashed border-outline-variant rounded-xl p-6 flex flex-col items-center justify-center text-center bg-surface-container-lowest hover:bg-surface-container-low transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-outline text-3xl mb-2" style="font-variation-settings: 'FILL' 0;">upload_file</span>
+<p class="font-label-md text-label-md text-on-surface mb-1">Drag and drop files here</p>
+<p class="font-body-md text-body-md text-on-surface-variant">or click to browse</p>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-col md:flex-row justify-end gap-2 pt-4 border-t border-outline-variant">
+<button class="w-full md:w-auto px-6 py-3 font-label-md text-label-md text-primary bg-transparent rounded-xl hover:bg-primary/5 transition-colors text-center" type="button">
+                        Cancel
+                    </button>
+<button class="w-full md:w-auto px-6 py-3 font-label-md text-label-md text-on-primary bg-primary rounded-xl hover:opacity-90 transition-opacity text-center font-bold" type="submit">
+                        Post Request
+                    </button>
+</div>
+</form>
+</div>
+</main>
+<!-- Bottom Navigation (Mobile) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe md:hidden bg-white/80 dark:bg-surface/80 backdrop-blur-xl border-t border-black/5 dark:border-white/5 shadow-lg rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">explore</span>
+<span class="font-label-sm text-label-sm">Explore</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold hover:text-primary/80 transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">list_alt</span>
+<span class="font-label-sm text-label-sm">Requests</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">add_circle</span>
+<span class="font-label-sm text-label-sm">Post</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">chat_bubble</span>
+<span class="font-label-sm text-label-sm">Messages</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+<!-- Footer (Web) -->
+<footer class="hidden md:flex flex-col items-center justify-center gap-4 w-full border-t border-outline-variant bg-surface-container-low dark:bg-surface-container-lowest py-8 mt-12">
+<div class="flex gap-4 font-label-md text-label-md">
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Terms</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Privacy</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Help</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Contact</a>
+</div>
+<div class="font-label-md text-label-md text-on-surface dark:text-on-surface-variant">
+            © 2024 TalentPulse. Premium Marketplace.
+        </div>
+</footer>
+</body></html>
