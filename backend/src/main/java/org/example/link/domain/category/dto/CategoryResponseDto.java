@@ -1,11 +1,13 @@
 package org.example.link.domain.category.dto;
 
+import java.util.UUID;
+
 import lombok.Builder;
 import org.example.link.domain.category.entity.CategoryEntity;
 
 @Builder
 public record CategoryResponseDto(
-        Long categoryId,
+        UUID categoryId,
         String name
 ) {
     public static CategoryResponseDto toDto(CategoryEntity categoryEntity) {

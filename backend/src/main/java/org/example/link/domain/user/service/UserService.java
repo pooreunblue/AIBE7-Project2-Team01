@@ -1,5 +1,7 @@
 package org.example.link.domain.user.service;
 
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
@@ -31,7 +33,7 @@ public class UserService {
     private final WalletService walletService;
     private final StorageService storageService;
 
-    public UserEntity getUserEntity(Long userId) {
+    public UserEntity getUserEntity(UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() ->
                         new CustomException(ErrorCode.USER_NOT_FOUND)
@@ -94,7 +96,7 @@ public class UserService {
 
     @Transactional
     public MyPageResponse updateProfileImage(
-            Long userId,
+            UUID userId,
             MultipartFile file
     ) {
         UserEntity user = getUserEntity(userId);

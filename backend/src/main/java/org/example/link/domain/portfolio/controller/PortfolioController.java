@@ -1,5 +1,7 @@
 package org.example.link.domain.portfolio.controller;
 
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +51,7 @@ public class PortfolioController {
     @GetMapping("/users/{userId}/portfolios")
     @Operation(summary = "사용자 포트폴리오 목록")
     public ApiResponse<List<PortfolioResponse>> getUserPortfolios(
-            @PathVariable Long userId
+            @PathVariable UUID userId
     ) {
         return ApiResponse.ok(
                 portfolioService.getUserPortfolios(userId)
@@ -59,7 +61,7 @@ public class PortfolioController {
     @GetMapping("/portfolios/{portfolioId}")
     @Operation(summary = "포트폴리오 상세")
     public ApiResponse<PortfolioResponse> getPortfolio(
-            @PathVariable Long portfolioId
+            @PathVariable UUID portfolioId
     ) {
         return ApiResponse.ok(
                 portfolioService.getPortfolio(portfolioId)
@@ -70,7 +72,7 @@ public class PortfolioController {
     @Operation(summary = "포트폴리오 수정")
     public ApiResponse<PortfolioResponse> updatePortfolio(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long portfolioId,
+            @PathVariable UUID portfolioId,
             @Valid @RequestBody UpdatePortfolioRequest request
     ) {
         return ApiResponse.ok(
@@ -86,7 +88,7 @@ public class PortfolioController {
     @Operation(summary = "포트폴리오 삭제")
     public ApiResponse<Void> deletePortfolio(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long portfolioId
+            @PathVariable UUID portfolioId
     ) {
         portfolioService.deletePortfolio(
                 user.getUserId(),

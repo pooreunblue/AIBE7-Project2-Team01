@@ -1,5 +1,7 @@
 package org.example.link.domain.talent.dto;
 
+import java.util.UUID;
+
 import lombok.Builder;
 import org.example.link.domain.talent.entity.TalentPostEntity;
 import org.example.link.domain.talent.util.DurationUnit;
@@ -10,16 +12,18 @@ import java.time.Instant;
 
 @Builder
 public record TalentPostResponseDto(
-        Long talentPostId,
-        Long userId,
-        Long categoryId,
+        UUID talentPostId,
+        UUID userId,
+        String authorNickname,
+        String authorProfileImageUrl,
+        UUID categoryId,
         String categoryName,
         String title,
         String content,
         Long price,
         Integer estimatedDuration,
         DurationUnit durationUnit,
-        Long portfolioId,
+        UUID portfolioId,
         TalentPostStatus status,
         BigDecimal aiConfidence,
         Instant createdAt,
@@ -29,6 +33,8 @@ public record TalentPostResponseDto(
         return TalentPostResponseDto.builder()
                 .talentPostId(talentPostEntity.getId())
                 .userId(talentPostEntity.getUser().getId())
+                .authorNickname(talentPostEntity.getUser().getNickname())
+                .authorProfileImageUrl(talentPostEntity.getUser().getProfileImageUrl())
                 .categoryId(talentPostEntity.getCategory().getId())
                 .categoryName(talentPostEntity.getCategory().getName())
                 .title(talentPostEntity.getTitle())

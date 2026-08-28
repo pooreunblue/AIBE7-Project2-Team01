@@ -1,5 +1,7 @@
 package org.example.link.domain.wallet.service;
 
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
@@ -21,7 +23,7 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final WalletTransactionRepository walletTransactionRepository;
 
-    public WalletResponse getWallet(Long userId){
+    public WalletResponse getWallet(UUID userId){
         WalletEntity wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() ->
                         new CustomException(ErrorCode.WALLET_NOT_FOUND));
@@ -31,7 +33,7 @@ public class WalletService {
     //충전
     @Transactional
     public WalletResponse charge(
-            Long userId,
+            UUID userId,
             BigDecimal amount
     ) {
         WalletEntity wallet = getWalletEntity(userId);
@@ -49,7 +51,7 @@ public class WalletService {
     //결제
     @Transactional
     public void withdraw(
-            Long userId,
+            UUID userId,
             BigDecimal amount,
             TradeEntity trade
     ) {
@@ -68,7 +70,7 @@ public class WalletService {
     //정산
     @Transactional
     public void deposit(
-            Long userId,
+            UUID userId,
             BigDecimal amount,
             TradeEntity trade
     ) {
@@ -87,7 +89,7 @@ public class WalletService {
     //환불
     @Transactional
     public void refund(
-            Long userId,
+            UUID userId,
             BigDecimal amount,
             TradeEntity trade
     ) {
@@ -105,7 +107,7 @@ public class WalletService {
         );
     }
 
-    public WalletEntity getWalletEntity(Long userId) {
+    public WalletEntity getWalletEntity(UUID userId) {
         return walletRepository.findByUserId(userId)
                 .orElseThrow(() ->
                         new CustomException(ErrorCode.WALLET_NOT_FOUND)

@@ -1,5 +1,7 @@
 package org.example.link.domain.chat.controller;
 
+import java.util.UUID;
+
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.example.link.domain.trade.service.TradeService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,7 +28,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -53,10 +58,21 @@ public class ChatRoomController {
         return ApiResponse.ok(chatService.getMyRooms(authentication.getName()));
     }
 
+    @PostMapping(value = "/{chatRoomId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "채팅 이미지 전송")
+    public ResponseEntity<ApiResponse<ChatMessageResponse>> sendImage(
+            @PathVariable UUID chatRoomId,
+            @RequestPart("file") MultipartFile file,
+            Authentication authentication
+    ) {
+        ChatMessageResponse response = chatService.sendImage(authentication.getName(), chatRoomId, file);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "채팅 메시지 목록 조회")
     public ApiResponse<List<ChatMessageResponse>> messages(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             Authentication authentication
@@ -67,7 +83,7 @@ public class ChatRoomController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> leave(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             Authentication authentication
     ) {
         chatService.leaveRoom(authentication.getName(), id);
@@ -76,7 +92,7 @@ public class ChatRoomController {
 
     @PostMapping("/{chatRoomId}/trades")
     public ResponseEntity<ApiResponse<TradeResponse>> createTrade(
-            @PathVariable Long chatRoomId,
+            @PathVariable UUID chatRoomId,
             @Valid @RequestBody TradeCreateRequest request,
             @AuthenticationPrincipal CustomUserDetails user
     ) {

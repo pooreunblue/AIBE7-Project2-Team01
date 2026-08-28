@@ -1,5 +1,7 @@
 package org.example.link.domain.request.dto;
 
+import java.util.UUID;
+
 import lombok.Builder;
 import org.example.link.domain.request.entity.RequestPostEntity;
 import org.example.link.domain.request.util.RequestPostStatus;
@@ -10,9 +12,9 @@ import java.time.LocalDate;
 
 @Builder
 public record RequestPostResponseDto(
-        Long requestPostId,
-        Long userId,
-        Long categoryId,
+        UUID requestPostId,
+        UUID userId,
+        UUID categoryId,
         String categoryName,
         String title,
         String content,

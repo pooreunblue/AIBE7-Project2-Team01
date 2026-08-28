@@ -1,8 +1,10 @@
 package org.example.link.domain.chat.dto;
 
+import java.util.UUID;
+
 public record ChatRoomCreateRequest(
-        Long requestPostId,
-        Long talentPostId,
-        Long otherUserId
+        UUID requestPostId,
+        UUID talentPostId,
+        UUID otherUserId
 ) {
 }

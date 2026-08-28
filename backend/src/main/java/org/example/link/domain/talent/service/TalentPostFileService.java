@@ -1,5 +1,7 @@
 package org.example.link.domain.talent.service;
 
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.exception.CustomException;
@@ -26,7 +28,7 @@ public class TalentPostFileService {
     private final StorageService storageService;
 
     @Transactional
-    public TalentPostFileResponse uploadFile(CustomUserDetails user, Long postId, MultipartFile file) {
+    public TalentPostFileResponse uploadFile(CustomUserDetails user, UUID postId, MultipartFile file) {
         TalentPostEntity post = findPost(postId);
         validateOwner(post, user.getUserId());
         StoredFile stored = storageService.upload(file, "talents/" + user.getUserId() + "/" + postId, FileType.PORTFOLIO);
@@ -37,7 +39,7 @@ public class TalentPostFileService {
     }
 
     @Transactional(readOnly = true)
-    public List<TalentPostFileResponse> getFiles(CustomUserDetails user, Long postId) {
+    public List<TalentPostFileResponse> getFiles(CustomUserDetails user, UUID postId) {
         TalentPostEntity post = findPost(postId);
         validateOwner(post, user.getUserId());
         return talentPostFileRepository.findAllByTalentPostId(postId).stream()
@@ -45,7 +47,7 @@ public class TalentPostFileService {
     }
 
     @Transactional
-    public void deleteFile(CustomUserDetails user, Long postId, Long fileId) {
+    public void deleteFile(CustomUserDetails user, UUID postId, UUID fileId) {
         TalentPostEntity post = findPost(postId);
         validateOwner(post, user.getUserId());
         TalentPostFileEntity file = findFile(fileId);
@@ -57,7 +59,7 @@ public class TalentPostFileService {
     }
 
     @Transactional
-    public TalentPostFileResponse updateFile(CustomUserDetails user, Long postId, Long fileId, MultipartFile newFile) {
+    public TalentPostFileResponse updateFile(CustomUserDetails user, UUID postId, UUID fileId, MultipartFile newFile) {
         TalentPostEntity post = findPost(postId);
         validateOwner(post, user.getUserId());
         TalentPostFileEntity file = findFile(fileId);
@@ -73,7 +75,7 @@ public class TalentPostFileService {
     }
 
     @Transactional
-    public TalentPostFileResponse changeThumbnail(CustomUserDetails user, Long postId, Long fileId) {
+    public TalentPostFileResponse changeThumbnail(CustomUserDetails user, UUID postId, UUID fileId) {
         TalentPostEntity post = findPost(postId);
         validateOwner(post, user.getUserId());
         TalentPostFileEntity file = findFile(fileId);
@@ -89,29 +91,29 @@ public class TalentPostFileService {
         return TalentPostFileResponse.from(file);
     }
 
-    private TalentPostEntity findPost(Long postId) {
+    private TalentPostEntity findPost(UUID postId) {
         return talentPostRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
     }
 
-    private TalentPostFileEntity findFile(Long fileId) {
+    private TalentPostFileEntity findFile(UUID fileId) {
         return talentPostFileRepository.findById(fileId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
     }
 
-    private void validateOwner(TalentPostEntity post, Long userId) {
+    private void validateOwner(TalentPostEntity post, UUID userId) {
         if (!post.getUser().getId().equals(userId)) {
             throw new CustomException(ErrorCode.POST_ACCESS_DENIED);
         }
     }
 
-    private void validateBelongsToPost(TalentPostFileEntity file, Long postId) {
+    private void validateBelongsToPost(TalentPostFileEntity file, UUID postId) {
         if (!file.getTalentPost().getId().equals(postId)) {
             throw new CustomException(ErrorCode.INVALID_POST_FILE);
         }
     }
 
-    private void setDefaultThumbnailIfAbsent(Long postId) {
+    private void setDefaultThumbnailIfAbsent(UUID postId) {
         if (talentPostFileRepository.findByTalentPostIdAndThumbnailTrue(postId).isPresent()) {
             return;
         }

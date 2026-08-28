@@ -1,5 +1,7 @@
 package org.example.link.domain.request.entity;
 
+import java.util.UUID;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.link.common.entity.BaseEntity;
@@ -20,9 +22,9 @@ import java.util.List;
 @Builder
 public class RequestPostEntity extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "request_post_id")
-    private Long id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

@@ -1,9 +1,11 @@
 package org.example.link.domain.portfolio.dto;
 
+import java.util.UUID;
+
 import org.example.link.domain.portfolio.entity.PortfolioFileEntity;
 
 public record PortfolioFileResponse(
-        Long portfolioFileId,
+        UUID portfolioFileId,
         String originalFileName,
         String fileUrl,
         String contentType,
