@@ -54,6 +54,9 @@ public class ChatService {
         UserEntity sender = userRepository.findByEmail(senderEmail)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         requireParticipant(chatRoom.getId(), sender.getId());
+        if (request.messageType() != ChatMessage.MessageType.TEXT) {
+            throw new CustomException(ErrorCode.INVALID_INPUT);
+        }
 
         ChatMessage message = new ChatMessage(
                 chatRoom,
@@ -63,6 +66,34 @@ public class ChatService {
         );
         ChatMessage savedMessage = chatMessageRepository.save(message);
         return ChatMessageResponse.from(savedMessage);
+    }
+
+    @Transactional
+    public ChatMessageResponse requestTradeAmount(UUID userId, UUID chatRoomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CHAT_ROOM_NOT_FOUND));
+        requireParticipant(chatRoomId, userId);
+
+        if (chatRoom.getRequestPostId() == null) {
+            throw new CustomException(ErrorCode.INVALID_INPUT);
+        }
+        if (tradeRepository.existsByChatRoomIdAndStatusIn(
+                chatRoomId, List.of(org.example.link.domain.trade.entity.TradeStatus.PENDING,
+                        org.example.link.domain.trade.entity.TradeStatus.PAID))) {
+            throw new CustomException(ErrorCode.TRADE_ALREADY_IN_PROGRESS);
+        }
+
+        var requestPost = requestPostRepository.findById(chatRoom.getRequestPostId())
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        if (!requestPost.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.POST_ACCESS_DENIED);
+        }
+
+        UserEntity sender = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        return chatMessagePublisher.publishTradeAmountRequest(
+                chatRoom, sender, "거래 금액 설정을 요청했습니다."
+        );
     }
 
     // 이미지 바이너리는 REST 멀티파트로 받아 Supabase 버킷에 저장하고,

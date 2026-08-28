@@ -99,4 +99,14 @@ public class ChatRoomController {
         TradeResponse response = tradeService.createTrade(user.getUserId(), chatRoomId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
     }
+
+    @PostMapping("/{chatRoomId}/trade-amount-request")
+    @Operation(summary = "요청글 거래 금액 설정 요청")
+    public ResponseEntity<ApiResponse<ChatMessageResponse>> requestTradeAmount(
+            @PathVariable UUID chatRoomId,
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        ChatMessageResponse response = chatService.requestTradeAmount(user.getUserId(), chatRoomId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
+    }
 }

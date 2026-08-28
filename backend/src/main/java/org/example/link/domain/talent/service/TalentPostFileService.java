@@ -39,9 +39,8 @@ public class TalentPostFileService {
     }
 
     @Transactional(readOnly = true)
-    public List<TalentPostFileResponse> getFiles(CustomUserDetails user, UUID postId) {
-        TalentPostEntity post = findPost(postId);
-        validateOwner(post, user.getUserId());
+    public List<TalentPostFileResponse> getFiles(UUID postId) {
+        findPost(postId);
         return talentPostFileRepository.findAllByTalentPostId(postId).stream()
                 .map(TalentPostFileResponse::from).toList();
     }

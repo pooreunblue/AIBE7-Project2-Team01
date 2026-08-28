@@ -17,8 +17,12 @@ public record ChatMessageResponse(
         String content,
         ChatMessage.MessageType messageType,
         Instant createdAt,
+        String actionType,
         TradeInfo trade
 ) {
+    private static final String TRADE_AMOUNT_REQUEST_CONTENT = "거래 금액 설정을 요청했습니다.";
+    private static final String TRADE_PAID_CONTENT = "결제가 완료되었습니다.";
+
     // 거래 요청 카드 렌더링용. TRADE_REQUEST 메시지가 아니면 null.
     public record TradeInfo(
             UUID tradeId,
@@ -50,7 +54,21 @@ public record ChatMessageResponse(
                 message.getContent(),
                 message.getMessageType(),
                 message.getCreatedAt(),
+                resolveActionType(message),
                 message.getTrade() != null ? TradeInfo.from(message.getTrade()) : null
         );
+    }
+
+    private static String resolveActionType(ChatMessage message) {
+        if (message.getMessageType() != ChatMessage.MessageType.SYSTEM) {
+            return null;
+        }
+        if (TRADE_AMOUNT_REQUEST_CONTENT.equals(message.getContent())) {
+            return "TRADE_AMOUNT_REQUEST";
+        }
+        if (TRADE_PAID_CONTENT.equals(message.getContent()) && message.getTrade() != null) {
+            return "TRADE_PAID";
+        }
+        return null;
     }
 }
