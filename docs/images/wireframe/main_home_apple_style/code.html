@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TalentPulse - Premium Marketplace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "inverse-primary": "#adc6ff",
+                "surface-tint": "#005bc1",
+                "on-primary-container": "#fefcff",
+                "system-gray": "#8E8E93",
+                "surface-dim": "#d9dade",
+                "system-orange": "#FF9500",
+                "on-secondary-fixed-variant": "#46464b",
+                "tertiary-fixed-dim": "#53e16f",
+                "surface-container": "#ededf2",
+                "primary-fixed-dim": "#adc6ff",
+                "on-error-container": "#93000a",
+                "on-secondary": "#ffffff",
+                "tertiary": "#006b27",
+                "secondary-fixed-dim": "#c6c6cb",
+                "surface-container-high": "#e8e8ed",
+                "inverse-on-surface": "#f0f0f5",
+                "system-red": "#FF3B30",
+                "on-tertiary-fixed-variant": "#00531c",
+                "on-secondary-fixed": "#1a1b1f",
+                "system-green": "#34C759",
+                "on-background": "#1a1c1f",
+                "on-tertiary-fixed": "#002107",
+                "on-surface-variant": "#414755",
+                "secondary-container": "#e0dfe4",
+                "on-tertiary": "#ffffff",
+                "primary": "#007AFF",
+                "secondary": "#5d5e63",
+                "primary-container": "#0070eb",
+                "on-tertiary-container": "#f7fff2",
+                "surface-base": "#FFFFFF",
+                "tertiary-container": "#008733",
+                "outline-variant": "#c1c6d7",
+                "surface-container-low": "#f3f3f8",
+                "background": "#f9f9fe",
+                "on-primary-fixed": "#001a41",
+                "surface-container-highest": "#e2e2e7",
+                "surface-variant": "#e2e2e7",
+                "primary-fixed": "#d8e2ff",
+                "surface-grouped": "#F2F2F7",
+                "secondary-fixed": "#e3e2e7",
+                "outline": "#717786",
+                "on-primary-fixed-variant": "#004493",
+                "inverse-surface": "#2e3034",
+                "on-surface": "#1a1c1f",
+                "surface-container-lowest": "#ffffff",
+                "on-secondary-container": "#626267",
+                "tertiary-fixed": "#72fe88",
+                "on-primary": "#ffffff",
+                "on-error": "#ffffff",
+                "surface-bright": "#f9f9fe",
+                "error": "#ba1a1a",
+                "surface": "#f9f9fe",
+                "error-container": "#ffdad6"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-md": "16px",
+                "gutter": "16px",
+                "margin-desktop": "32px",
+                "unit": "8px",
+                "margin-mobile": "16px",
+                "stack-sm": "8px",
+                "stack-lg": "32px",
+                "xxl": "48px",
+                "xs": "8px",
+                "sm": "12px",
+                "md": "16px",
+                "lg": "24px",
+                "container-max": "1200px",
+                "xl": "32px",
+                "base": "4px"
+        },
+        "fontFamily": {
+                "headline-md": [
+                        "Inter"
+                ],
+                "display-lg": [
+                        "Inter"
+                ],
+                "body-lg": [
+                        "Inter"
+                ],
+                "label-sm": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-md": [
+                        "22px",
+                        {
+                                "lineHeight": "28px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "34px",
+                        {
+                                "lineHeight": "41px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "17px",
+                        {
+                                "lineHeight": "22px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-sm": [
+                        "11px",
+                        {
+                                "lineHeight": "13px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "30px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-md": [
+                        "13px",
+                        {
+                                "lineHeight": "18px",
+                                "letterSpacing": "0.01em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-md": [
+                        "15px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "28px",
+                        {
+                                "lineHeight": "34px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        body {
+            background-color: #F2F2F7; /* Base level canvas */
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .premium-card {
+            background-color: #FFFFFF;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 16px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .premium-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface bg-background antialiased min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="sticky top-0 w-full z-50 bg-white/80 dark:bg-surface/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5 shadow-sm hidden md:block">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
+<div class="flex items-center gap-lg">
+<a class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed" href="#">TalentPulse</a>
+<nav class="hidden md:flex gap-md ml-lg">
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-body-lg text-body-lg hover:opacity-75 transition-opacity active:scale-95 duration-200" href="#">Talent</a>
+<a class="text-on-surface-variant font-medium font-body-lg text-body-lg hover:opacity-75 transition-opacity active:scale-95 duration-200" href="#">Requests</a>
+<a class="text-on-surface-variant font-medium font-body-lg text-body-lg hover:opacity-75 transition-opacity active:scale-95 duration-200" href="#">Categories</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant" style="font-variation-settings: 'wght' 300;">search</span>
+<input class="bg-surface-container-low focus:bg-white focus:border-primary border-transparent rounded-full py-2 pl-[40px] pr-md font-body-md text-body-md w-64 transition-colors outline-none ring-0 focus:ring-0" placeholder="Search talent..." type="text"/>
+</div>
+<button class="p-2 rounded-full hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" style="font-variation-settings: 'wght' 300;">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" style="font-variation-settings: 'wght' 300;">chat</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" style="font-variation-settings: 'wght' 300;">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Mobile Header (Minimal) -->
+<header class="md:hidden sticky top-0 z-50 glass-panel px-margin-mobile py-4 border-b border-black/5">
+<div class="flex justify-between items-center">
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">TalentPulse</span>
+<button class="p-2 rounded-full">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'wght' 300;">search</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-lg pb-xxl space-y-xxl">
+<!-- Hero Search Section -->
+<section class="flex flex-col items-center justify-center text-center space-y-lg pt-xl md:pt-xxl">
+<h1 class="font-display-lg text-display-lg text-on-surface max-w-2xl">Find the perfect talent for your next project.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">From graphic design to web development, connect with top-tier professionals ready to bring your vision to life.</p>
+<div class="w-full max-w-2xl relative mt-md">
+<div class="flex items-center bg-white rounded-full shadow-sm border border-black/5 p-2 transition-shadow focus-within:shadow-md focus-within:border-primary/50 relative z-10">
+<div class="pl-md pr-sm py-2 bg-surface-container-low rounded-full mr-2 hidden sm:flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'wght' 500;">auto_awesome</span>
+<span class="font-label-md text-label-md text-on-surface font-medium">AI Search</span>
+</div>
+<input class="flex-1 bg-transparent border-none outline-none ring-0 focus:ring-0 font-body-lg text-body-lg text-on-surface placeholder:text-on-surface-variant px-sm py-2" placeholder="Describe what you need done..." type="text"/>
+<button class="bg-primary text-white rounded-full px-lg py-3 font-label-md text-label-md font-bold hover:bg-primary-container transition-colors flex items-center gap-xs">
+<span>Search</span>
+</button>
+</div>
+<!-- Ambient glow for search -->
+<div class="absolute -inset-2 bg-gradient-to-r from-primary-container/20 to-tertiary-container/20 rounded-full blur-xl -z-10 opacity-50"></div>
+</div>
+<!-- Quick Chips -->
+<div class="flex flex-wrap justify-center gap-sm mt-md">
+<button class="bg-surface-container-low px-4 py-2 rounded-full font-label-md text-label-md text-on-surface hover:bg-surface-variant transition-colors">UI/UX Design</button>
+<button class="bg-surface-container-low px-4 py-2 rounded-full font-label-md text-label-md text-on-surface hover:bg-surface-variant transition-colors">Copywriting</button>
+<button class="bg-surface-container-low px-4 py-2 rounded-full font-label-md text-label-md text-on-surface hover:bg-surface-variant transition-colors">Video Editing</button>
+<button class="bg-surface-container-low px-4 py-2 rounded-full font-label-md text-label-md text-on-surface hover:bg-surface-variant transition-colors">SEO</button>
+</div>
+</section>
+<!-- Categories Peek Scroll (Mobile) / Grid (Desktop) -->
+<section>
+<div class="flex justify-between items-end mb-lg">
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface">Explore Categories</h2>
+<button class="text-primary font-label-md text-label-md font-medium hover:underline bg-transparent border-none">View all</button>
+</div>
+<div class="flex overflow-x-auto hide-scrollbar gap-gutter md:grid md:grid-cols-4 md:gap-lg pb-4 -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0">
+<!-- Category Card -->
+<a class="premium-card flex-none w-[160px] md:w-auto p-md flex flex-col items-center justify-center text-center gap-sm group cursor-pointer aspect-square" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-2xl transition-colors" style="font-variation-settings: 'wght' 300;">design_services</span>
+</div>
+<span class="font-label-md text-label-md font-medium text-on-surface">Design &amp; Creative</span>
+</a>
+<!-- Category Card -->
+<a class="premium-card flex-none w-[160px] md:w-auto p-md flex flex-col items-center justify-center text-center gap-sm group cursor-pointer aspect-square" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-2xl transition-colors" style="font-variation-settings: 'wght' 300;">code</span>
+</div>
+<span class="font-label-md text-label-md font-medium text-on-surface">Development</span>
+</a>
+<!-- Category Card -->
+<a class="premium-card flex-none w-[160px] md:w-auto p-md flex flex-col items-center justify-center text-center gap-sm group cursor-pointer aspect-square" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-2xl transition-colors" style="font-variation-settings: 'wght' 300;">campaign</span>
+</div>
+<span class="font-label-md text-label-md font-medium text-on-surface">Marketing</span>
+</a>
+<!-- Category Card -->
+<a class="premium-card flex-none w-[160px] md:w-auto p-md flex flex-col items-center justify-center text-center gap-sm group cursor-pointer aspect-square" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-2xl transition-colors" style="font-variation-settings: 'wght' 300;">edit_document</span>
+</div>
+<span class="font-label-md text-label-md font-medium text-on-surface">Writing &amp; Trans</span>
+</a>
+</div>
+</section>
+<!-- Featured Talent (Bento Style Layout Desktop / List Mobile) -->
+<section>
+<div class="flex justify-between items-end mb-lg">
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface">Featured Talent</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter md:gap-lg">
+<!-- Main Feature Card (Spans 8 cols on desktop) -->
+<div class="premium-card md:col-span-8 overflow-hidden group cursor-pointer">
+<div class="relative h-64 md:h-80 w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A cinematic, high-key lighting shot of a modern, organized graphic designer's workspace. A sleek silver laptop sits open next to a digital drawing tablet with a stylus. The desk is a clean white surface with minimal clutter, perhaps a small green succulent plant and a notebook. The color palette is bright, airy, and professional, emphasizing the premium minimalist aesthetic of the marketplace platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWCV5b-UfFcMUSdXhwuqJySA3h2qBISAPhVEnObOzC43svSGfbDOj_iXR9V2qNNbYtfGXrc9jpjvVfrUl2hzO6PklGXLZAw_ZxZAqgsZXS_XD_aJpu0UlnZ0FuWEKQTKzN9P74AvXv95Mzbn2M1hBhT-jqNAc7tG6e4guhkh3PYVmKSssvd5fAtDFZQuQwU7K5AzuWRe3n4HR3OMAr2qXX28pRAwMBIjEsYHKcNRLjlE42IR9tMIZT"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-lg w-full">
+<div class="flex items-center gap-sm mb-xs">
+<span class="bg-white/20 backdrop-blur-md text-white px-2 py-1 rounded-md font-label-sm text-label-sm uppercase tracking-wider">Top Rated</span>
+<div class="flex items-center text-white">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md ml-1">4.9 (120)</span>
+</div>
+</div>
+<h3 class="font-headline-md text-headline-md font-bold text-white mb-1">Premium Brand Identity Design</h3>
+<p class="font-body-md text-body-md text-white/80">by Elena R. • Starting at $500</p>
+</div>
+</div>
+</div>
+<!-- Secondary Feature 1 -->
+<div class="premium-card md:col-span-4 overflow-hidden group cursor-pointer flex flex-col">
+<div class="relative h-48 w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A close-up, high-quality image of hands typing on a mechanical keyboard with glowing subtle backlighting, suggesting coding or software development. The background is softly out of focus, showing a dual-monitor setup with lines of clean code. The lighting is slightly moody but professional, with blue and cool gray tones, fitting the clean, systematic UI grid aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0VTs-8szKbnOsduZSfuV82WNDC_G_Gfei5u6hIAvMyFr4BJ-kscn1Vozr5OMjs8BfmBEqYK2O_WoQQu0e2IMimM-lcXey7sHr7nJjkna81PNHsvrxSqp2qvi02aypq978EU8_Q7oeMvUvUHsNmR8e5gKZwhuBFA_ZL1zCie0m8rQvqV_hcaNfcXGsRaYAOXkDZr4GoWR207yYEEABUOek0E3Mxh1uZRma4j1i0aOUeXPLrSfBXbFj"/>
+</div>
+<div class="p-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-sm mb-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md">4.8 (85)</span>
+</div>
+<h3 class="font-body-lg text-body-lg font-medium text-on-surface line-clamp-2">Full-Stack React &amp; Node.js Web App Development</h3>
+</div>
+<div class="mt-sm flex items-center justify-between">
+<div class="flex items-center gap-xs">
+<div class="w-6 h-6 rounded-full bg-surface-dim overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a young male software developer. He is wearing a clean, casual navy blue crew neck t-shirt. The background is a plain, light gray studio backdrop. The lighting is soft and flattering, creating a friendly and capable impression." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6WK_9Ix9eUeRiD_4jLYKdTVvL9qdlmzfvRjQlhaRNSwU7Ah0zBId0oZ1XPkuKqK95QncXQOk8KTmU_j2VTMSutAmsBEyjHWfPRo7TXZ8Tq60_r6Dli6mMfAze1ngflKj4pmwV_xVIiuAQKO_GcPYRrMI6lw0hwPtPcrsWj-H1bhYIPes_krEfRQy9SDr8OXdwiCp0jU3abADBAzchmeSomvk3eZA_xvlyG3I9TZlWY3EHjmkpHB_b"/>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">David K.</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-primary">From $1200</span>
+</div>
+</div>
+</div>
+<!-- Secondary Feature 2 -->
+<div class="premium-card md:col-span-4 overflow-hidden group cursor-pointer flex flex-col hidden md:flex">
+<div class="relative h-48 w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A vibrant, aesthetic flat-lay composition of social media marketing tools. A sleek smartphone showing an analytics dashboard, a moleskine notebook with handwritten notes, and a cup of artisan coffee on a clean, light-textured marble surface. The overall color palette features soft neutrals with bright pops of brand orange and blue, perfectly aligning with the platform's premium minimalist vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfLPvYnx8GaUe8OExNlX6QdMP_Yef4xg73MZplw0ceJfxz4FszO0AuZEB2rMPMg0SePyTasYjUbbX7TuCa0RSdzwycMN2qqUW3UxaxPtAUaxaLhKcR0YeSJ0lC1aTCwmk8nLIUV96qsYBuj2KicXPZ9J2tSVsid43elg6DI9GLOEWARcfv2XHpDtC9VjNEVZabfZOU7vDyVTMLdXuu4cF9Agj6X25YXDRxfJfT8GIs1u5J6fHuBEN2"/>
+</div>
+<div class="p-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-sm mb-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md">5.0 (42)</span>
+</div>
+<h3 class="font-body-lg text-body-lg font-medium text-on-surface line-clamp-2">Social Media Strategy &amp; Growth Management</h3>
+</div>
+<div class="mt-sm flex items-center justify-between">
+<div class="flex items-center gap-xs">
+<div class="w-6 h-6 rounded-full bg-surface-dim overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional, warm headshot of a female marketing strategist. She has a bright smile and is wearing a modern, tailored beige blazer. The lighting is natural and bright, against a clean white background, evoking trust and approachability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-4pQXRuoXNUbEAFzD7poVz7mnHgiX-omcSko0xZx7rgQomJinMIJdWQ9MtazuAtl5Hkk2YCQki7uy0u5O97jefYOaytA8wi9a_nbkis2CalISFcZc7Rar4UdNEQ8XHj21x4-AWjlfT8Zk-3UtglOnfITBHRXUxaultpyDowvca9d-Eq68l24lxjfma9iRaoYocG8jU53E26EF4pNMWFv3-DeL9jGqvmNaPX_Jspzj4UlPEZjvqpYn"/>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">Sarah J.</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-primary">From $300</span>
+</div>
+</div>
+</div>
+<!-- Secondary Feature 3 -->
+<div class="premium-card md:col-span-4 overflow-hidden group cursor-pointer flex flex-col hidden md:flex">
+<div class="relative h-48 w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A minimalist and elegant view of professional video editing software open on a large, high-resolution curved monitor. The screen displays a complex timeline with colorful tracks. The environment is slightly dim, focusing on the bright screen, with a premium studio monitor speaker visible in the blurred foreground. The aesthetic is highly technical yet refined and creative." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCT5izrKrJvNjTiVfMMMpKTug_TnVdA69GhAaUDdqqc4sxhI1pCnzuKcniGepjbBsa8MG7sRzpcgtNt75EzdUS3IUHGUQC5OobK0O7Cip3EXTTNLf0PB_TQvjoF8HY2Msn_tNUKCJCUWvifp90Dgal--5zv4o4gMALmZQZ0y57ezLMdbVaTNlIjauesILvV0PEofyybAJ6dfeWACZyQGveb3aM3gwNLtGeXRYsXbyhpH36jFOW2XJFS"/>
+</div>
+<div class="p-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-sm mb-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md">4.9 (210)</span>
+</div>
+<h3 class="font-body-lg text-body-lg font-medium text-on-surface line-clamp-2">Cinematic Video Editing &amp; Color Grading</h3>
+</div>
+<div class="mt-sm flex items-center justify-between">
+<div class="flex items-center gap-xs">
+<div class="w-6 h-6 rounded-full bg-surface-dim overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A trendy, professional portrait of a male video editor. He is wearing stylish clear-framed glasses and a black turtleneck. The portrait is taken with a shallow depth of field against a softly lit, neutral studio wall, conveying a sense of artistic capability and modern style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLI4NsEu0X1YwtD_B3PoEnQ6i8rSoRlbYCB0I8TvxryGqg8IUP97HkGIR3E4TYJTU07KZFxha3bDFQNJFZkIkcTX0D62o2K8hhWEQRSlX1YXayOtxkhA5wVTawAZX795CXLj9cuhTEeM-FNFdtbGuQjpbkLlKUWxCjUggiL7cbQ7y0ZujPdZu6taScGQ6NUiZ6-0PGu6xx67HtzO0GrOmsCbdbo1uQpSCVBvj7UmzADlff7P5I6Xzm"/>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">Marcus L.</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-primary">From $150</span>
+</div>
+</div>
+</div>
+<!-- Secondary Feature 4 -->
+<div class="premium-card md:col-span-4 overflow-hidden group cursor-pointer flex flex-col hidden md:flex">
+<div class="relative h-48 w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A clean, minimalist shot focusing on a fountain pen resting on premium, thick textured paper with elegant, modern typography visible in the blurred background. The lighting is soft and diffused, casting gentle shadows. The color palette is restricted to soft whites, creams, and dark ink blue, representing high-end copywriting and editorial services." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA54eMWS_KQPJamLGR5FWWhCJ7byTqnsytA5VejeVvMC7mZhx_aN5cuXtMEvgBbeCkkffB4uhLwdHE_AwlR0ZXiaPGVEaXm_ZwioqhCoMJn4dV1oSCWiAnaK3Zg-nRtwp8ZIkUNTIjrHrRoX97vWFR3XY6AVfeJBegY1BXHsMXoYFFvMlHvq80AHvtZOkhWZuM8DPJprfteiRXHPH3zL14_lsRosDjiV4M_i79pgnXyhp9cJ4Anr8Xo"/>
+</div>
+<div class="p-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-sm mb-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md">4.7 (55)</span>
+</div>
+<h3 class="font-body-lg text-body-lg font-medium text-on-surface line-clamp-2">SEO Optimized Copywriting &amp; Blog Posts</h3>
+</div>
+<div class="mt-sm flex items-center justify-between">
+<div class="flex items-center gap-xs">
+<div class="w-6 h-6 rounded-full bg-surface-dim overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A friendly, approachable headshot of a female writer. She is wearing a soft gray sweater and has her hair tied back loosely. The lighting is warm and natural, suggesting reliability and a personable communication style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdXwrISSdGy61pUw-ItTX7zw2018oJ9lhwqwztYKrfg1bWYqVnE-aOyomXEpBoMPggUCdVUgG-Eq8M9IevVJInyC2uA7DAWVL-5f0MDEVmAy5yLaeu7a8aBz_N3-r7P4lJi5P_a47xJoNb6elGfjONOBhIqskmYJyxVqebGJKEfobkZtwWNWaIy74DpckulhjLXsee_Dbi-kInYAZ8vwnTy-8FT5sxM2CyVMmp6eTWy6S29c5nIRWi"/>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">Anna B.</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-primary">From $80</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe md:hidden bg-white/80 dark:bg-surface/80 backdrop-blur-xl border-t border-black/5 dark:border-white/5 shadow-lg rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold hover:text-primary/80 scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1 text-[24px]" style="font-variation-settings: 'FILL' 1;">explore</span>
+<span class="font-label-sm text-label-sm">Explore</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined mb-1 text-[24px]">list_alt</span>
+<span class="font-label-sm text-label-sm">Requests</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined mb-1 text-[24px]">add_circle</span>
+<span class="font-label-sm text-label-sm">Post</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined mb-1 text-[24px]">chat_bubble</span>
+<span class="font-label-sm text-label-sm">Messages</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined mb-1 text-[24px]">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+<!-- Footer (Desktop Only) -->
+<footer class="hidden md:flex flex-col items-center justify-center gap-md w-full border-t border-outline-variant bg-surface-container-low dark:bg-surface-container-lowest py-xl">
+<div class="font-headline-md text-headline-md font-bold text-primary mb-sm">TalentPulse</div>
+<div class="flex gap-lg">
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors cursor-pointer" href="#">Terms</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors cursor-pointer" href="#">Privacy</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors cursor-pointer" href="#">Help</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors cursor-pointer" href="#">Contact</a>
+</div>
+<div class="text-on-surface dark:text-on-surface-variant font-label-md text-label-md mt-sm text-center">
+            © 2024 TalentPulse. Premium Marketplace.
+        </div>
+</footer>
+</body></html>

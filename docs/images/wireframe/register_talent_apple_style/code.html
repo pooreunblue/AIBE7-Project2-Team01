@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>재능 등록 - TalentPulse</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "inverse-primary": "#adc6ff",
+                "surface-tint": "#005bc1",
+                "on-primary-container": "#fefcff",
+                "system-gray": "#8E8E93",
+                "surface-dim": "#d9dade",
+                "system-orange": "#FF9500",
+                "on-secondary-fixed-variant": "#46464b",
+                "tertiary-fixed-dim": "#53e16f",
+                "surface-container": "#ededf2",
+                "primary-fixed-dim": "#adc6ff",
+                "on-error-container": "#93000a",
+                "on-secondary": "#ffffff",
+                "tertiary": "#006b27",
+                "secondary-fixed-dim": "#c6c6cb",
+                "surface-container-high": "#e8e8ed",
+                "inverse-on-surface": "#f0f0f5",
+                "system-red": "#FF3B30",
+                "on-tertiary-fixed-variant": "#00531c",
+                "on-secondary-fixed": "#1a1b1f",
+                "system-green": "#34C759",
+                "on-background": "#1a1c1f",
+                "on-tertiary-fixed": "#002107",
+                "on-surface-variant": "#414755",
+                "secondary-container": "#e0dfe4",
+                "on-tertiary": "#ffffff",
+                "primary": "#0058bc",
+                "secondary": "#5d5e63",
+                "primary-container": "#0070eb",
+                "on-tertiary-container": "#f7fff2",
+                "surface-base": "#FFFFFF",
+                "tertiary-container": "#008733",
+                "outline-variant": "#c1c6d7",
+                "surface-container-low": "#f3f3f8",
+                "background": "#f9f9fe",
+                "on-primary-fixed": "#001a41",
+                "surface-container-highest": "#e2e2e7",
+                "surface-variant": "#e2e2e7",
+                "primary-fixed": "#d8e2ff",
+                "surface-grouped": "#F2F2F7",
+                "secondary-fixed": "#e3e2e7",
+                "outline": "#717786",
+                "on-primary-fixed-variant": "#004493",
+                "inverse-surface": "#2e3034",
+                "on-surface": "#1a1c1f",
+                "surface-container-lowest": "#ffffff",
+                "on-secondary-container": "#626267",
+                "tertiary-fixed": "#72fe88",
+                "on-primary": "#ffffff",
+                "on-error": "#ffffff",
+                "surface-bright": "#f9f9fe",
+                "error": "#ba1a1a",
+                "surface": "#f9f9fe",
+                "error-container": "#ffdad6"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-md": "16px",
+                "gutter": "16px",
+                "margin-desktop": "32px",
+                "unit": "8px",
+                "margin-mobile": "16px",
+                "stack-sm": "8px",
+                "stack-lg": "32px",
+                "container-max": "1200px"
+        },
+        "fontFamily": {
+                "headline-md": [
+                        "Inter"
+                ],
+                "display-lg": [
+                        "Inter"
+                ],
+                "body-lg": [
+                        "Inter"
+                ],
+                "label-sm": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-md": [
+                        "22px",
+                        {
+                                "lineHeight": "28px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "34px",
+                        {
+                                "lineHeight": "41px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "17px",
+                        {
+                                "lineHeight": "22px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-sm": [
+                        "11px",
+                        {
+                                "lineHeight": "13px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "30px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-md": [
+                        "13px",
+                        {
+                                "lineHeight": "18px",
+                                "letterSpacing": "0.01em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-md": [
+                        "15px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "28px",
+                        {
+                                "lineHeight": "34px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen flex flex-col">
+<!-- Navigation Header -->
+<header class="sticky top-0 w-full z-50 bg-white/80 dark:bg-surface/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5 shadow-sm">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
+<div class="flex items-center gap-6">
+<a class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed" href="#">TalentPulse</a>
+<div class="hidden md:flex gap-4 ml-6">
+<a class="font-body-lg text-body-lg text-on-surface-variant font-medium hover:opacity-75 transition-opacity" href="#">Talent</a>
+<a class="font-body-lg text-body-lg text-on-surface-variant font-medium hover:opacity-75 transition-opacity" href="#">Requests</a>
+<a class="font-body-lg text-body-lg text-on-surface-variant font-medium hover:opacity-75 transition-opacity" href="#">Categories</a>
+</div>
+</div>
+<div class="flex items-center gap-4 text-primary dark:text-primary-fixed">
+<button class="hover:opacity-75 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="hover:opacity-75 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined">chat</span>
+</button>
+<button class="hover:opacity-75 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-3xl mx-auto px-margin-mobile md:px-margin-desktop py-8">
+<div class="mb-6">
+<h1 class="font-headline-lg text-headline-lg hidden md:block text-on-surface mb-1">Post a Talent</h1>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:hidden text-on-surface mb-1">Post a Talent</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Share your skills with the TalentPulse community. Please provide detailed information to help others understand your offering.</p>
+</div>
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-black/5 p-6 md:p-8">
+<form action="#" class="space-y-8" method="POST">
+<!-- Category Segmented Control (Apple-style) -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-2">Category</label>
+<div class="flex p-1 bg-surface-container-low rounded-lg">
+<label class="flex-1 text-center">
+<input checked="" class="peer sr-only" name="category" type="radio" value="design"/>
+<div class="font-label-md text-label-md py-2 rounded-md cursor-pointer transition-all peer-checked:bg-white peer-checked:shadow-sm peer-checked:text-primary text-on-surface-variant">
+                                Design
+                            </div>
+</label>
+<label class="flex-1 text-center">
+<input class="peer sr-only" name="category" type="radio" value="development"/>
+<div class="font-label-md text-label-md py-2 rounded-md cursor-pointer transition-all peer-checked:bg-white peer-checked:shadow-sm peer-checked:text-primary text-on-surface-variant">
+                                Development
+                            </div>
+</label>
+<label class="flex-1 text-center">
+<input class="peer sr-only" name="category" type="radio" value="writing"/>
+<div class="font-label-md text-label-md py-2 rounded-md cursor-pointer transition-all peer-checked:bg-white peer-checked:shadow-sm peer-checked:text-primary text-on-surface-variant">
+                                Writing
+                            </div>
+</label>
+<label class="flex-1 text-center">
+<input class="peer sr-only" name="category" type="radio" value="consulting"/>
+<div class="font-label-md text-label-md py-2 rounded-md cursor-pointer transition-all peer-checked:bg-white peer-checked:shadow-sm peer-checked:text-primary text-on-surface-variant">
+                                Consulting
+                            </div>
+</label>
+</div>
+</div>
+<!-- Title Input -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="title">Title</label>
+<input class="w-full bg-surface-container-low border-transparent focus:bg-white focus:border-primary focus:ring-0 rounded-lg font-body-md text-body-md px-4 py-2 transition-colors text-on-surface placeholder-on-surface-variant/50" id="title" name="title" placeholder="e.g. Professional UI/UX Design for Web Apps" type="text"/>
+</div>
+<!-- Description Input -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="description">Description</label>
+<textarea class="w-full bg-surface-container-low border-transparent focus:bg-white focus:border-primary focus:ring-0 rounded-lg font-body-md text-body-md px-4 py-2 transition-colors text-on-surface placeholder-on-surface-variant/50 resize-y" id="description" name="description" placeholder="Describe your talent, what's included, and your process..." rows="5"></textarea>
+</div>
+<!-- Price Input -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="price">Price</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="font-body-md text-body-md text-on-surface-variant">$</span>
+</div>
+<input class="w-full pl-8 bg-surface-container-low border-transparent focus:bg-white focus:border-primary focus:ring-0 rounded-lg font-body-md text-body-md pr-4 py-2 transition-colors text-on-surface placeholder-on-surface-variant/50" id="price" name="price" placeholder="0.00" type="number"/>
+</div>
+</div>
+<!-- Portfolio Upload Area -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">Portfolio Images</label>
+<div class="mt-2 flex justify-center rounded-xl border border-black/10 dark:border-white/10 px-4 py-12 bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="text-center">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2 group-hover:text-primary transition-colors">cloud_upload</span>
+<div class="font-body-md text-body-md flex text-on-surface-variant justify-center">
+<label class="relative cursor-pointer rounded-md font-medium text-primary hover:text-primary-container focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2" for="file-upload">
+<span>Upload a file</span>
+<input accept="image/*" class="sr-only" id="file-upload" multiple="" name="file-upload" type="file"/>
+</label>
+<p class="pl-1">or drag and drop</p>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant/70 mt-2">PNG, JPG, GIF up to 10MB</p>
+</div>
+</div>
+<!-- Preview Grid (Placeholder) -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
+<div class="relative aspect-[4/5] rounded-lg overflow-hidden bg-surface-container border border-black/5">
+<img class="w-full h-full object-cover" data-alt="A modern UI design mockup showing a sleek dashboard interface with a light mode aesthetic, featuring soft orange primary colors and clean typography. The layout is minimalist and professional, displayed on an angled screen perspective." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBY-1d4RbCmntdRLH3cYamrOHmBMUf1FXDPZtuy3ED2DbgiHwH2KL6h2H0pTeHXsJGpcXO5WhD3--LRrXznZhm0wInhQ3lEouExt-7xqhBuOGBGspuwtDCUkCJ4QGSOshXM5m0pSkSgIcPypuFDwd05RvmEgiv76Guyw4Qj7JRV-X2OD7f2V0MZXfOBIaP18YX4IedWti0hWftz288dyzccWTNF5JRI5OdALLaBWx9B6iw02Q5U7cbf"/>
+<button class="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-error transition-colors backdrop-blur-sm" type="button">
+<span class="material-symbols-outlined" style="font-size: 16px;">close</span>
+</button>
+</div>
+<div class="relative aspect-[4/5] rounded-lg border border-black/10 dark:border-white/10 flex items-center justify-center bg-surface-container hover:bg-surface-container-high cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">add</span>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex gap-4 pt-4 border-t border-black/5">
+<button class="flex-1 py-2 px-4 rounded-xl font-label-md text-label-md font-bold text-primary bg-transparent hover:bg-surface-container-low transition-colors" type="button">
+                        Cancel
+                    </button>
+<button class="flex-[2] py-2 px-4 rounded-xl font-label-md text-label-md font-bold text-white bg-primary hover:bg-primary-container transition-colors shadow-sm" type="submit">
+                        Post Talent
+                    </button>
+</div>
+</form>
+</div>
+</main>
+<!-- Bottom Navigation (Mobile) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe md:hidden bg-white/80 dark:bg-surface/80 backdrop-blur-xl border-t border-black/5 dark:border-white/5 rounded-t-xl shadow-lg">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors" href="#">
+<span class="material-symbols-outlined">explore</span>
+<span class="font-label-sm text-label-sm mt-1">Explore</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-label-sm text-label-sm mt-1">Requests</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold hover:text-primary/80 transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+<span class="font-label-sm text-label-sm mt-1">Post</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors" href="#">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="font-label-sm text-label-sm mt-1">Messages</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-sm text-label-sm mt-1">Profile</span>
+</a>
+</nav>
+<!-- Footer -->
+<footer class="hidden md:flex flex-col items-center justify-center gap-4 w-full border-t border-outline-variant bg-surface-container-low dark:bg-surface-container-lowest py-8 mt-12">
+<div class="font-headline-md text-headline-md font-bold text-primary">TalentPulse</div>
+<div class="flex gap-6">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Terms</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Privacy</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Help</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Contact</a>
+</div>
+<div class="font-label-md text-label-md text-on-surface dark:text-on-surface-variant">© 2024 TalentPulse. Premium Marketplace.</div>
+</footer>
+</body></html>

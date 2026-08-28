@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TalentPulse - Chat</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "inverse-primary": "#adc6ff",
+                "surface-tint": "#005bc1",
+                "on-primary-container": "#fefcff",
+                "system-gray": "#8E8E93",
+                "surface-dim": "#d9dade",
+                "system-orange": "#FF9500",
+                "on-secondary-fixed-variant": "#46464b",
+                "tertiary-fixed-dim": "#53e16f",
+                "surface-container": "#ededf2",
+                "primary-fixed-dim": "#adc6ff",
+                "on-error-container": "#93000a",
+                "on-secondary": "#ffffff",
+                "tertiary": "#006b27",
+                "secondary-fixed-dim": "#c6c6cb",
+                "surface-container-high": "#e8e8ed",
+                "inverse-on-surface": "#f0f0f5",
+                "system-red": "#FF3B30",
+                "on-tertiary-fixed-variant": "#00531c",
+                "on-secondary-fixed": "#1a1b1f",
+                "system-green": "#34C759",
+                "on-background": "#1a1c1f",
+                "on-tertiary-fixed": "#002107",
+                "on-surface-variant": "#414755",
+                "secondary-container": "#e0dfe4",
+                "on-tertiary": "#ffffff",
+                "primary": "#0058bc",
+                "secondary": "#5d5e63",
+                "primary-container": "#0070eb",
+                "on-tertiary-container": "#f7fff2",
+                "surface-base": "#FFFFFF",
+                "tertiary-container": "#008733",
+                "outline-variant": "#c1c6d7",
+                "surface-container-low": "#f3f3f8",
+                "background": "#f9f9fe",
+                "on-primary-fixed": "#001a41",
+                "surface-container-highest": "#e2e2e7",
+                "surface-variant": "#e2e2e7",
+                "primary-fixed": "#d8e2ff",
+                "surface-grouped": "#F2F2F7",
+                "secondary-fixed": "#e3e2e7",
+                "outline": "#717786",
+                "on-primary-fixed-variant": "#004493",
+                "inverse-surface": "#2e3034",
+                "on-surface": "#1a1c1f",
+                "surface-container-lowest": "#ffffff",
+                "on-secondary-container": "#626267",
+                "tertiary-fixed": "#72fe88",
+                "on-primary": "#ffffff",
+                "on-error": "#ffffff",
+                "surface-bright": "#f9f9fe",
+                "error": "#ba1a1a",
+                "surface": "#f9f9fe",
+                "error-container": "#ffdad6"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-md": "16px",
+                "gutter": "16px",
+                "margin-desktop": "32px",
+                "unit": "8px",
+                "margin-mobile": "16px",
+                "stack-sm": "8px",
+                "stack-lg": "32px"
+        },
+        "fontFamily": {
+                "headline-md": [
+                        "Inter"
+                ],
+                "display-lg": [
+                        "Inter"
+                ],
+                "body-lg": [
+                        "Inter"
+                ],
+                "label-sm": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-md": [
+                        "22px",
+                        {
+                                "lineHeight": "28px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "34px",
+                        {
+                                "lineHeight": "41px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "17px",
+                        {
+                                "lineHeight": "22px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-sm": [
+                        "11px",
+                        {
+                                "lineHeight": "13px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "30px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-md": [
+                        "13px",
+                        {
+                                "lineHeight": "18px",
+                                "letterSpacing": "0.01em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-md": [
+                        "15px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "28px",
+                        {
+                                "lineHeight": "34px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for chat area */
+        .chat-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background-color: #e2e2e7;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md h-screen flex flex-col overflow-hidden">
+<!-- TopNavBar -->
+<header class="sticky top-0 w-full z-50 bg-white/80 dark:bg-surface/80 border-b border-black/5 dark:border-white/5 shadow-sm backdrop-blur-xl">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-[1200px] mx-auto">
+<div class="flex items-center gap-stack-lg">
+<a class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed" href="#">TalentPulse</a>
+<nav class="hidden md:flex gap-stack-lg">
+<a class="text-on-surface-variant font-medium hover:opacity-75 transition-opacity" href="#">Talent</a>
+<a class="text-on-surface-variant font-medium hover:opacity-75 transition-opacity" href="#">Requests</a>
+<a class="text-on-surface-variant font-medium hover:opacity-75 transition-opacity" href="#">Categories</a>
+</nav>
+</div>
+<div class="flex items-center gap-stack-md">
+<button class="hover:opacity-75 transition-opacity text-primary dark:text-primary-fixed"><span class="material-symbols-outlined">notifications</span></button>
+<button class="hover:opacity-75 transition-opacity text-primary font-bold border-b-2 border-primary pb-1"><span class="material-symbols-outlined">chat</span></button>
+<button class="hover:opacity-75 transition-opacity text-primary dark:text-primary-fixed"><span class="material-symbols-outlined">account_circle</span></button>
+</div>
+</div>
+</header>
+<!-- Main Chat Layout -->
+<main class="flex-1 flex overflow-hidden max-w-[1200px] w-full mx-auto bg-white shadow-sm mt-stack-md mb-[48px] rounded-xl border border-surface-variant">
+<!-- Sidebar: Chat List -->
+<aside class="w-full md:w-80 border-r border-surface-variant flex flex-col bg-surface-container-lowest">
+<div class="p-4 border-b border-surface-variant">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-4">Messages</h2>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-body-md focus:ring-2 focus:ring-primary focus:bg-white transition-colors" placeholder="Search conversations..." type="text"/>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto chat-scroll">
+<!-- Chat Item Active -->
+<div class="flex items-center p-4 bg-surface-container-low cursor-pointer border-l-4 border-primary">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover border border-surface-variant" data-alt="A professional headshot of a young woman with a warm smile, wearing a stylish blazer, soft studio lighting, light mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3e3XlTYrFD801VfXbCnYn3DDIpZ53F4DBMK2PJRNcl6KWjcg2CeIz4BuaL7WzqTcFqsA_wP7UywA0fQuLsjTSHGPFJH46mMOtNXJK1QjrUWr65UQWmBDlFPE7cSVoEf9YIRohSPSckzvclJLw4p0ynsNBN9cW4B2j-unJzlA6GZS3Q6U6p9WlZq-sZt9EVa40a1x-OGOfJuNCMxA04d25giX4Qw6M7VfK9-dYtUR8Y6kiS-m6JIOo"/>
+<div class="absolute bottom-0 right-0 w-3 h-3 bg-system-green rounded-full border-2 border-white"></div>
+</div>
+<div class="ml-4 flex-1">
+<div class="flex justify-between items-baseline">
+<h3 class="font-label-md text-label-md text-on-surface">Elena Rodriguez</h3>
+<span class="text-label-sm text-on-surface-variant">10:42 AM</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant truncate text-sm mt-1">That sounds great! I can start on...</p>
+</div>
+</div>
+<!-- Chat Item -->
+<div class="flex items-center p-4 hover:bg-surface-container transition-colors cursor-pointer border-l-4 border-transparent">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover border border-surface-variant" data-alt="A portrait of a male freelance designer in his 30s, creative studio background, well-lit, approachable, light mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcf-2mVXEXcj98G-ZqpQpgqdmJI_2at6gTfnlWeEFKtS9TlfyyrkaVwJfYLO1_hC-oaVkNT57dInds8UF3a3WDILW_c3xA70JAdHbUWC6490Kigu785otAIYpDHQPXzdvjrO32eJ52BKIDJNIAnJMzXOWF3tOVEUGn4QOTbzw-IX2Mide14LsKQSxOk-lvdjrdlUV7przzWiicPh0zYWEPM1J469w8X4NLfLDZZuzrPQ4DaNzbWojf"/>
+</div>
+<div class="ml-4 flex-1">
+<div class="flex justify-between items-baseline">
+<h3 class="font-label-md text-label-md text-on-surface font-medium">Marcus Chen</h3>
+<span class="text-label-sm text-on-surface-variant">Yesterday</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant truncate text-sm mt-1">Here is the link to my portfolio.</p>
+</div>
+</div>
+<!-- Chat Item -->
+<div class="flex items-center p-4 hover:bg-surface-container transition-colors cursor-pointer border-l-4 border-transparent">
+<div class="relative">
+<div class="w-12 h-12 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary-container font-headline-md">SJ</div>
+</div>
+<div class="ml-4 flex-1">
+<div class="flex justify-between items-baseline">
+<h3 class="font-label-md text-label-md text-on-surface font-medium">Sarah Jenkins</h3>
+<span class="text-label-sm text-on-surface-variant">Mon</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant truncate text-sm mt-1">Thanks for the update.</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Chat Area -->
+<section class="flex-1 flex flex-col hidden md:flex bg-white relative">
+<!-- Chat Header -->
+<div class="flex items-center justify-between p-4 border-b border-surface-variant bg-white/80 backdrop-blur-md z-10 sticky top-0">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A professional headshot of a young woman with a warm smile, wearing a stylish blazer, soft studio lighting, light mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0tkmfvNrwCzpLi6LjGoZHAOMnHzZu7w-8jlpew69cIkgTruPwQb-Aukq6jlkzl8SqKav5Hsx6mp3aP_e2SEQUKk-chiMTFmrJgHG8V56NGwdrx2QyFFwRcr0qTOfAVwmK80c2lXQqsQ3wthwEnE45rU2euUFfsjgXzl3UdbzrrbxeDvhUBAZ6liqXeOe6bV7hXn0uc10m6dBFgLbPDzzFi-c8UHhAZ9R2KvbrUuLEhxk8epkLD_dl"/>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface text-lg">Elena Rodriguez</h2>
+<span class="text-label-sm text-on-surface-variant">UI/UX Designer • Response time: 1 hr</span>
+</div>
+</div>
+<div class="flex items-center gap-stack-md">
+<button class="bg-primary text-white font-label-md px-4 py-2 rounded-xl hover:bg-primary-container transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">handshake</span>
+                        Request Transaction
+                    </button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Chat Messages (Canvas) -->
+<div class="flex-1 overflow-y-auto p-6 chat-scroll bg-surface-grouped flex flex-col gap-4">
+<!-- Date Divider -->
+<div class="flex justify-center my-2">
+<span class="text-label-sm text-on-surface-variant bg-surface-variant px-3 py-1 rounded-full">Today</span>
+</div>
+<!-- Received Message (Other) -->
+<div class="flex items-end gap-2 max-w-[75%]">
+<img class="w-8 h-8 rounded-full object-cover mb-1" data-alt="A professional headshot of a young woman with a warm smile, wearing a stylish blazer, soft studio lighting, light mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuByjUStf5GmwFogJcinqde5Rh4az5wy69RCw6OuvJM4CaXUAHh1021Rcz7lDR57wiozEBzPcbwD5gAKActhuIdsByPZoDb-uv60wbvLR0Ms8i2UDYSRkWzBULZdJS4P5mXMUrqT1dp9e_Jx6BLEjKg-Z7BcuYticBL3ZdzoX0I1fZB7YVwLsX4eDXL5xO9MBdBp0WULo_GBPW_NCJZCnqNcIwO8kR8oOc5MZdB3qm7mzcvYp1FZeKlZ"/>
+<div class="bg-surface-variant p-3 rounded-[18px] rounded-bl-sm border border-black/5 shadow-sm">
+<p class="font-body-md text-body-md text-on-surface">Hi there! I reviewed your project requirements for the new marketplace app.</p>
+</div>
+<span class="text-label-sm text-on-surface-variant self-end mb-1">10:30 AM</span>
+</div>
+<!-- Received Message (Other) -->
+<div class="flex items-end gap-2 max-w-[75%]">
+<div class="w-8 h-8 mb-1 invisible"></div> <!-- Spacer for alignment -->
+<div class="bg-surface-variant p-3 rounded-[18px] rounded-bl-sm border border-black/5 shadow-sm">
+<p class="font-body-md text-body-md text-on-surface">I have a few questions about the target audience before I can provide a final quote.</p>
+</div>
+<span class="text-label-sm text-on-surface-variant self-end mb-1">10:31 AM</span>
+</div>
+<!-- Sent Message (Me) -->
+<div class="flex items-end gap-2 max-w-[75%] self-end flex-row-reverse">
+<div class="bg-primary p-3 rounded-[18px] rounded-br-sm shadow-sm">
+<p class="font-body-md text-body-md text-white">Hello Elena! Thanks for getting back so quickly.</p>
+</div>
+<span class="text-label-sm text-on-surface-variant self-end mb-1">10:35 AM</span>
+</div>
+<!-- Sent Message (Me) -->
+<div class="flex items-end gap-2 max-w-[75%] self-end flex-row-reverse">
+<div class="bg-primary p-3 rounded-[18px] rounded-br-sm shadow-sm">
+<p class="font-body-md text-body-md text-white">The primary audience is young professionals, ages 25-35. I can send over our current persona deck if that helps?</p>
+</div>
+<span class="text-label-sm text-on-surface-variant self-end mb-1 flex items-center gap-1">
+                        10:36 AM <span class="material-symbols-outlined text-[14px] text-primary">done_all</span>
+</span>
+</div>
+<!-- Received Message (Other) with Portfolio Attachment -->
+<div class="flex items-end gap-2 max-w-[75%] mt-2">
+<img class="w-8 h-8 rounded-full object-cover mb-1" data-alt="A professional headshot of a young woman with a warm smile, wearing a stylish blazer, soft studio lighting, light mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDj1C2X0Q4Zk5k4S-mwtV4_NrAF4YfMyD7T4yiIRhg7s8PL3XAijwdyXNuKLsuuezF4VQpMOzrVZXvyDQMlFZbCCezZsBvvIumBs0qffFwrioLwdW_fl1KHqMC0Js29O9O2UR2sSoZcwts2SMUqx2SVZTLUx-4a2g4nnas6L_6Xw3BQTopKOUn1wF7xzhx1N6O58hxB10y7hR9LuRBCPjiufe4V_k2ibEYjGEk9tLOrdUsD5B6fTq-G"/>
+<div class="bg-surface-variant p-3 rounded-[18px] rounded-bl-sm border border-black/5 shadow-sm flex flex-col gap-2 w-72">
+<p class="font-body-md text-body-md text-on-surface">That sounds great! I can start on those personas. In the meantime, here is a similar project I completed recently.</p>
+<!-- Embedded Card/Attachment -->
+<div class="border border-surface-variant rounded-lg overflow-hidden flex flex-col bg-surface-container-lowest cursor-pointer hover:shadow-[0_4px_24px_rgba(0,0,0,0.04)] transition-shadow">
+<div class="h-24 bg-surface-variant w-full" data-alt="A mockup of a modern mobile app interface displayed on an isometric smartphone, clean minimalist design, light mode, vibrant orange accents, soft shadows." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCpiTyFrZsZ1cuFAWFTlxbdFsdi_HCCIZ5636Qtk66U0cEpuGcOyVuatSKBh7fNwjjI98Tkap9MWWp5r5rZEns0b9qGE7o1bV7zJqD-Tz5tatR6ltIG6pxAbv6kuvNwWlS3vXBcDDxIgf-T_aBN3k2QlpktkZe7_U-NY0dvTITEjm16_g390BhdnQAWLbPXQe2x7DyBEeW7cy_hTQrOYk8PsImhU2nJnc0Uy5-ubQu17PIVq0EhkIKj'); background-size: cover; background-position: center;"></div>
+<div class="p-2 flex items-center justify-between">
+<div>
+<p class="font-label-md text-label-md font-medium text-on-surface">Fintech App Redesign</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Behance Portfolio</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">open_in_new</span>
+</div>
+</div>
+</div>
+<span class="text-label-sm text-on-surface-variant self-end mb-1">10:42 AM</span>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-4 bg-white border-t border-surface-variant z-10">
+<div class="flex items-end gap-2 bg-surface-container-low p-2 rounded-[24px] border border-surface-variant focus-within:bg-white focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full" title="Attach Image">
+<span class="material-symbols-outlined">image</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full" title="Send Portfolio">
+<span class="material-symbols-outlined">folder_special</span>
+</button>
+<textarea class="flex-1 bg-transparent border-none focus:ring-0 resize-none max-h-32 py-2 font-body-md text-on-surface placeholder-on-surface-variant" placeholder="Type a message..." rows="1" style="min-height: 40px;"></textarea>
+<button class="p-2 bg-primary text-white rounded-full hover:bg-primary-container transition-colors ml-1 shadow-sm">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe md:hidden bg-white/80 dark:bg-surface/80 border-t border-black/5 dark:border-white/5 shadow-lg rounded-t-xl backdrop-blur-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined">explore</span>
+<span class="font-label-sm text-label-sm mt-1">Explore</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-label-sm text-label-sm mt-1">Requests</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined">add_circle</span>
+<span class="font-label-sm text-label-sm mt-1">Post</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+<span class="font-label-sm text-label-sm mt-1">Messages</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-sm text-label-sm mt-1">Profile</span>
+</a>
+</nav>
+<script>
+        // Simple auto-resize for textarea
+        const textarea = document.querySelector('textarea');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            if(this.value === '') {
+                 this.style.height = '40px';
+            }
+        });
+    </script>
+</body></html>
