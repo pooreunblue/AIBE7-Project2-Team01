@@ -1,5 +1,7 @@
 package org.example.link.auth.jwt;
 
+import java.util.UUID;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -47,7 +49,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 // Access Token만 인증에 사용
                 if (jwtProvider.isAccessToken(claims)) {
 
-                    Long userId = jwtProvider.getUserId(claims);
+                    UUID userId = jwtProvider.getUserId(claims);
                     String email = jwtProvider.getEmail(claims);
                     Role role = jwtProvider.getRole(claims);
 

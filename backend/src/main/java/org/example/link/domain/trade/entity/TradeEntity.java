@@ -1,5 +1,7 @@
 package org.example.link.domain.trade.entity;
 
+import java.util.UUID;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -15,24 +17,24 @@ import java.time.Instant;
 public class TradeEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "trade_id")
-    private Long id;
+    private UUID id;
 
     @Column(name = "chat_room_id")
-    private Long chatRoomId;
+    private UUID chatRoomId;
 
     @Column(name = "request_post_id")
-    private Long requestPostId;
+    private UUID requestPostId;
 
     @Column(name = "talent_post_id")
-    private Long talentPostId;
+    private UUID talentPostId;
 
     @Column(name = "payer_id", nullable = false)
-    private Long payerId;
+    private UUID payerId;
 
     @Column(name = "payee_id", nullable = false)
-    private Long payeeId;
+    private UUID payeeId;
 
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
@@ -53,7 +55,7 @@ public class TradeEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    public TradeEntity(Long chatRoomId, Long requestPostId, Long talentPostId, Long payerId, Long payeeId, BigDecimal amount) {
+    public TradeEntity(UUID chatRoomId, UUID requestPostId, UUID talentPostId, UUID payerId, UUID payeeId, BigDecimal amount) {
         this.chatRoomId = chatRoomId;
         this.requestPostId = requestPostId;
         this.talentPostId = talentPostId;

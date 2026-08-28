@@ -1,5 +1,7 @@
 package org.example.link.domain.request.service;
 
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.exception.CustomException;
@@ -26,7 +28,7 @@ public class RequestPostFileService {
     private final StorageService storageService;
 
     @Transactional
-    public RequestPostFileResponse uploadFile(CustomUserDetails user, Long postId, MultipartFile file) {
+    public RequestPostFileResponse uploadFile(CustomUserDetails user, UUID postId, MultipartFile file) {
         RequestPostEntity post = findPost(postId);
         validateOwner(post, user.getUserId());
         StoredFile stored = storageService.upload(file, "requests/" + user.getUserId() + "/" + postId, FileType.PORTFOLIO);
@@ -37,7 +39,7 @@ public class RequestPostFileService {
     }
 
     @Transactional(readOnly = true)
-    public List<RequestPostFileResponse> getFiles(CustomUserDetails user, Long postId) {
+    public List<RequestPostFileResponse> getFiles(CustomUserDetails user, UUID postId) {
         RequestPostEntity post = findPost(postId);
         validateOwner(post, user.getUserId());
         return requestPostFileRepository.findAllByRequestPostId(postId).stream()
@@ -45,7 +47,7 @@ public class RequestPostFileService {
     }
 
     @Transactional
-    public void deleteFile(CustomUserDetails user, Long postId, Long fileId) {
+    public void deleteFile(CustomUserDetails user, UUID postId, UUID fileId) {
         RequestPostEntity post = findPost(postId);
         validateOwner(post, user.getUserId());
         RequestPostFileEntity file = findFile(fileId);
@@ -57,7 +59,7 @@ public class RequestPostFileService {
     }
 
     @Transactional
-    public RequestPostFileResponse updateFile(CustomUserDetails user, Long postId, Long fileId, MultipartFile newFile) {
+    public RequestPostFileResponse updateFile(CustomUserDetails user, UUID postId, UUID fileId, MultipartFile newFile) {
         RequestPostEntity post = findPost(postId);
         validateOwner(post, user.getUserId());
         RequestPostFileEntity file = findFile(fileId);
@@ -73,7 +75,7 @@ public class RequestPostFileService {
     }
 
     @Transactional
-    public RequestPostFileResponse changeThumbnail(CustomUserDetails user, Long postId, Long fileId) {
+    public RequestPostFileResponse changeThumbnail(CustomUserDetails user, UUID postId, UUID fileId) {
         RequestPostEntity post = findPost(postId);
         validateOwner(post, user.getUserId());
         RequestPostFileEntity file = findFile(fileId);
@@ -89,29 +91,29 @@ public class RequestPostFileService {
         return RequestPostFileResponse.from(file);
     }
 
-    private RequestPostEntity findPost(Long postId) {
+    private RequestPostEntity findPost(UUID postId) {
         return requestPostRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
     }
 
-    private RequestPostFileEntity findFile(Long fileId) {
+    private RequestPostFileEntity findFile(UUID fileId) {
         return requestPostFileRepository.findById(fileId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
     }
 
-    private void validateOwner(RequestPostEntity post, Long userId) {
+    private void validateOwner(RequestPostEntity post, UUID userId) {
         if (!post.getUser().getId().equals(userId)) {
             throw new CustomException(ErrorCode.POST_ACCESS_DENIED);
         }
     }
 
-    private void validateBelongsToPost(RequestPostFileEntity file, Long postId) {
+    private void validateBelongsToPost(RequestPostFileEntity file, UUID postId) {
         if (!file.getRequestPost().getId().equals(postId)) {
             throw new CustomException(ErrorCode.INVALID_POST_FILE);
         }
     }
 
-    private void setDefaultThumbnailIfAbsent(Long postId) {
+    private void setDefaultThumbnailIfAbsent(UUID postId) {
         if (requestPostFileRepository.findByRequestPostIdAndThumbnailTrue(postId).isPresent()) {
             return;
         }

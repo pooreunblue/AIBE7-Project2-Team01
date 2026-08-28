@@ -1,5 +1,7 @@
 package org.example.link.domain.wallet.service;
 
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
@@ -21,7 +23,7 @@ public class TransactionService {
     private final WalletTransactionRepository walletTransactionRepository;
 
     public Page<WalletTransactionResponse> getTransactions(
-            Long userId,
+            UUID userId,
             Pageable pageable
     ) {
         WalletEntity wallet = walletRepository.findByUserId(userId)

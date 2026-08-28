@@ -10,7 +10,7 @@ let activeClient = null;
 // 채팅 목록 페이지(#/chat) 겸 채팅방 페이지(#/chat/{id}).
 // 실제 데이터는 initChatPage()가 렌더링 후 비동기로 채워 넣음 (app.js의 bindPageEvents에서 호출).
 export function ChatPage(activeRoomId) {
-  const roomId = activeRoomId ? Number(activeRoomId) : "";
+  const roomId = activeRoomId || "";
   return `
     <section class="chat-layout" data-chat-page data-room-id="${roomId}">
       <aside class="conversation-list" data-conversation-list>
@@ -33,7 +33,7 @@ export function initChatPage() {
   if (!root) return;
 
   const roomIdAttr = root.dataset.roomId;
-  const roomId = roomIdAttr ? Number(roomIdAttr) : null;
+  const roomId = roomIdAttr || null;
   const listEl = root.querySelector("[data-room-list]");
   const panelEl = root.querySelector("[data-chat-panel]");
 
@@ -101,7 +101,7 @@ async function openRoom(panelEl, room) {
     requestPost &&
     !activeTrade &&
     currentUserId != null &&
-    Number(requestPost.userId) === Number(currentUserId)
+    String(requestPost.userId) === String(currentUserId)
   );
 
   panelEl.innerHTML = panelTemplate(room, { canRequestTrade });
@@ -186,7 +186,7 @@ async function loadActiveTrade(chatRoomId) {
   try {
     const trades = await fetchMyTrades({ size: 50 });
     return (trades.content || []).find(
-      (trade) => Number(trade.chatRoomId) === Number(chatRoomId) &&
+      (trade) => String(trade.chatRoomId) === String(chatRoomId) &&
         (trade.status === "PENDING" || trade.status === "PAID")
     );
   } catch {
@@ -248,7 +248,7 @@ function panelTemplate(room, { canRequestTrade = false } = {}) {
 }
 
 function renderBubble(message, currentUserId) {
-  const mine = currentUserId != null && Number(message.senderId) === Number(currentUserId);
+  const mine = currentUserId != null && String(message.senderId) === String(currentUserId);
   const mineClass = mine ? "me" : "";
 
   if (message.messageType === "TRADE_REQUEST" && message.trade) {
@@ -267,7 +267,7 @@ function renderBubble(message, currentUserId) {
 
 function renderTradeRequestBubble(message, currentUserId, mineClass) {
   const trade = message.trade;
-  const isPayer = currentUserId != null && Number(trade.payerId) === Number(currentUserId);
+  const isPayer = currentUserId != null && String(trade.payerId) === String(currentUserId);
   const isPending = trade.status === "PENDING";
 
   return `

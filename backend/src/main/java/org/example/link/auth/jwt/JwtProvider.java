@@ -1,5 +1,7 @@
 package org.example.link.auth.jwt;
 
+import java.util.UUID;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -27,7 +29,7 @@ public class JwtProvider {
 
     //AccessToken 생성
     public String createAccessToken(
-            Long userId,
+            UUID userId,
             String email,
             Role role
     ) {
@@ -52,7 +54,7 @@ public class JwtProvider {
     }
 
     //RefreshToken 생성
-    public String createRefreshToken(Long userId) {
+    public String createRefreshToken(UUID userId) {
         Instant now = Instant.now();
         Instant expiry =
                 now.plus(authProperties.jwt().refreshTokenExpiry());
@@ -96,8 +98,8 @@ public class JwtProvider {
     }
 
     //userId 추출
-    public Long getUserId(Claims claims) {
-        return Long.valueOf(claims.getSubject());
+    public UUID getUserId(Claims claims) {
+        return UUID.fromString(claims.getSubject());
     }
 
     //email 추출

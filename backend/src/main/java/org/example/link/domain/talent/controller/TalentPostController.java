@@ -1,5 +1,7 @@
 package org.example.link.domain.talent.controller;
 
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +55,7 @@ public class TalentPostController {
 
     @GetMapping("/{talentPostId}")
     @Operation(summary = "재능글 상세 조회")
-    public ApiResponse<TalentPostResponseDto> readOne(@PathVariable Long talentPostId) {
+    public ApiResponse<TalentPostResponseDto> readOne(@PathVariable UUID talentPostId) {
         TalentPostEntity talentPostEntity = talentPostService.readOne(talentPostId);
         return ApiResponse.ok(TalentPostResponseDto.toDto(talentPostEntity));
     }
@@ -76,7 +78,7 @@ public class TalentPostController {
     @PutMapping("/{talentPostId}")
     @Operation(summary = "재능글 수정")
     public ApiResponse<TalentPostResponseDto> update(
-            @PathVariable Long talentPostId,
+            @PathVariable UUID talentPostId,
             @Valid @RequestBody TalentPostRequestDto talentPostRequestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) throws AccessDeniedException {
@@ -87,7 +89,7 @@ public class TalentPostController {
     @DeleteMapping("/{talentPostId}")
     @Operation(summary = "재능글 삭제")
     public ApiResponse<Void> delete(
-            @PathVariable Long talentPostId,
+            @PathVariable UUID talentPostId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) throws AccessDeniedException {
         talentPostService.delete(talentPostId, userDetails);
@@ -97,7 +99,7 @@ public class TalentPostController {
     @PatchMapping("/{talentPostId}/inactive")
     @Operation(summary = "재능글 비활성화")
     public ApiResponse<TalentPostResponseDto> inactive(
-            @PathVariable Long talentPostId,
+            @PathVariable UUID talentPostId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) throws AccessDeniedException {
         TalentPostEntity inactived = talentPostService.inactiveStatus(talentPostId, userDetails);

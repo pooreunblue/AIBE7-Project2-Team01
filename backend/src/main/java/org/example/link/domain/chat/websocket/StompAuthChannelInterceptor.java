@@ -1,5 +1,7 @@
 package org.example.link.domain.chat.websocket;
 
+import java.util.UUID;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +42,7 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
                             "Access Token이 아닙니다."
                     );
                 }
-                Long userId = jwtProvider.getUserId(claims);
+                UUID userId = jwtProvider.getUserId(claims);
                 String email = jwtProvider.getEmail(claims);
                 accessor.setUser(
                         new StompPrincipal(userId, email)
@@ -76,7 +78,7 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
         return token instanceof String value ? value : null;
     }
         private record StompPrincipal(
-                Long userId,
+                UUID userId,
                 String email
         ) implements Principal {
             @Override

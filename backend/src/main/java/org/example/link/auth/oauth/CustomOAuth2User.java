@@ -1,5 +1,7 @@
 package org.example.link.auth.oauth;
 
+import java.util.UUID;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.example.link.domain.user.entity.Role;
@@ -14,7 +16,7 @@ import java.util.Map;
 @Getter
 @RequiredArgsConstructor
 public class CustomOAuth2User implements OAuth2User {
-    private final Long userId;
+    private final UUID userId;
     private final String email;
     private final Role role;
     private final Map<String, Object> attributes;

@@ -1,5 +1,7 @@
 package org.example.link.domain.chat.controller;
 
+import java.util.UUID;
+
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -59,7 +61,7 @@ public class ChatRoomController {
     @PostMapping(value = "/{chatRoomId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "채팅 이미지 전송")
     public ResponseEntity<ApiResponse<ChatMessageResponse>> sendImage(
-            @PathVariable Long chatRoomId,
+            @PathVariable UUID chatRoomId,
             @RequestPart("file") MultipartFile file,
             Authentication authentication
     ) {
@@ -70,7 +72,7 @@ public class ChatRoomController {
     @GetMapping("/{id}")
     @Operation(summary = "채팅 메시지 목록 조회")
     public ApiResponse<List<ChatMessageResponse>> messages(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             Authentication authentication
@@ -81,7 +83,7 @@ public class ChatRoomController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> leave(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             Authentication authentication
     ) {
         chatService.leaveRoom(authentication.getName(), id);
@@ -90,7 +92,7 @@ public class ChatRoomController {
 
     @PostMapping("/{chatRoomId}/trades")
     public ResponseEntity<ApiResponse<TradeResponse>> createTrade(
-            @PathVariable Long chatRoomId,
+            @PathVariable UUID chatRoomId,
             @Valid @RequestBody TradeCreateRequest request,
             @AuthenticationPrincipal CustomUserDetails user
     ) {

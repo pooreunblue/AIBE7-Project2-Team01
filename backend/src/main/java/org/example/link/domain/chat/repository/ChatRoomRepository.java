@@ -1,5 +1,7 @@
 package org.example.link.domain.chat.repository;
 
+import java.util.UUID;
+
 import org.example.link.domain.chat.entity.ChatRoom;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -7,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
+public interface ChatRoomRepository extends JpaRepository<ChatRoom, UUID> {
 
     @Query("""
             select cr from ChatRoom cr
@@ -17,9 +19,9 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             and exists (select 1 from ChatParticipant p where p.chatRoom = cr and p.user.id = :userBId)
             """)
     Optional<ChatRoom> findExistingRoom(
-            @Param("requestPostId") Long requestPostId,
-            @Param("talentPostId") Long talentPostId,
-            @Param("userAId") Long userAId,
-            @Param("userBId") Long userBId
+            @Param("requestPostId") UUID requestPostId,
+            @Param("talentPostId") UUID talentPostId,
+            @Param("userAId") UUID userAId,
+            @Param("userBId") UUID userBId
     );
 }

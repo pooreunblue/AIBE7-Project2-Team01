@@ -1,5 +1,7 @@
 package org.example.link.domain.category.entity;
 
+import java.util.UUID;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -16,9 +18,9 @@ import java.time.Instant;
 public class CategoryEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "category_id")
-    private Long id;
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     private String name;

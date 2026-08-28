@@ -1,5 +1,7 @@
 package org.example.link.domain.talent.service;
 
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.exception.CustomException;
@@ -35,7 +37,7 @@ public class TalentPostService {
 
     @Transactional
     public TalentPostEntity create(TalentPostRequestDto talentPostRequestDto, CustomUserDetails userDetails) {
-        Long userId = getUserId(userDetails);
+        UUID userId = getUserId(userDetails);
         UserEntity user = getUser(userId);
         CategoryEntity category = getCategory(talentPostRequestDto);
         PortfolioEntity portfolio = getPortfolio(talentPostRequestDto);
@@ -47,7 +49,7 @@ public class TalentPostService {
         return talentPostRepository.findAll();
     }
 
-    public TalentPostEntity readOne(Long talentPostId) {
+    public TalentPostEntity readOne(UUID talentPostId) {
         return getTalentPostEntity(talentPostId);
     }
 
@@ -61,10 +63,10 @@ public class TalentPostService {
 
     @Transactional
     public TalentPostEntity update(
-            Long talentPostId,
+            UUID talentPostId,
             TalentPostRequestDto talentPostRequestDto,
             CustomUserDetails userDetails) throws AccessDeniedException {
-        Long userId = getUserId(userDetails);
+        UUID userId = getUserId(userDetails);
         TalentPostEntity talentPostEntity = getTalentPostEntity(talentPostId);
         validateAuth(talentPostEntity, userId);
         CategoryEntity category = getCategory(talentPostRequestDto);
@@ -74,27 +76,27 @@ public class TalentPostService {
     }
 
     @Transactional
-    public void delete(Long talentPostId, CustomUserDetails userDetails) throws AccessDeniedException {
-        Long userId = getUserId(userDetails);
+    public void delete(UUID talentPostId, CustomUserDetails userDetails) throws AccessDeniedException {
+        UUID userId = getUserId(userDetails);
         TalentPostEntity talentPostEntity = getTalentPostEntity(talentPostId);
         validateAuth(talentPostEntity, userId);
         talentPostRepository.delete(talentPostEntity);
     }
 
     @Transactional
-    public TalentPostEntity inactiveStatus(Long talentPostId, CustomUserDetails userDetails) throws AccessDeniedException {
-        Long userId = getUserId(userDetails);
+    public TalentPostEntity inactiveStatus(UUID talentPostId, CustomUserDetails userDetails) throws AccessDeniedException {
+        UUID userId = getUserId(userDetails);
         TalentPostEntity talentPostEntity = getTalentPostEntity(talentPostId);
         validateAuth(talentPostEntity, userId);
         talentPostEntity.inactiveStatus();
         return talentPostEntity;
     }
 
-    private Long getUserId(CustomUserDetails userDetails) {
+    private UUID getUserId(CustomUserDetails userDetails) {
         return userDetails.getUserId();
     }
 
-    private @NonNull UserEntity getUser(Long userId) {
+    private @NonNull UserEntity getUser(UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
@@ -127,12 +129,12 @@ public class TalentPostService {
                 .build();
     }
 
-    private @NonNull TalentPostEntity getTalentPostEntity(Long talentPostId) {
+    private @NonNull TalentPostEntity getTalentPostEntity(UUID talentPostId) {
         return talentPostRepository.findById(talentPostId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
     }
 
-    private void validateAuth(TalentPostEntity talentPostEntity, Long userId) throws AccessDeniedException {
+    private void validateAuth(TalentPostEntity talentPostEntity, UUID userId) throws AccessDeniedException {
         if (!talentPostEntity.getUser().getId().equals(userId)) {
             throw new CustomException(ErrorCode.POST_ACCESS_DENIED);
         }

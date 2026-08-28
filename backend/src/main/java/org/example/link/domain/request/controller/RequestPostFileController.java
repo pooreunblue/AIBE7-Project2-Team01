@@ -1,5 +1,7 @@
 package org.example.link.domain.request.controller;
 
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
@@ -25,7 +27,7 @@ public class RequestPostFileController {
     @Operation(summary = "의뢰글 파일 업로드")
     public ResponseEntity<ApiResponse<RequestPostFileResponse>> uploadFile(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long requestPostId,
+            @PathVariable UUID requestPostId,
             @RequestPart("file") MultipartFile file) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(
                 requestPostFileService.uploadFile(user, requestPostId, file)));
@@ -35,7 +37,7 @@ public class RequestPostFileController {
     @Operation(summary = "의뢰글 파일 목록 조회")
     public ApiResponse<List<RequestPostFileResponse>> getFiles(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long requestPostId) {
+            @PathVariable UUID requestPostId) {
         return ApiResponse.ok(requestPostFileService.getFiles(user, requestPostId));
     }
 
@@ -43,8 +45,8 @@ public class RequestPostFileController {
     @Operation(summary = "의뢰글 파일 삭제")
     public ApiResponse<Void> deleteFile(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long requestPostId,
-            @PathVariable Long fileId) {
+            @PathVariable UUID requestPostId,
+            @PathVariable UUID fileId) {
         requestPostFileService.deleteFile(user, requestPostId, fileId);
         return ApiResponse.ok();
     }
@@ -53,8 +55,8 @@ public class RequestPostFileController {
     @Operation(summary = "의뢰글 파일 교체")
     public ApiResponse<RequestPostFileResponse> updateFile(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long requestPostId,
-            @PathVariable Long fileId,
+            @PathVariable UUID requestPostId,
+            @PathVariable UUID fileId,
             @RequestPart("file") MultipartFile file) {
         return ApiResponse.ok(requestPostFileService.updateFile(user, requestPostId, fileId, file));
     }
@@ -63,8 +65,8 @@ public class RequestPostFileController {
     @Operation(summary = "의뢰글 대표 이미지 지정")
     public ApiResponse<RequestPostFileResponse> changeThumbnail(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long requestPostId,
-            @PathVariable Long fileId) {
+            @PathVariable UUID requestPostId,
+            @PathVariable UUID fileId) {
         return ApiResponse.ok(requestPostFileService.changeThumbnail(user, requestPostId, fileId));
     }
 }
