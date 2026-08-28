@@ -1,14 +1,19 @@
+# Application defaults
 spring:
   application:
     name: backend
+
   profiles:
-    active: dev,db,auth,redis,storage
+    active: dev,db,auth,redis,storage,ai
+
 ---
+# Development environment
 spring:
   config:
     activate:
       on-profile: dev
     import: optional:file:.env[.properties]
+
   servlet:
     multipart:
       max-file-size: 10MB

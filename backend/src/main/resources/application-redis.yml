@@ -1,3 +1,4 @@
+# Redis connection
 spring:
   data:
     redis:
