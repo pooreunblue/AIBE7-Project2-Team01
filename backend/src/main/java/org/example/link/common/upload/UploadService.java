@@ -1,5 +1,7 @@
 package org.example.link.common.upload;
 
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.example.link.common.storage.dto.StoredFile;
 import org.example.link.common.storage.service.StorageService;
@@ -14,7 +16,7 @@ public class UploadService {
     private final StorageService storageService;
 
     public UploadResponse uploadTempImage(
-            Long userId,
+            UUID userId,
             MultipartFile file
     ){
 

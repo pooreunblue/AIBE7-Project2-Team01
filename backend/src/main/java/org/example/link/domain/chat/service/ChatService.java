@@ -1,5 +1,7 @@
 package org.example.link.domain.chat.service;
 
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
@@ -62,7 +64,7 @@ public class ChatService {
     // 이미지 바이너리는 REST 멀티파트로 받아 Supabase 버킷에 저장하고,
     // 생성된 메시지는 텍스트와 동일하게 /topic/chat-rooms/{id} 로 브로드캐스트한다.
     @Transactional
-    public ChatMessageResponse sendImage(String senderEmail, Long chatRoomId, MultipartFile file) {
+    public ChatMessageResponse sendImage(String senderEmail, UUID chatRoomId, MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new CustomException(ErrorCode.INVALID_FILE);
         }
@@ -76,7 +78,7 @@ public class ChatService {
         return chatMessagePublisher.publishImage(chatRoom, sender, stored.url(), stored.path());
     }
 
-    private void requireParticipant(Long chatRoomId, Long userId) {
+    private void requireParticipant(UUID chatRoomId, UUID userId) {
         if (!chatParticipantRepository.existsByChatRoomIdAndUserId(chatRoomId, userId)) {
             throw new CustomException(ErrorCode.CHAT_ROOM_ACCESS_DENIED);
         }
@@ -114,7 +116,7 @@ public class ChatService {
     // 나가는 사람의 참가자 row만 지움 (메시지/방은 그대로 유지 — 상대방은 계속 볼 수 있어야 함).
     // 양쪽 다 나가서 참가자가 0명이 되면, 걸린 거래(trade)가 없을 때만 방+메시지까지 완전히 정리함.
     @Transactional
-    public void leaveRoom(String email, Long chatRoomId) {
+    public void leaveRoom(String email, UUID chatRoomId) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -130,7 +132,7 @@ public class ChatService {
     }
 
     // 방이 완전히 삭제될 때 버킷에 남는 orphan 이미지를 정리한다. 정리 실패가 방 삭제를 막지 않도록 best-effort.
-    private void deleteAttachments(Long chatRoomId) {
+    private void deleteAttachments(UUID chatRoomId) {
         for (String path : chatMessageRepository.findAttachmentPathsByChatRoomId(chatRoomId)) {
             try {
                 storageService.delete(path);
@@ -145,11 +147,11 @@ public class ChatService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         List<ChatParticipant> myParticipations = chatParticipantRepository.findByUserId(user.getId());
-        List<Long> roomIds = myParticipations.stream()
+        List<UUID> roomIds = myParticipations.stream()
                 .map(p -> p.getChatRoom().getId())
                 .toList();
 
-        Map<Long, UserEntity> otherUserByRoomId = chatParticipantRepository
+        Map<UUID, UserEntity> otherUserByRoomId = chatParticipantRepository
                 .findByChatRoomIdInAndUserIdNot(roomIds, user.getId()).stream()
                 .collect(Collectors.toMap(p -> p.getChatRoom().getId(), ChatParticipant::getUser));
 
@@ -159,7 +161,7 @@ public class ChatService {
                 .toList();
     }
 
-    public List<ChatMessageResponse> getMessages(String email, Long chatRoomId, Pageable pageable) {
+    public List<ChatMessageResponse> getMessages(String email, UUID chatRoomId, Pageable pageable) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 

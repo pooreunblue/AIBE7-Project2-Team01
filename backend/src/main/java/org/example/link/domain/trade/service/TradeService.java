@@ -1,5 +1,7 @@
 package org.example.link.domain.trade.service;
 
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
@@ -48,7 +50,7 @@ public class TradeService {
     private static final String TRADE_REQUEST_MESSAGE = "거래를 요청했습니다.";
 
     @Transactional
-    public TradeResponse createTrade(Long userId, Long chatRoomId, TradeCreateRequest request) {
+    public TradeResponse createTrade(UUID userId, UUID chatRoomId, TradeCreateRequest request) {
         boolean hasRequestPost = request.requestPostId() != null;
         boolean hasTalentPost = request.talentPostId() != null;
         if (hasRequestPost == hasTalentPost) {
@@ -90,7 +92,7 @@ public class TradeService {
         return TradeResponse.from(saved);
     }
 
-    private record TradeParties(Long payerId, Long payeeId) {
+    private record TradeParties(UUID payerId, UUID payeeId) {
     }
 
     /**
@@ -99,14 +101,14 @@ public class TradeService {
      * - 재능글: 채팅 상대(구매자)가 결제자, 글쓴이(전문가)가 수취자.
      * 거래 요청 생성은 항상 해당 게시글 작성자만 가능하며, 게시글이 채팅방과 실제로 연결돼 있어야 한다.
      */
-    private TradeParties resolveParties(Long userId, ChatRoom chatRoom, TradeCreateRequest request, boolean isRequestPost) {
+    private TradeParties resolveParties(UUID userId, ChatRoom chatRoom, TradeCreateRequest request, boolean isRequestPost) {
         if (isRequestPost) {
             if (!request.requestPostId().equals(chatRoom.getRequestPostId())) {
                 throw new CustomException(ErrorCode.CHATROOM_POST_MISMATCH);
             }
             RequestPostEntity post = requestPostRepository.findById(request.requestPostId())
                     .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
-            Long ownerId = post.getUser().getId();
+            UUID ownerId = post.getUser().getId();
             if (!userId.equals(ownerId)) {
                 throw new CustomException(ErrorCode.POST_ACCESS_DENIED);
             }
@@ -118,25 +120,25 @@ public class TradeService {
         }
         TalentPostEntity post = talentPostRepository.findById(request.talentPostId())
                 .orElseThrow(() -> new CustomException(ErrorCode.TALENT_POST_NOT_FOUND));
-        Long ownerId = post.getUser().getId();
+        UUID ownerId = post.getUser().getId();
         if (!userId.equals(ownerId)) {
             throw new CustomException(ErrorCode.POST_ACCESS_DENIED);
         }
         return new TradeParties(findCounterpartId(chatRoom.getId(), ownerId), ownerId);
     }
 
-    public TradeResponse getTrade(Long userId, Long tradeId) {
+    public TradeResponse getTrade(UUID userId, UUID tradeId) {
         TradeEntity trade = getOwnedTrade(userId, tradeId);
         return TradeResponse.from(trade);
     }
 
-    public Page<TradeResponse> getMyTrades(Long userId, Pageable pageable) {
+    public Page<TradeResponse> getMyTrades(UUID userId, Pageable pageable) {
         return tradeRepository.findByPayerIdOrPayeeId(userId, userId, pageable)
                 .map(TradeResponse::from);
     }
 
     @Transactional
-    public TradeResponse pay(Long userId, Long tradeId) {
+    public TradeResponse pay(UUID userId, UUID tradeId) {
         TradeEntity trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRADE_NOT_FOUND));
         if (!trade.getPayerId().equals(userId)) {
@@ -152,7 +154,7 @@ public class TradeService {
     }
 
     @Transactional
-    public TradeResponse complete(Long userId, Long tradeId) {
+    public TradeResponse complete(UUID userId, UUID tradeId) {
         TradeEntity trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRADE_NOT_FOUND));
         if (!trade.getPayerId().equals(userId)) {
@@ -168,7 +170,7 @@ public class TradeService {
     }
 
     @Transactional
-    public TradeResponse cancel(Long userId, Long tradeId) {
+    public TradeResponse cancel(UUID userId, UUID tradeId) {
         TradeEntity trade = getOwnedTrade(userId, tradeId);
         if (trade.getStatus() != TradeStatus.PENDING && trade.getStatus() != TradeStatus.PAID) {
             throw new CustomException(ErrorCode.INVALID_TRADE_STATUS);
@@ -181,7 +183,7 @@ public class TradeService {
         return TradeResponse.from(trade);
     }
 
-    private TradeEntity getOwnedTrade(Long userId, Long tradeId) {
+    private TradeEntity getOwnedTrade(UUID userId, UUID tradeId) {
         TradeEntity trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRADE_NOT_FOUND));
         if (!trade.getPayerId().equals(userId) && !trade.getPayeeId().equals(userId)) {
@@ -190,7 +192,7 @@ public class TradeService {
         return trade;
     }
 
-    private Long findCounterpartId(Long chatRoomId, Long excludeUserId) {
+    private UUID findCounterpartId(UUID chatRoomId, UUID excludeUserId) {
         List<ChatParticipant> participants = chatParticipantRepository.findByChatRoomId(chatRoomId);
         return participants.stream()
                 .map(p -> p.getUser().getId())

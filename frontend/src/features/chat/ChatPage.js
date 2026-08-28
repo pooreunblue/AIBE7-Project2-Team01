@@ -8,7 +8,7 @@ let activeClient = null;
 // 채팅 목록 페이지(#/chat) 겸 채팅방 페이지(#/chat/{id}).
 // 실제 데이터는 initChatPage()가 렌더링 후 비동기로 채워 넣음 (app.js의 bindPageEvents에서 호출).
 export function ChatPage(activeRoomId) {
-  const roomId = activeRoomId ? Number(activeRoomId) : "";
+  const roomId = activeRoomId || "";
   return `
     <section class="chat-layout" data-chat-page data-room-id="${roomId}">
       <aside class="conversation-list" data-conversation-list>
@@ -31,7 +31,7 @@ export function initChatPage() {
   if (!root) return;
 
   const roomIdAttr = root.dataset.roomId;
-  const roomId = roomIdAttr ? Number(roomIdAttr) : null;
+  const roomId = roomIdAttr || null;
   const listEl = root.querySelector("[data-room-list]");
   const panelEl = root.querySelector("[data-chat-panel]");
 
@@ -198,7 +198,7 @@ function panelTemplate(room) {
 }
 
 function renderBubble(message, currentUserId) {
-  const mine = currentUserId != null && Number(message.senderId) === Number(currentUserId);
+  const mine = currentUserId != null && String(message.senderId) === String(currentUserId);
   const mineClass = mine ? "me" : "";
 
   if (message.messageType === "IMAGE") {

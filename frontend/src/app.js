@@ -353,7 +353,7 @@ function bindRequestCreatePage() {
       const request = await createRequest({
         title: formData.get("title"),
         content: formData.get("content"),
-        categoryId: Number(formData.get("categoryId")),
+        categoryId: formData.get("categoryId"),
         budgetMin,
         budgetMax,
       });
@@ -593,7 +593,7 @@ async function bindTalentDetailActions(talent) {
   if (!actions || !chatButton) return;
 
   const currentUserId = await getCurrentUserId({ optional: true });
-  const isOwner = currentUserId != null && Number(talent.userId) === Number(currentUserId);
+  const isOwner = currentUserId != null && String(talent.userId) === String(currentUserId);
 
   if (isOwner) {
     chatButton.remove();
@@ -759,24 +759,28 @@ function buildTalentPayload(form) {
   return {
     title: formData.get("title"),
     content: formData.get("content"),
-    categoryId: Number(formData.get("categoryId")),
+    categoryId: formData.get("categoryId"),
     price: optionalNumber(formData.get("price")),
     estimatedDuration: optionalNumber(formData.get("estimatedDuration")),
     durationUnit: formData.get("estimatedDuration") ? (formData.get("durationUnit") || "DAY") : null,
-    portfolioId: optionalNumber(formData.get("portfolioId")),
+    portfolioId: optionalValue(formData.get("portfolioId")),
   };
 }
 
 function validateTalentSettings(form) {
   const formData = new FormData(form);
-  const categoryId = Number(formData.get("categoryId"));
+  const categoryId = formData.get("categoryId");
   const rawPrice = formData.get("price");
   const rawDuration = formData.get("estimatedDuration");
   return Boolean(
-    Number.isFinite(categoryId) && categoryId > 0 &&
+    categoryId &&
     (!rawPrice || Number(rawPrice) >= 0) &&
     (!rawDuration || Number(rawDuration) > 0)
   );
+}
+
+function optionalValue(value) {
+  return value ? String(value) : null;
 }
 
 function renderTalentSettingsSummary(form) {

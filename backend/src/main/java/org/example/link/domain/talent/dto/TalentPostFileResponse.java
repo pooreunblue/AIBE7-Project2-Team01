@@ -1,9 +1,11 @@
 package org.example.link.domain.talent.dto;
 
+import java.util.UUID;
+
 import org.example.link.domain.talent.entity.TalentPostFileEntity;
 
 public record TalentPostFileResponse(
-        Long talentPostFileId,
+        UUID talentPostFileId,
         String originalFileName,
         String fileUrl,
         String contentType,

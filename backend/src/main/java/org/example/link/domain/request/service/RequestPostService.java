@@ -1,5 +1,7 @@
 package org.example.link.domain.request.service;
 
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.exception.CustomException;
@@ -30,7 +32,7 @@ public class RequestPostService {
 
     @Transactional
     public RequestPostEntity create(RequestPostRequestDto requestPostRequestDto, CustomUserDetails userDetails) {
-        Long userId = getUserId(userDetails);
+        UUID userId = getUserId(userDetails);
         UserEntity user = getUser(userId);
         CategoryEntity category = getCategory(requestPostRequestDto);
         RequestPostEntity requestPostEntity = createRequestPost(user, category, requestPostRequestDto);
@@ -41,7 +43,7 @@ public class RequestPostService {
         return requestPostRepository.findAll();
     }
 
-    public RequestPostEntity readOne(Long requestPostId) {
+    public RequestPostEntity readOne(UUID requestPostId) {
         return getRequestPost(requestPostId);
     }
 
@@ -55,10 +57,10 @@ public class RequestPostService {
 
     @Transactional
     public RequestPostEntity update(
-            Long requestPostId,
+            UUID requestPostId,
             RequestPostRequestDto requestPostRequestDto,
             CustomUserDetails userDetails) throws AccessDeniedException {
-        Long userId = getUserId(userDetails);
+        UUID userId = getUserId(userDetails);
         RequestPostEntity requestPostEntity = getRequestPost(requestPostId);
         validateAuth(requestPostEntity, userId);
         CategoryEntity category = getCategory(requestPostRequestDto);
@@ -67,27 +69,27 @@ public class RequestPostService {
     }
 
     @Transactional
-    public void delete(Long requestPostId, CustomUserDetails userDetails) throws AccessDeniedException {
-        Long userId = getUserId(userDetails);
+    public void delete(UUID requestPostId, CustomUserDetails userDetails) throws AccessDeniedException {
+        UUID userId = getUserId(userDetails);
         RequestPostEntity requestPostEntity = getRequestPost(requestPostId);
         validateAuth(requestPostEntity, userId);
         requestPostRepository.delete(requestPostEntity);
     }
 
     @Transactional
-    public RequestPostEntity closeStatus(Long requestPostId, CustomUserDetails userDetails) throws AccessDeniedException {
-        Long userId = getUserId(userDetails);
+    public RequestPostEntity closeStatus(UUID requestPostId, CustomUserDetails userDetails) throws AccessDeniedException {
+        UUID userId = getUserId(userDetails);
         RequestPostEntity requestPostEntity = getRequestPost(requestPostId);
         validateAuth(requestPostEntity, userId);
         requestPostEntity.closeStatus();
         return requestPostEntity;
     }
 
-    private Long getUserId(CustomUserDetails userDetails) {
+    private UUID getUserId(CustomUserDetails userDetails) {
         return userDetails.getUserId();
     }
 
-    private UserEntity getUser(Long userId) {
+    private UserEntity getUser(UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
@@ -110,12 +112,12 @@ public class RequestPostService {
                 .build();
     }
 
-    private RequestPostEntity getRequestPost(Long requestPostId) {
+    private RequestPostEntity getRequestPost(UUID requestPostId) {
         return requestPostRepository.findById(requestPostId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
     }
     
-    private void validateAuth(RequestPostEntity requestPostEntity, Long userId) throws AccessDeniedException {
+    private void validateAuth(RequestPostEntity requestPostEntity, UUID userId) throws AccessDeniedException {
         if (!requestPostEntity.getUser().getId().equals(userId)) {
             throw new CustomException(ErrorCode.POST_ACCESS_DENIED);
         }

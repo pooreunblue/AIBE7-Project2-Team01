@@ -1,5 +1,7 @@
 package org.example.link.domain.talent.dto;
 
+import java.util.UUID;
+
 import lombok.Builder;
 import org.example.link.domain.talent.entity.TalentPostEntity;
 import org.example.link.domain.talent.util.DurationUnit;
@@ -10,16 +12,16 @@ import java.time.Instant;
 
 @Builder
 public record TalentPostResponseDto(
-        Long talentPostId,
-        Long userId,
-        Long categoryId,
+        UUID talentPostId,
+        UUID userId,
+        UUID categoryId,
         String categoryName,
         String title,
         String content,
         Long price,
         Integer estimatedDuration,
         DurationUnit durationUnit,
-        Long portfolioId,
+        UUID portfolioId,
         TalentPostStatus status,
         BigDecimal aiConfidence,
         Instant createdAt,
@@ -36,7 +38,7 @@ public record TalentPostResponseDto(
                 .price(talentPostEntity.getPrice())
                 .estimatedDuration(talentPostEntity.getEstimatedDuration())
                 .durationUnit(talentPostEntity.getDurationUnit())
-                .portfolioId(talentPostEntity.getPortfolio().getId())
+                .portfolioId(talentPostEntity.getPortfolio() == null ? null : talentPostEntity.getPortfolio().getId())
                 .status(talentPostEntity.getStatus())
                 .aiConfidence(talentPostEntity.getAiConfidence())
                 .createdAt(talentPostEntity.getCreatedAt())

@@ -26,7 +26,7 @@ export async function getCurrentUser({ force = false, optional = false } = {}) {
 
 export async function getCurrentUserId(options) {
   const user = await getCurrentUser(options);
-  return user ? Number(user.userId) : null;
+  return user?.userId ?? null;
 }
 
 export async function getCurrentUserEmail(options) {

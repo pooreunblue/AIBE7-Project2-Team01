@@ -1,5 +1,7 @@
 package org.example.link.domain.talent.entity;
 
+import java.util.UUID;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.link.common.entity.BaseEntity;
@@ -19,9 +21,9 @@ import java.math.BigDecimal;
 @Builder
 public class TalentPostEntity extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "talent_post_id")
-    private Long id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -56,7 +58,7 @@ public class TalentPostEntity extends BaseEntity {
     private DurationUnit durationUnit;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "portfolio_id", nullable = false)
+    @JoinColumn(name = "portfolio_id")
     private PortfolioEntity portfolio;
 
     @Enumerated(EnumType.STRING)

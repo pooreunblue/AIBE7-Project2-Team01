@@ -1,5 +1,7 @@
 package org.example.link.domain.trade.dto;
 
+import java.util.UUID;
+
 import org.example.link.domain.trade.entity.TradeEntity;
 import org.example.link.domain.trade.entity.TradeStatus;
 
@@ -7,12 +9,12 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 public record TradeResponse(
-        Long tradeId,
-        Long chatRoomId,
-        Long requestPostId,
-        Long talentPostId,
-        Long payerId,
-        Long payeeId,
+        UUID tradeId,
+        UUID chatRoomId,
+        UUID requestPostId,
+        UUID talentPostId,
+        UUID payerId,
+        UUID payeeId,
         BigDecimal amount,
         TradeStatus status,
         Instant paidAt,

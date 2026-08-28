@@ -1,5 +1,7 @@
 package org.example.link.domain.chat.entity;
 
+import java.util.UUID;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,17 +20,17 @@ import org.example.link.common.entity.BaseEntity;
 public class ChatRoom extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "chat_room_id")
-    private Long id;
+    private UUID id;
 
     @Column(name = "request_post_id")
-    private Long requestPostId;
+    private UUID requestPostId;
 
     @Column(name = "talent_post_id")
-    private Long talentPostId;
+    private UUID talentPostId;
 
-    public ChatRoom(Long requestPostId, Long talentPostId) {
+    public ChatRoom(UUID requestPostId, UUID talentPostId) {
         this.requestPostId = requestPostId;
         this.talentPostId = talentPostId;
     }

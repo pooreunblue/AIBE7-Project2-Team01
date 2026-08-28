@@ -1,5 +1,7 @@
 package org.example.link.auth.service;
 
+import java.util.UUID;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
@@ -72,7 +74,7 @@ public class AuthService {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        Long userId = jwtProvider.getUserId(claims);
+        UUID userId = jwtProvider.getUserId(claims);
         String savedRefreshToken = refreshTokenService.get(userId);
 
         if(savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {

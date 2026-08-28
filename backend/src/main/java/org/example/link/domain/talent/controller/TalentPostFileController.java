@@ -1,5 +1,7 @@
 package org.example.link.domain.talent.controller;
 
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
@@ -25,7 +27,7 @@ public class TalentPostFileController {
     @Operation(summary = "재능글 파일 업로드")
     public ResponseEntity<ApiResponse<TalentPostFileResponse>> uploadFile(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long talentPostId,
+            @PathVariable UUID talentPostId,
             @RequestPart("file") MultipartFile file) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(
                 talentPostFileService.uploadFile(user, talentPostId, file)));
@@ -35,7 +37,7 @@ public class TalentPostFileController {
     @Operation(summary = "재능글 파일 목록 조회")
     public ApiResponse<List<TalentPostFileResponse>> getFiles(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long talentPostId) {
+            @PathVariable UUID talentPostId) {
         return ApiResponse.ok(talentPostFileService.getFiles(user, talentPostId));
     }
 
@@ -43,8 +45,8 @@ public class TalentPostFileController {
     @Operation(summary = "재능글 파일 삭제")
     public ApiResponse<Void> deleteFile(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long talentPostId,
-            @PathVariable Long fileId) {
+            @PathVariable UUID talentPostId,
+            @PathVariable UUID fileId) {
         talentPostFileService.deleteFile(user, talentPostId, fileId);
         return ApiResponse.ok();
     }
@@ -53,8 +55,8 @@ public class TalentPostFileController {
     @Operation(summary = "재능글 파일 교체")
     public ApiResponse<TalentPostFileResponse> updateFile(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long talentPostId,
-            @PathVariable Long fileId,
+            @PathVariable UUID talentPostId,
+            @PathVariable UUID fileId,
             @RequestPart("file") MultipartFile file) {
         return ApiResponse.ok(talentPostFileService.updateFile(user, talentPostId, fileId, file));
     }
@@ -63,8 +65,8 @@ public class TalentPostFileController {
     @Operation(summary = "재능글 대표 이미지 지정")
     public ApiResponse<TalentPostFileResponse> changeThumbnail(
             @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable Long talentPostId,
-            @PathVariable Long fileId) {
+            @PathVariable UUID talentPostId,
+            @PathVariable UUID fileId) {
         return ApiResponse.ok(talentPostFileService.changeThumbnail(user, talentPostId, fileId));
     }
 }
