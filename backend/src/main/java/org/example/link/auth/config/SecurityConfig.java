@@ -61,9 +61,13 @@ SecurityConfig {
                                 "/test/**"
                         ).permitAll()
                                 .requestMatchers(HttpMethod.GET, "/requests/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/talents/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/requests").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/talents").authenticated()
                                 .requestMatchers(HttpMethod.PUT, "/requests/**").authenticated()
+                                .requestMatchers(HttpMethod.PUT, "/talents/**").authenticated()
                                 .requestMatchers(HttpMethod.DELETE, "/requests/**").authenticated()
+                                .requestMatchers(HttpMethod.DELETE, "/talents/**").authenticated()
                                 .anyRequest().authenticated()
                         )
                         .exceptionHandling(exception -> exception

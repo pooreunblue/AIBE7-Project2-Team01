@@ -1,5 +1,7 @@
 package org.example.link.domain.portfolio.service;
 
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
@@ -26,8 +28,8 @@ public class PortfolioFileService {
 
     @Transactional
     public PortfolioFileResponse uploadFile(
-            Long userId,
-            Long portfolioId,
+            UUID userId,
+            UUID portfolioId,
             MultipartFile file
     ) {
         PortfolioEntity portfolio =
@@ -74,8 +76,8 @@ public class PortfolioFileService {
 
     @Transactional(readOnly = true)
     public List<PortfolioFileResponse> getFiles(
-            Long userId,
-            Long portfolioId
+            UUID userId,
+            UUID portfolioId
     ) {
         PortfolioEntity portfolio =
                 findPortfolio(portfolioId);
@@ -94,9 +96,9 @@ public class PortfolioFileService {
 
     @Transactional
     public void deleteFile(
-            Long userId,
-            Long portfolioId,
-            Long fileId
+            UUID userId,
+            UUID portfolioId,
+            UUID fileId
     ) {
 
         PortfolioEntity portfolio =
@@ -127,9 +129,9 @@ public class PortfolioFileService {
     @Transactional
 
     public PortfolioFileResponse updateFile(
-            Long userId,
-            Long portfolioId,
-            Long fileId,
+            UUID userId,
+            UUID portfolioId,
+            UUID fileId,
             MultipartFile newFile
     ){
         PortfolioEntity portfolio =
@@ -179,9 +181,9 @@ public class PortfolioFileService {
 
     @Transactional
     public PortfolioFileResponse changeThumbnail(
-            Long userId,
-            Long portfolioId,
-            Long fileId
+            UUID userId,
+            UUID portfolioId,
+            UUID fileId
     ){
         PortfolioEntity portfolio =
                 findPortfolio(portfolioId);
@@ -210,7 +212,7 @@ public class PortfolioFileService {
         return PortfolioFileResponse.from(file);
     }
 
-    private PortfolioEntity findPortfolio(Long portfolioId) {
+    private PortfolioEntity findPortfolio(UUID portfolioId) {
         return portfolioRepository.findById(portfolioId)
                 .orElseThrow(() ->
                         new CustomException(
@@ -219,7 +221,7 @@ public class PortfolioFileService {
                 );
     }
 
-    private PortfolioFileEntity findPortfolioFile(Long fileId) {
+    private PortfolioFileEntity findPortfolioFile(UUID fileId) {
         return portfolioFileRepository.findById(fileId)
                 .orElseThrow(() ->
                         new CustomException(
@@ -230,7 +232,7 @@ public class PortfolioFileService {
 
     private void validateOwner(
             PortfolioEntity portfolio,
-            Long userId
+            UUID userId
     ) {
         if (!portfolio.getUser().getId().equals(userId)) {
             throw new CustomException(
@@ -241,7 +243,7 @@ public class PortfolioFileService {
 
     private void validateFileBelongsToPortfolio(
             PortfolioFileEntity file,
-            Long portfolioId
+            UUID portfolioId
     ) {
         if (!file.getPortfolio().getId().equals(portfolioId)) {
             throw new CustomException(
@@ -250,7 +252,7 @@ public class PortfolioFileService {
         }
     }
 
-    private void setDefaultThumbnailIfAbsent(Long portfolioId) {
+    private void setDefaultThumbnailIfAbsent(UUID portfolioId) {
         if (portfolioFileRepository
                 .findByPortfolioIdAndThumbnailTrue(portfolioId)
                 .isPresent()) {

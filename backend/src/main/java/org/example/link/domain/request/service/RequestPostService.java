@@ -1,5 +1,7 @@
 package org.example.link.domain.request.service;
 
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.exception.CustomException;
@@ -7,7 +9,6 @@ import org.example.link.common.exception.ErrorCode;
 import org.example.link.domain.category.entity.CategoryEntity;
 import org.example.link.domain.category.repository.CategoryRepository;
 import org.example.link.domain.request.dto.RequestPostRequestDto;
-import org.example.link.domain.request.dto.RequestPostResponseDto;
 import org.example.link.domain.request.entity.RequestPostEntity;
 import org.example.link.domain.request.repository.RequestPostRepository;
 import org.example.link.domain.request.util.RequestPostStatus;
@@ -15,7 +16,6 @@ import org.example.link.domain.user.entity.UserEntity;
 import org.example.link.domain.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,21 +32,10 @@ public class RequestPostService {
 
     @Transactional
     public RequestPostEntity create(RequestPostRequestDto requestPostRequestDto, CustomUserDetails userDetails) {
-        Long userId = userDetails.getUserId();
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        CategoryEntity category = categoryRepository.findById(requestPostRequestDto.categoryId())
-                .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
-        RequestPostEntity requestPostEntity = RequestPostEntity.builder()
-                .user(user)
-                .category(category)
-                .title(requestPostRequestDto.title())
-                .content(requestPostRequestDto.content())
-                .budgetMin(requestPostRequestDto.budgetMin())
-                .budgetMax(requestPostRequestDto.budgetMax())
-                .dueDate(requestPostRequestDto.dueDate())
-                .status(RequestPostStatus.OPEN)
-                .build();
+        UUID userId = getUserId(userDetails);
+        UserEntity user = getUser(userId);
+        CategoryEntity category = getCategory(requestPostRequestDto);
+        RequestPostEntity requestPostEntity = createRequestPost(user, category, requestPostRequestDto);
         return requestPostRepository.save(requestPostEntity);
     }
 
@@ -54,9 +43,8 @@ public class RequestPostService {
         return requestPostRepository.findAll();
     }
 
-    public RequestPostEntity readOne(Long requestPostId) {
-        return requestPostRepository.findById(requestPostId)
-                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+    public RequestPostEntity readOne(UUID requestPostId) {
+        return getRequestPost(requestPostId);
     }
 
     @Transactional(readOnly = true)
@@ -69,17 +57,72 @@ public class RequestPostService {
 
     @Transactional
     public RequestPostEntity update(
-            Long requestPostId,
+            UUID requestPostId,
             RequestPostRequestDto requestPostRequestDto,
             CustomUserDetails userDetails) throws AccessDeniedException {
-        Long userId = userDetails.getUserId();
-        RequestPostEntity requestPostEntity = requestPostRepository.findById(requestPostId)
-                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
-        if (!requestPostEntity.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("작성자만 수정할 수 있습니다.");
-        }
-        CategoryEntity category = categoryRepository.findById(requestPostRequestDto.categoryId())
+        UUID userId = getUserId(userDetails);
+        RequestPostEntity requestPostEntity = getRequestPost(requestPostId);
+        validateAuth(requestPostEntity, userId);
+        CategoryEntity category = getCategory(requestPostRequestDto);
+        updateRequestPost(requestPostRequestDto, requestPostEntity, category);
+        return requestPostEntity;
+    }
+
+    @Transactional
+    public void delete(UUID requestPostId, CustomUserDetails userDetails) throws AccessDeniedException {
+        UUID userId = getUserId(userDetails);
+        RequestPostEntity requestPostEntity = getRequestPost(requestPostId);
+        validateAuth(requestPostEntity, userId);
+        requestPostRepository.delete(requestPostEntity);
+    }
+
+    @Transactional
+    public RequestPostEntity closeStatus(UUID requestPostId, CustomUserDetails userDetails) throws AccessDeniedException {
+        UUID userId = getUserId(userDetails);
+        RequestPostEntity requestPostEntity = getRequestPost(requestPostId);
+        validateAuth(requestPostEntity, userId);
+        requestPostEntity.closeStatus();
+        return requestPostEntity;
+    }
+
+    private UUID getUserId(CustomUserDetails userDetails) {
+        return userDetails.getUserId();
+    }
+
+    private UserEntity getUser(UUID userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private CategoryEntity getCategory(RequestPostRequestDto requestPostRequestDto) {
+        return categoryRepository.findById(requestPostRequestDto.categoryId())
                 .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+    }
+
+    private RequestPostEntity createRequestPost(UserEntity user, CategoryEntity category, RequestPostRequestDto requestPostRequestDto) {
+        return RequestPostEntity.builder()
+                .user(user)
+                .category(category)
+                .title(requestPostRequestDto.title())
+                .content(requestPostRequestDto.content())
+                .budgetMin(requestPostRequestDto.budgetMin())
+                .budgetMax(requestPostRequestDto.budgetMax())
+                .dueDate(requestPostRequestDto.dueDate())
+                .status(RequestPostStatus.OPEN)
+                .build();
+    }
+
+    private RequestPostEntity getRequestPost(UUID requestPostId) {
+        return requestPostRepository.findById(requestPostId)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+    }
+    private void validateAuth(RequestPostEntity requestPostEntity, UUID userId) throws AccessDeniedException {
+        if (!requestPostEntity.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.POST_ACCESS_DENIED);
+        }
+    }
+
+    private void updateRequestPost(RequestPostRequestDto requestPostRequestDto, RequestPostEntity requestPostEntity, CategoryEntity category) {
         requestPostEntity.update(
                 requestPostRequestDto.title(),
                 requestPostRequestDto.content(),
@@ -88,21 +131,5 @@ public class RequestPostService {
                 requestPostRequestDto.budgetMax(),
                 requestPostRequestDto.dueDate()
         );
-        return requestPostEntity;
-    }
-
-    @Transactional
-    public void delete(Long requestPostId) {
-        RequestPostEntity requestPostEntity = requestPostRepository.findById(requestPostId)
-                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
-        requestPostRepository.delete(requestPostEntity);
-    }
-
-    @Transactional
-    public RequestPostEntity closeStatus(Long requestPostId) {
-        RequestPostEntity requestPostEntity = requestPostRepository.findById(requestPostId)
-                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
-        requestPostEntity.closeStatus();
-        return requestPostEntity;
     }
 }

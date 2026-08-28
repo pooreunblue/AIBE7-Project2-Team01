@@ -1,5 +1,7 @@
 package org.example.link.domain.request.controller;
 
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +53,7 @@ public class RequestPostController {
 
     @GetMapping("/{requestPostId}")
     @Operation(summary = "의뢰글 상세 조회")
-    public ApiResponse<RequestPostResponseDto> readOne(@PathVariable Long requestPostId) {
+    public ApiResponse<RequestPostResponseDto> readOne(@PathVariable UUID requestPostId) {
         RequestPostEntity requestPostEntity = requestPostService.readOne(requestPostId);
         return ApiResponse.ok(RequestPostResponseDto.toDto(requestPostEntity));
     }
@@ -74,7 +76,7 @@ public class RequestPostController {
     @PutMapping("/{requestPostId}")
     @Operation(summary = "의뢰글 수정")
     public ApiResponse<RequestPostResponseDto> update(
-            @PathVariable Long requestPostId,
+            @PathVariable UUID requestPostId,
             @Valid @RequestBody RequestPostRequestDto requestPostRequestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) throws AccessDeniedException {
@@ -85,18 +87,20 @@ public class RequestPostController {
     @DeleteMapping("/{requestPostId}")
     @Operation(summary = "의뢰글 삭제")
     public ApiResponse<Void> delete(
-            @PathVariable Long requestPostId
-    ) {
-        requestPostService.delete(requestPostId);
+            @PathVariable UUID requestPostId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) throws AccessDeniedException {
+        requestPostService.delete(requestPostId, userDetails);
         return ApiResponse.ok();
     }
 
     @PatchMapping("/{requestPostId}/close")
     @Operation(summary = "의뢰글 마감")
     public ApiResponse<RequestPostResponseDto> close(
-            @PathVariable Long requestPostId
-    ) {
-        RequestPostEntity closed = requestPostService.closeStatus(requestPostId);
+            @PathVariable UUID requestPostId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) throws AccessDeniedException {
+        RequestPostEntity closed = requestPostService.closeStatus(requestPostId, userDetails);
         return ApiResponse.ok(RequestPostResponseDto.toDto(closed));
     }
 }

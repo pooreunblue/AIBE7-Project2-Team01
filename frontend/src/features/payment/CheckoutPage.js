@@ -10,7 +10,7 @@ import { createTrade, fetchMyTrades, payTrade } from "../trade/tradeApi.js";
 export function CheckoutPage() {
   const params = new URLSearchParams(window.location.hash.split("?")[1] || "");
   const rawChatRoomId = params.get("chatRoomId");
-  const chatRoomId = rawChatRoomId && /^\d+$/.test(rawChatRoomId) ? rawChatRoomId : null;
+  const chatRoomId = rawChatRoomId || null;
 
   if (!chatRoomId) {
     return `<section class="checkout-layout"><p>잘못된 접근입니다. 채팅방의 "결제하기" 버튼을 통해 들어와 주세요.</p></section>`;
@@ -37,10 +37,10 @@ export async function initCheckoutPage() {
   const root = document.querySelector("[data-checkout-page]");
   if (!root) return;
 
-  const chatRoomId = Number(root.dataset.checkoutPage);
+  const chatRoomId = root.dataset.checkoutPage;
   const summaryEl = root.querySelector("[data-checkout-summary]");
   const panelEl = root.querySelector("[data-checkout-panel]");
-  const currentUserId = getCurrentUserId();
+  const currentUserId = await getCurrentUserId({ optional: true });
 
   let room;
   try {
@@ -80,7 +80,7 @@ export async function initCheckoutPage() {
 
   summaryEl.innerHTML = renderRoomSummary(room, post);
 
-  const isPayer = currentUserId != null && Number(post.userId) === Number(currentUserId);
+  const isPayer = currentUserId != null && String(post.userId) === String(currentUserId);
   renderPanel(panelEl, { chatRoomId, room, post, wallet, existingTrade, isPayer });
 }
 

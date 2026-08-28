@@ -1,5 +1,7 @@
 package org.example.link.domain.request.entity;
 
+import java.util.UUID;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.link.common.entity.BaseEntity;
@@ -9,6 +11,8 @@ import org.example.link.domain.user.entity.UserEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "request_posts")
@@ -18,9 +22,9 @@ import java.time.LocalDate;
 @Builder
 public class RequestPostEntity extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "request_post_id")
-    private Long id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -35,6 +39,14 @@ public class RequestPostEntity extends BaseEntity {
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
+
+    @OneToMany(
+            mappedBy = "requestPost",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @Builder.Default
+    private List<RequestPostFileEntity> files = new ArrayList<>();
 
     @Column(name = "budget_min",nullable = false)
     private Long budgetMin;

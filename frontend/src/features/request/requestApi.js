@@ -20,6 +20,44 @@ export async function createRequest(payload) {
   return unwrapApiResponse(response);
 }
 
+export async function uploadRequestFile(requestPostId, file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await apiRequest(`/requests/${requestPostId}/files`, {
+    method: "POST",
+    body: formData,
+  });
+  return unwrapApiResponse(response);
+}
+
+export async function getRequestFiles(requestPostId) {
+  const response = await apiRequest(`/requests/${requestPostId}/files`);
+  return unwrapApiResponse(response);
+}
+
+export async function updateRequestFile(requestPostId, fileId, file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await apiRequest(`/requests/${requestPostId}/files/${fileId}`, {
+    method: "PATCH",
+    body: formData,
+  });
+  return unwrapApiResponse(response);
+}
+
+export async function setRequestThumbnail(requestPostId, fileId) {
+  const response = await apiRequest(`/requests/${requestPostId}/files/${fileId}/thumbnail`, {
+    method: "PATCH",
+  });
+  return unwrapApiResponse(response);
+}
+
+export async function deleteRequestFile(requestPostId, fileId) {
+  await apiRequest(`/requests/${requestPostId}/files/${fileId}`, { method: "DELETE" });
+}
+
 function unwrapApiResponse(response) {
   return response?.data ?? response;
 }

@@ -1,6 +1,4 @@
-import { getAccessToken } from "../../auth/tokenStorage.js";
-
-const API_BASE_URL = window.__API_BASE_URL__ || "http://localhost:8080";
+const WS_BASE_URL = window.__WS_BASE_URL__ || "http://localhost:8080";
 
 /**
  * 채팅방 하나에 STOMP로 연결하고 구독까지 해줌.
@@ -10,8 +8,7 @@ const API_BASE_URL = window.__API_BASE_URL__ || "http://localhost:8080";
  */
 export function connectChatRoom(chatRoomId, { onMessage, onConnect, onError } = {}) {
   const client = new StompJs.Client({
-    webSocketFactory: () => new SockJS(`${API_BASE_URL}/ws`),
-    connectHeaders: { Authorization: `Bearer ${getAccessToken()}` },
+    webSocketFactory: () => new SockJS(`${WS_BASE_URL}/ws`),
     onConnect: () => {
       client.subscribe(`/topic/chat-rooms/${chatRoomId}`, (message) => {
         onMessage?.(JSON.parse(message.body));

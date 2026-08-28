@@ -1,26 +1,44 @@
-import { getAccessToken } from "./tokenStorage.js";
+import { apiRequest } from "../api/api.js";
 
-// accessToken의 payload(sub = userId, email)를 디코드해서 재사용.
-// 백엔드 JwtProvider.createAccessToken()과 클레임 구조를 맞춰야 함.
-export function getCurrentUserId() {
-  const claims = decodeAccessToken();
-  return claims ? Number(claims.sub) : null;
+let currentUser = null;
+let currentUserPromise = null;
+
+export async function getCurrentUser({ force = false, optional = false } = {}) {
+  if (currentUser && !force) return currentUser;
+  if (currentUserPromise && !force) return currentUserPromise;
+
+  currentUserPromise = apiRequest("/users/me", { authOptional: optional })
+    .then((response) => {
+      currentUser = response?.data ?? response;
+      return currentUser;
+    })
+    .catch((error) => {
+      currentUser = null;
+      if (!optional) throw error;
+      return null;
+    })
+    .finally(() => {
+      currentUserPromise = null;
+    });
+
+  return currentUserPromise;
 }
 
-export function getCurrentUserEmail() {
-  const claims = decodeAccessToken();
-  return claims ? claims.email : null;
+export async function getCurrentUserId(options) {
+  const user = await getCurrentUser(options);
+  return user?.userId ?? null;
 }
 
-function decodeAccessToken() {
-  const token = getAccessToken();
-  if (!token) return null;
+export async function getCurrentUserEmail(options) {
+  const user = await getCurrentUser(options);
+  return user?.email ?? null;
+}
 
-  try {
-    const payload = token.split(".")[1];
-    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
-    return JSON.parse(decodeURIComponent(escape(json)));
-  } catch {
-    return null;
-  }
+export function getCachedCurrentUser() {
+  return currentUser;
+}
+
+export function clearCurrentUser() {
+  currentUser = null;
+  currentUserPromise = null;
 }

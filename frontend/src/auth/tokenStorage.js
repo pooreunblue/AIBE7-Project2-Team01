@@ -1,26 +1,21 @@
-const ACCESS_TOKEN_KEY = "talentpulse.accessToken";
-const REFRESH_TOKEN_KEY = "talentpulse.refreshToken";
-
 export function getAccessToken() {
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+  return null;
 }
 
 export function setAccessToken(token) {
-  localStorage.setItem(ACCESS_TOKEN_KEY, token);
+  void token;
 }
 
 export function removeAccessToken() {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
 }
 
 export function getRefreshToken() {
-  return localStorage.getItem(REFRESH_TOKEN_KEY);
+  return null;
 }
 
 export function setRefreshToken(token) {
-  localStorage.setItem(REFRESH_TOKEN_KEY, token);
+  void token;
 }
 
 export function removeRefreshToken() {
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
 }

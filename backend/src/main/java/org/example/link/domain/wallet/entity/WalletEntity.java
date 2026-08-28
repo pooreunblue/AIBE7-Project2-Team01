@@ -1,5 +1,7 @@
 package org.example.link.domain.wallet.entity;
 
+import java.util.UUID;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -17,9 +19,9 @@ import java.math.BigDecimal;
 @Table(name = "wallets")
 public class WalletEntity extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "wallet_id")
-    private Long id;
+    private UUID id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)

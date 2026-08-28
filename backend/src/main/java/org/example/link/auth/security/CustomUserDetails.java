@@ -1,5 +1,7 @@
 package org.example.link.auth.security;
 
+import java.util.UUID;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.example.link.domain.user.entity.Role;
@@ -13,7 +15,7 @@ import java.util.List;
 @Getter
 @RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
-    private final Long userId;
+    private final UUID userId;
     private final String email;
     private final Role role;
 
