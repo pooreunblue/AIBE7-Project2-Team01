@@ -38,6 +38,12 @@ export function uploadChatImage(chatRoomId, file) {
   }).then(unwrapApiResponse);
 }
 
+export function requestTradeAmount(chatRoomId) {
+  return apiRequest(`/chatrooms/${chatRoomId}/trade-amount-request`, {
+    method: "POST",
+  }).then(unwrapApiResponse);
+}
+
 function unwrapApiResponse(response) {
   return response?.data ?? response;
 }

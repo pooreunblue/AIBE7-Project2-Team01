@@ -51,7 +51,7 @@ public class ChatMessage {
     @Column(name = "message_type", nullable = false)
     private MessageType messageType;
 
-    // 거래 요청(TRADE_REQUEST) 메시지에만 연결됨. 그 외 타입은 null.
+    // 거래 요청 및 결제 상태 시스템 메시지에 연결됨. 일반 메시지는 null.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trade_id")
     private TradeEntity trade;

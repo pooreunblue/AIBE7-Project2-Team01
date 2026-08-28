@@ -46,6 +46,7 @@ public class TradeService {
     private final WalletService walletService;
 
     private static final String TRADE_REQUEST_MESSAGE = "거래를 요청했습니다.";
+    private static final String TRADE_PAID_MESSAGE = "결제가 완료되었습니다.";
 
     @Transactional
     public TradeResponse createTrade(UUID userId, UUID chatRoomId, TradeCreateRequest request) {
@@ -93,7 +94,7 @@ public class TradeService {
      * 게시글 타입별로 결제자(payer)/수취자(payee)를 결정한다.
      * - 요청글(의뢰): 글쓴이(의뢰인)가 결제자, 채팅 상대(수락한 전문가)가 수취자.
      * - 재능글: 채팅 상대(구매자)가 결제자, 글쓴이(전문가)가 수취자.
-     * 거래 요청 생성은 항상 해당 게시글 작성자만 가능하며, 게시글이 채팅방과 실제로 연결돼 있어야 한다.
+     * 금액을 확정하는 수취자가 거래를 생성하며, 게시글이 채팅방과 실제로 연결돼 있어야 한다.
      */
     private TradeParties resolveParties(UUID userId, ChatRoom chatRoom, TradeCreateRequest request, boolean isRequestPost) {
         if (isRequestPost) {
@@ -103,10 +104,11 @@ public class TradeService {
             RequestPostEntity post = requestPostRepository.findById(request.requestPostId())
                     .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
             UUID ownerId = post.getUser().getId();
-            if (!userId.equals(ownerId)) {
-                throw new CustomException(ErrorCode.POST_ACCESS_DENIED);
+            UUID payeeId = findCounterpartId(chatRoom.getId(), ownerId);
+            if (!userId.equals(payeeId)) {
+                throw new CustomException(ErrorCode.TRADE_CREATE_ACCESS_DENIED);
             }
-            return new TradeParties(ownerId, findCounterpartId(chatRoom.getId(), ownerId));
+            return new TradeParties(ownerId, payeeId);
         }
 
         if (!request.talentPostId().equals(chatRoom.getTalentPostId())) {
@@ -116,7 +118,7 @@ public class TradeService {
                 .orElseThrow(() -> new CustomException(ErrorCode.TALENT_POST_NOT_FOUND));
         UUID ownerId = post.getUser().getId();
         if (!userId.equals(ownerId)) {
-            throw new CustomException(ErrorCode.POST_ACCESS_DENIED);
+            throw new CustomException(ErrorCode.TRADE_CREATE_ACCESS_DENIED);
         }
         return new TradeParties(findCounterpartId(chatRoom.getId(), ownerId), ownerId);
     }
@@ -144,6 +146,13 @@ public class TradeService {
 
         walletService.withdraw(trade.getPayerId(), trade.getAmount(), trade);
         trade.paid();
+
+        ChatRoom chatRoom = chatRoomRepository.findById(trade.getChatRoomId())
+                .orElseThrow(() -> new CustomException(ErrorCode.CHAT_ROOM_NOT_FOUND));
+        UserEntity payer = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        chatMessagePublisher.publishTradePaid(chatRoom, payer, TRADE_PAID_MESSAGE, trade);
+
         return TradeResponse.from(trade);
     }
 

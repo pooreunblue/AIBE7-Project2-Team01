@@ -36,9 +36,8 @@ public class RequestPostFileController {
     @GetMapping
     @Operation(summary = "의뢰글 파일 목록 조회")
     public ApiResponse<List<RequestPostFileResponse>> getFiles(
-            @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable UUID requestPostId) {
-        return ApiResponse.ok(requestPostFileService.getFiles(user, requestPostId));
+        return ApiResponse.ok(requestPostFileService.getFiles(requestPostId));
     }
 
     @DeleteMapping("/{fileId}")

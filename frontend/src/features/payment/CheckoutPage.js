@@ -2,18 +2,18 @@ import { formatMoney, pageTitle } from "../../shared/ui/index.js";
 import { getCurrentUserId } from "../../auth/currentUser.js";
 import { fetchMyChatRooms } from "../chat/chatApi.js";
 import { fetchRequest } from "../request/requestApi.js";
+import { fetchTalent } from "../talent/talentApi.js";
 import { fetchWallet } from "../wallet/walletApi.js";
-import { createTrade, fetchMyTrades, payTrade } from "../trade/tradeApi.js";
+import { fetchMyTrades, payTrade } from "../trade/tradeApi.js";
 
-// 채팅방 하위 결제 화면(#/checkout?chatRoomId={id}). 거래는 반드시 채팅을 거쳐야 하므로
-// chatRoomId 없이는 진입할 수 없음 (ChatPage의 "결제하기" 버튼에서만 들어옴).
+// 채팅방에서 확정된 거래를 조회하고 결제하는 화면. 이 페이지에서는 금액을 만들거나 수정하지 않는다.
 export function CheckoutPage() {
   const params = new URLSearchParams(window.location.hash.split("?")[1] || "");
   const rawChatRoomId = params.get("chatRoomId");
   const chatRoomId = rawChatRoomId || null;
 
   if (!chatRoomId) {
-    return `<section class="checkout-layout"><p>잘못된 접근입니다. 채팅방의 "결제하기" 버튼을 통해 들어와 주세요.</p></section>`;
+    return `<section class="checkout-layout"><p>잘못된 접근입니다. 채팅방의 거래 요청을 통해 들어와 주세요.</p></section>`;
   }
 
   return `
@@ -57,20 +57,11 @@ export async function initCheckoutPage() {
     return;
   }
 
-  if (!room.requestPostId) {
-    // talent 도메인이 아직 없어서 재능글 기반 거래는 백엔드에서도 막고 있음 — 프론트도 동일하게 안내만.
-    summaryEl.innerHTML = renderRoomSummary(room, null);
-    panelEl.innerHTML = `<p>재능글 기반 거래는 아직 지원하지 않습니다.</p>`;
-    return;
-  }
-
   let post;
-  let wallet;
   let existingTrade;
   try {
-    [post, wallet, existingTrade] = await Promise.all([
-      fetchRequest(room.requestPostId),
-      fetchWallet(),
+    [post, existingTrade] = await Promise.all([
+      room.requestPostId ? fetchRequest(room.requestPostId) : fetchTalent(room.talentPostId),
       findActiveTrade(chatRoomId),
     ]);
   } catch (error) {
@@ -80,18 +71,30 @@ export async function initCheckoutPage() {
 
   summaryEl.innerHTML = renderRoomSummary(room, post);
 
-  const isPayer = currentUserId != null && String(post.userId) === String(currentUserId);
-  renderPanel(panelEl, { chatRoomId, room, post, wallet, existingTrade, isPayer });
+  const isPayer = currentUserId != null && existingTrade != null &&
+    String(existingTrade.payerId) === String(currentUserId);
+  let wallet = null;
+  if (existingTrade?.status === "PENDING" && isPayer) {
+    try {
+      wallet = await fetchWallet();
+    } catch (error) {
+      panelEl.innerHTML = `<p>잔액을 불러오지 못했습니다: ${escapeHtml(error.message)}</p>`;
+      return;
+    }
+  }
+  renderPanel(panelEl, { room, wallet, existingTrade, isPayer, currentUserId, post });
 }
 
 async function findActiveTrade(chatRoomId) {
   const { content } = await fetchMyTrades({ size: 50 });
   return (content || []).find(
-    (trade) => trade.chatRoomId === chatRoomId && (trade.status === "PENDING" || trade.status === "PAID")
+    (trade) => String(trade.chatRoomId) === String(chatRoomId) &&
+      (trade.status === "PENDING" || trade.status === "PAID")
   );
 }
 
 function renderRoomSummary(room, post) {
+  const isRequestPost = Boolean(room.requestPostId);
   return `
     <h2>거래 정보</h2>
     <div class="seller-box">
@@ -100,18 +103,20 @@ function renderRoomSummary(room, post) {
     </div>
     ${post
       ? `
-        <h2>요청글</h2>
+        <h2>${isRequestPost ? "재능 요청글" : "재능 판매글"}</h2>
         <p><strong>${escapeHtml(post.title)}</strong></p>
         <p>${escapeHtml(post.content)}</p>
-        <dl>
+        ${isRequestPost ? `<dl>
           <div><dt>예산</dt><dd>${formatMoney(Number(post.budgetMin || 0))} ~ ${formatMoney(Number(post.budgetMax || 0))}</dd></div>
-        </dl>
+        </dl>` : `<dl>
+          <div><dt>등록 가격</dt><dd>${formatMoney(Number(post.price || 0))}</dd></div>
+        </dl>`}
       `
       : ""}
   `;
 }
 
-function renderPanel(panelEl, { chatRoomId, post, wallet, existingTrade, isPayer }) {
+function renderPanel(panelEl, { room, wallet, existingTrade, isPayer, currentUserId, post }) {
   if (existingTrade) {
     panelEl.innerHTML = renderTradePanel(existingTrade, wallet, isPayer);
     if (existingTrade.status === "PENDING" && isPayer) {
@@ -120,48 +125,20 @@ function renderPanel(panelEl, { chatRoomId, post, wallet, existingTrade, isPayer
     return;
   }
 
-  if (!isPayer) {
-    panelEl.innerHTML = `<p>결제는 이 요청글을 등록한 의뢰인만 진행할 수 있습니다.</p>`;
-    return;
-  }
+  const isPostOwner = currentUserId != null && String(post.userId) === String(currentUserId);
+  const guidance = room.requestPostId
+    ? (isPostOwner
+      ? "채팅에서 상대방에게 금액 설정을 요청해 주세요."
+      : "채팅에서 받을 금액을 설정한 뒤 지불 요청을 보내 주세요.")
+    : (isPostOwner
+      ? "채팅에서 판매 금액을 설정하고 거래 요청을 보내 주세요."
+      : "판매자가 거래 금액을 확정할 때까지 기다려 주세요.");
 
   panelEl.innerHTML = `
     <span>Payment Details</span>
-    <p>내 잔액: ${formatMoney(Number(wallet.balance || 0))}</p>
-    <form data-checkout-form>
-      <label>
-        결제 금액
-        <input type="number" name="amount" min="1" step="1" value="${post.budgetMax || post.budgetMin || ""}" required />
-      </label>
-      <p data-checkout-message></p>
-      <button type="submit" class="button primary">결제 진행</button>
-    </form>
-    <p class="secure-note">결제 금액은 지갑(cash) 잔액에서 차감됩니다.</p>
+    <p>${guidance}</p>
+    <a class="button primary" href="#/chat/${room.chatRoomId}">채팅으로 이동</a>
   `;
-
-  const formEl = panelEl.querySelector("[data-checkout-form]");
-  const messageEl = panelEl.querySelector("[data-checkout-message]");
-  const submitButton = formEl.querySelector("button");
-
-  formEl.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const amount = Number(new FormData(formEl).get("amount"));
-    if (!Number.isFinite(amount) || amount <= 0) {
-      messageEl.textContent = "결제 금액을 확인해 주세요.";
-      return;
-    }
-
-    submitButton.disabled = true;
-    try {
-      messageEl.textContent = "";
-      const trade = await createTrade(chatRoomId, { amount, requestPostId: post.requestPostId });
-      await payTrade(trade.tradeId);
-      panelEl.innerHTML = `<p>결제가 완료되었습니다.</p>`;
-    } catch (error) {
-      messageEl.textContent = error.message;
-      submitButton.disabled = false;
-    }
-  });
 }
 
 function renderTradePanel(trade, wallet, isPayer) {
@@ -181,7 +158,7 @@ function renderTradePanel(trade, wallet, isPayer) {
     <p>${isPayer ? "생성된 거래가 있습니다. 결제를 진행해 주세요." : "상대방의 결제를 기다리는 중입니다."}</p>
     <dl>
       <div><dt>결제 금액</dt><dd>${formatMoney(Number(trade.amount || 0))}</dd></div>
-      ${isPayer ? `<div><dt>내 잔액</dt><dd>${formatMoney(Number(wallet.balance || 0))}</dd></div>` : ""}
+      ${isPayer ? `<div><dt>내 잔액</dt><dd>${formatMoney(Number(wallet?.balance || 0))}</dd></div>` : ""}
     </dl>
     <p data-checkout-message></p>
     ${isPayer ? `<button type="button" class="button primary" data-checkout-pay>결제하기</button>` : ""}
