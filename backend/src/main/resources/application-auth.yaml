@@ -1,14 +1,18 @@
+# JWT settings
 app:
   auth:
     jwt:
       secret: ${JWT_SECRET}
       access-token-expiry: 15m
       refresh-token-expiry: 14d
+
 ---
+# Development authentication providers
 spring:
   config:
     activate:
       on-profile: dev
+
   security:
     user:
       name: user

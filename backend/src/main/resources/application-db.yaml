@@ -1,13 +1,17 @@
+# Database connection
 spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST}:5432/${DB_NAME}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+
 ---
+# Development JPA options
 spring:
   config:
     activate:
       on-profile: dev
+
   jpa:
     hibernate:
       ddl-auto: update

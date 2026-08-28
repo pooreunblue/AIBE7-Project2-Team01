@@ -1,0 +1,24 @@
+# Spring AI foundation
+spring:
+  ai:
+    model:
+      embedding:
+        text: google-genai
+
+    google:
+      genai:
+        embedding:
+          api-key: ${GEMINI_API_KEY}
+          text:
+            model: gemini-embedding-001
+            dimensions: 1536
+
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536
+        initialize-schema: ${AI_PGVECTOR_INITIALIZE_SCHEMA:false}
+        remove-existing-vector-store-table: false
+        schema-name: public
+        table-name: vector_store

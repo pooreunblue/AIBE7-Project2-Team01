@@ -38,5 +38,7 @@ out/
 .vscode/
 
 ###dotenv###
+.env
 .env*
 !*.sample
+!*.example

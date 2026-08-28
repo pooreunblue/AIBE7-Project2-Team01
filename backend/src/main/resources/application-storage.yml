@@ -1,8 +1,10 @@
+# Storage profile
 spring:
   config:
     activate:
       on-profile: storage
 
+# Supabase Storage
 supabase:
   url: ${SUPABASE_URL}
   service-key: ${SUPABASE_SERVICE_KEY}
