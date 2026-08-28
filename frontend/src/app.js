@@ -25,6 +25,7 @@ import {
   fetchRequests,
   getRequestFiles,
   setRequestThumbnail,
+  updateRequest,
   uploadRequestFile,
 } from "./features/request/requestApi.js";
 import {
@@ -288,12 +289,12 @@ function bindRequestListPage() {
   if (!list) return;
 
   const searchForm = document.querySelector("[data-list-search]");
-  loadRequestList();
+  loadRequestList("", currentCategoryId());
 
   searchForm?.addEventListener("submit", (event) => {
     event.preventDefault();
     const keyword = new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "";
-    loadRequestList(String(keyword));
+    loadRequestList(String(keyword), currentCategoryId());
   });
 }
 
@@ -308,13 +309,21 @@ function bindRequestCreatePage() {
   const form = document.querySelector("[data-request-create-form]");
   if (!form) return;
 
+  const requestPostId = getRequestEditId();
   const thumbnailInput = form.querySelector("[data-request-thumbnail-input]");
   const thumbnailTrigger = form.querySelector("[data-request-thumbnail-trigger]");
   const thumbnailPreview = form.querySelector("[data-request-thumbnail-preview]");
   let thumbnailFile = null;
   let thumbnailPreviewUrl = null;
+  let existingFiles = [];
 
-  loadRequestCategories().then(() => renderRequestSettingsSummary(form));
+  loadRequestCategories().then(async () => {
+    if (requestPostId) {
+      existingFiles = await loadRequestEditForm(form, requestPostId);
+    }
+    renderRequestSettingsSummary(form);
+    renderTalentThumbnailPreview(thumbnailPreview, existingFiles, thumbnailFile, thumbnailPreviewUrl);
+  });
   bindMarkdownImageUpload();
   bindPortfolioMarkdownPreview();
   bindRequestSettingsModal(form);
@@ -333,7 +342,7 @@ function bindRequestCreatePage() {
     }
     if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
     thumbnailPreviewUrl = thumbnailFile ? URL.createObjectURL(thumbnailFile) : null;
-    renderTalentThumbnailPreview(thumbnailPreview, [], thumbnailFile, thumbnailPreviewUrl);
+    renderTalentThumbnailPreview(thumbnailPreview, existingFiles, thumbnailFile, thumbnailPreviewUrl);
   });
 
   thumbnailPreview?.addEventListener("click", (event) => {
@@ -344,7 +353,7 @@ function bindRequestCreatePage() {
       URL.revokeObjectURL(thumbnailPreviewUrl);
       thumbnailPreviewUrl = null;
     }
-    renderTalentThumbnailPreview(thumbnailPreview, [], thumbnailFile, thumbnailPreviewUrl);
+    renderTalentThumbnailPreview(thumbnailPreview, existingFiles, thumbnailFile, thumbnailPreviewUrl);
   });
 
   requestAnimationFrame(() => openRequestSettingsModal(form));
@@ -362,7 +371,9 @@ function bindRequestCreatePage() {
 
     try {
       if (message) message.textContent = "";
-      const request = await createRequest(payload);
+      const request = requestPostId
+        ? await updateRequest(requestPostId, payload)
+        : await createRequest(payload);
       if (thumbnailFile) {
         const thumbnail = await uploadRequestFile(request.requestPostId, thumbnailFile);
         await setRequestThumbnail(request.requestPostId, thumbnail.requestPostFileId);
@@ -375,14 +386,49 @@ function bindRequestCreatePage() {
   });
 }
 
-async function loadRequestList(keyword = "") {
+async function loadRequestEditForm(form, requestPostId) {
+  const submitButton = form.querySelector("button[type='submit']");
+  const titleInput = form.elements.title;
+  const contentInput = form.elements.content;
+  const message = form.querySelector("[data-request-create-message]");
+
+  if (submitButton) submitButton.textContent = "요청글 수정";
+
+  try {
+    const [request, files] = await Promise.all([
+      fetchRequest(requestPostId),
+      getRequestFiles(requestPostId).catch(() => []),
+    ]);
+
+    if (titleInput) {
+      titleInput.value = request.title || "";
+      titleInput.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    if (contentInput) {
+      contentInput.value = request.content || "";
+      contentInput.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    setFormValue(form, "categoryId", request.categoryId);
+    setFormValue(form, "budgetMin", request.budgetMin);
+    setFormValue(form, "budgetMax", request.budgetMax);
+    setFormValue(form, "dueDate", request.dueDate);
+
+    return files;
+  } catch (error) {
+    if (message) message.textContent = `요청글을 불러오지 못했습니다: ${error.message}`;
+    return [];
+  }
+}
+
+async function loadRequestList(keyword = "", categoryId = "") {
   const list = document.querySelector("[data-request-list]");
   if (!list) return;
 
   try {
     const requests = await fetchRequests(keyword);
+    const filteredRequests = filterByCategory(requests, categoryId);
     const requestsWithFiles = await Promise.all(
-      requests.map(async (request) => ({
+      filteredRequests.map(async (request) => ({
         ...request,
         files: await getRequestFiles(request.requestPostId).catch(() => []),
       }))
@@ -398,13 +444,17 @@ async function loadRequestList(keyword = "") {
 
 async function loadRequestDetail(requestPostId) {
   try {
-    const request = await fetchRequest(requestPostId);
-    renderRequestDetail(request);
+    const [request, files] = await Promise.all([
+      fetchRequest(requestPostId),
+      getRequestFiles(requestPostId).catch(() => []),
+    ]);
+    renderRequestDetail(request, files);
     bindRequestChatButton(request);
   } catch (error) {
     setText("[data-request-category]", "ERROR");
     setText("[data-request-title]", "의뢰글을 불러오지 못했습니다.");
-    setText("[data-request-content]", error.message);
+    const content = document.querySelector("[data-request-content]");
+    if (content) content.innerHTML = `<p>${escapeHtml(error.message)}</p>`;
   }
 }
 
@@ -519,14 +569,15 @@ async function loadCategoryTabs(tabRows) {
     const categories = await fetchCategories();
     tabRows.forEach((row) => {
       const href = row.dataset.categoryHref || "#/talents";
-      const active = row.dataset.categoryActive || "All";
-      const items = [{ name: "All", href }, ...categories.map((category) => ({
+      const activeCategoryId = currentCategoryId();
+      const items = [{ name: "All", href, categoryId: "" }, ...categories.map((category) => ({
         name: category.name,
+        categoryId: category.categoryId,
         href: `${href}?categoryId=${category.categoryId}`,
       }))];
 
       row.innerHTML = items.map((item) => `
-        <a class="tab ${item.name === active ? "active" : ""}" href="${item.href}">${escapeHtml(item.name)}</a>
+        <a class="tab ${String(item.categoryId || "") === String(activeCategoryId || "") ? "active" : ""}" href="${item.href}">${escapeHtml(item.name)}</a>
       `).join("");
     });
   } catch {
@@ -542,12 +593,12 @@ function bindTalentListPage() {
   if (!list) return;
 
   const searchForm = document.querySelector("[data-list-search]");
-  loadTalentList();
+  loadTalentList("", currentCategoryId());
 
   searchForm?.addEventListener("submit", (event) => {
     event.preventDefault();
     const keyword = new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "";
-    loadTalentList(String(keyword));
+    loadTalentList(String(keyword), currentCategoryId());
   });
 }
 
@@ -642,14 +693,15 @@ function bindTalentCreatePage() {
   });
 }
 
-async function loadTalentList(keyword = "") {
+async function loadTalentList(keyword = "", categoryId = "") {
   const list = document.querySelector("[data-list='talents']");
   if (!list) return;
 
   try {
     const talents = await fetchTalents(keyword);
+    const filteredTalents = filterByCategory(talents, categoryId);
     const talentsWithFiles = await Promise.all(
-      talents.map(async (talent) => ({
+      filteredTalents.map(async (talent) => ({
         ...talent,
         files: await getTalentFiles(talent.talentPostId).catch(() => []),
       }))
@@ -715,7 +767,7 @@ function renderTalentCard(talent) {
       ` : ""}
       <div class="card-body">
         <div class="meta-line">
-          <span>작성자 #${escapeHtml(talent.userId)}</span>
+          <span>${escapeHtml(authorLabel(talent))}</span>
           <strong>${escapeHtml(talent.status || "-")}</strong>
         </div>
         <h3><a href="#/talent/${talent.talentPostId}">${escapeHtml(talent.title)}</a></h3>
@@ -759,7 +811,7 @@ function renderTalentDetail(talent, files = []) {
 }
 
 function renderTalentAuthor(talent) {
-  const name = talent.authorNickname || `작성자 #${talent.userId}`;
+  const name = authorLabel(talent);
   setText("[data-talent-author]", name);
 
   const avatar = document.querySelector("[data-talent-avatar]");
@@ -1215,6 +1267,21 @@ function getTalentEditId() {
   return new URLSearchParams(query).get("id");
 }
 
+function getRequestEditId() {
+  const query = window.location.hash.split("?")[1] || "";
+  return new URLSearchParams(query).get("id");
+}
+
+function currentCategoryId() {
+  const query = window.location.hash.split("?")[1] || "";
+  return new URLSearchParams(query).get("categoryId") || "";
+}
+
+function filterByCategory(posts, categoryId) {
+  if (!categoryId) return posts;
+  return posts.filter((post) => String(post.categoryId || "") === String(categoryId));
+}
+
 function markdownExcerpt(markdown) {
   return String(markdown || "")
     .replace(/!\[[^\]]*]\([^)]*\)/g, "")
@@ -1257,7 +1324,7 @@ function renderRequestCard(request) {
       ` : ""}
       <div class="card-body">
         <div class="meta-line">
-          <span>작성자 #${escapeHtml(request.userId)}</span>
+          <span>${escapeHtml(authorLabel(request))}</span>
           <strong>${escapeHtml(request.status || "-")}</strong>
         </div>
         <h3><a href="#/request/${request.requestPostId}">${escapeHtml(request.title)}</a></h3>
@@ -1275,21 +1342,45 @@ function renderRequestCard(request) {
   `;
 }
 
-function renderRequestDetail(request) {
-  setText("[data-request-category]", `${request.categoryName || "의뢰"} · ${request.status || "-"}`);
+function renderRequestDetail(request, files = []) {
+  setText("[data-request-category]", request.categoryName || "Request");
+  setText("[data-request-meta-line]", `${request.categoryName || "의뢰"} · ${request.status || "-"} · 등록일 ${formatDate(request.createdAt)}`);
   setText("[data-request-title]", request.title);
-  setText("[data-request-content]", request.content);
   setText("[data-request-budget]", formatBudget(request));
-  setText("[data-request-meta]", `작성자 #${request.userId} · 등록일 ${formatDate(request.createdAt)}`);
+  setText("[data-request-meta]", `${authorLabel(request)} · 등록일 ${formatDate(request.createdAt)}`);
+
+  const content = document.querySelector("[data-request-content]");
+  if (content) content.innerHTML = renderMarkdown("", request.content || "");
+
+  const hero = document.querySelector(".detail-hero");
+  const thumbnail = getRequestPreviewImage(files);
+  if (hero) {
+    hero.classList.toggle("has-image", Boolean(thumbnail));
+    hero.innerHTML = thumbnail
+      ? `
+        <img src="${escapeHtml(thumbnail.fileUrl)}" alt="" />
+        <span data-request-category>${escapeHtml(request.categoryName || "Request")}</span>
+      `
+      : `<span data-request-category>${escapeHtml(request.categoryName || "Request")}</span>`;
+  }
 }
 
-function bindRequestChatButton(request) {
+async function bindRequestChatButton(request) {
   const button = document.querySelector("[data-request-chat]");
   if (!button) return;
 
+  const currentUserId = await getCurrentUserId({ optional: true });
+  const isOwner = currentUserId != null && String(request.userId) === String(currentUserId);
+
   button.disabled = false;
+  button.textContent = isOwner ? "수정하기" : "요청자와 채팅";
   button.addEventListener("click", async () => {
     button.disabled = true;
+    if (isOwner) {
+      window.location.hash = `/request-new?id=${request.requestPostId}`;
+      return;
+    }
+
     try {
       await startChat({
         requestPostId: request.requestPostId,
@@ -1300,6 +1391,10 @@ function bindRequestChatButton(request) {
       button.disabled = false;
     }
   });
+}
+
+function authorLabel(post) {
+  return post.authorNickname || post.nickname || "작성자";
 }
 
 function formatBudget(request) {
