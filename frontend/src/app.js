@@ -1,4 +1,11 @@
 import { formatMoney, shell } from "./shared/ui/index.js";
+import {
+  appendSafeHtml,
+  escapeHtml,
+  safeImageUrl,
+  safeUrl,
+  setSafeHtml,
+} from "./shared/security/xss.js";
 import { uploadTempImage } from "./api/uploadApi.js";
 import { parseRoute, resolvePage } from "./router.js";
 import { login, logout, signup } from "./features/auth/authApi.js";
@@ -55,7 +62,7 @@ async function render() {
   const { route, content } = resolvePage(parseRoute());
   const currentUser = await getCurrentUser({ optional: true });
   if (sequence !== renderSequence) return;
-  app.innerHTML = shell(content, route, { isLoggedIn: Boolean(currentUser) });
+  setSafeHtml(app, shell(content, route, { isLoggedIn: Boolean(currentUser) }));
   bindPageEvents();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -111,7 +118,12 @@ function bindSignupForm() {
     }
 
     previewUrl = URL.createObjectURL(file);
-    if (preview) preview.innerHTML = `<img src="${previewUrl}" alt="" />`;
+    if (preview) {
+      const image = document.createElement("img");
+      image.src = safeImageUrl(previewUrl);
+      image.alt = "";
+      preview.replaceChildren(image);
+    }
     if (fileName) fileName.textContent = file.name;
   });
 
@@ -162,7 +174,7 @@ function renderHeaderAvatar(myPage) {
   if (!avatar) return;
 
   if (myPage.profileImageUrl) {
-    avatar.innerHTML = `<img src="${escapeHtml(myPage.profileImageUrl)}" alt="" />`;
+    setSafeHtml(avatar, `<img src="${escapeHtml(safeImageUrl(myPage.profileImageUrl))}" alt="" />`);
     return;
   }
 
@@ -238,7 +250,7 @@ function bindPortfolioMarkdownPreview() {
   if (!titleInput || !markdownInput || !preview) return;
 
   const renderPreview = () => {
-    preview.innerHTML = renderMarkdown(titleInput.value, markdownInput.value);
+    setSafeHtml(preview, renderMarkdown(titleInput.value, markdownInput.value));
   };
 
   titleInput.addEventListener("input", renderPreview);
@@ -434,11 +446,11 @@ async function loadRequestList(keyword = "", categoryId = "") {
       }))
     );
 
-    list.innerHTML = requestsWithFiles.length
+    setSafeHtml(list, requestsWithFiles.length
       ? requestsWithFiles.map(renderRequestCard).join("")
-      : `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 의뢰글이 없습니다.</h3><p>첫 의뢰글을 작성해 보세요.</p></div></article>`;
+      : `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 의뢰글이 없습니다.</h3><p>첫 의뢰글을 작성해 보세요.</p></div></article>`);
   } catch (error) {
-    list.innerHTML = `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">ERROR</span><h3>의뢰글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`;
+    setSafeHtml(list, `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">ERROR</span><h3>의뢰글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`);
   }
 }
 
@@ -454,7 +466,7 @@ async function loadRequestDetail(requestPostId) {
     setText("[data-request-category]", "ERROR");
     setText("[data-request-title]", "의뢰글을 불러오지 못했습니다.");
     const content = document.querySelector("[data-request-content]");
-    if (content) content.innerHTML = `<p>${escapeHtml(error.message)}</p>`;
+    setSafeHtml(content, `<p>${escapeHtml(error.message)}</p>`);
   }
 }
 
@@ -464,11 +476,11 @@ async function loadRequestCategories() {
 
   try {
     const categories = await fetchCategories();
-    select.innerHTML = categories.length
+    setSafeHtml(select, categories.length
       ? `<option value="">카테고리 선택</option>${categories.map((category) => `<option value="${category.categoryId}">${escapeHtml(category.name)}</option>`).join("")}`
-      : `<option value="">등록된 카테고리가 없습니다</option>`;
+      : `<option value="">등록된 카테고리가 없습니다</option>`);
   } catch {
-    select.innerHTML = `<option value="">카테고리를 불러오지 못했습니다</option>`;
+    setSafeHtml(select, `<option value="">카테고리를 불러오지 못했습니다</option>`);
   }
 }
 
@@ -550,18 +562,18 @@ function renderRequestSettingsSummary(form) {
   if (!summary) return;
 
   if (!validateRequestSettings(form)) {
-    summary.innerHTML = `<span>상세 설정을 입력해 주세요.</span>`;
+    setSafeHtml(summary, `<span>상세 설정을 입력해 주세요.</span>`);
     return;
   }
 
   const formData = new FormData(form);
   const category = selectedOptionText(form.querySelector("[data-request-category-select]"));
   const dueDate = formData.get("dueDate");
-  summary.innerHTML = `
+  setSafeHtml(summary, `
     <span>${escapeHtml(category)}</span>
     <strong>${formatMoney(Number(formData.get("budgetMin")))} - ${formatMoney(Number(formData.get("budgetMax")))}</strong>
     <span>${dueDate ? `마감 ${escapeHtml(dueDate)}` : "일정 협의"}</span>
-  `;
+  `);
 }
 
 async function loadCategoryTabs(tabRows) {
@@ -576,14 +588,14 @@ async function loadCategoryTabs(tabRows) {
         href: `${href}?categoryId=${category.categoryId}`,
       }))];
 
-      row.innerHTML = items.map((item) => `
-        <a class="tab ${String(item.categoryId || "") === String(activeCategoryId || "") ? "active" : ""}" href="${item.href}">${escapeHtml(item.name)}</a>
-      `).join("");
+      setSafeHtml(row, items.map((item) => `
+        <a class="tab ${String(item.categoryId || "") === String(activeCategoryId || "") ? "active" : ""}" href="${escapeHtml(safeUrl(item.href))}">${escapeHtml(item.name)}</a>
+      `).join(""));
     });
   } catch {
     tabRows.forEach((row) => {
       const href = row.dataset.categoryHref || "#/talents";
-      row.innerHTML = `<a class="tab active" href="${href}">All</a>`;
+      setSafeHtml(row, `<a class="tab active" href="${escapeHtml(safeUrl(href))}">All</a>`);
     });
   }
 }
@@ -707,11 +719,11 @@ async function loadTalentList(keyword = "", categoryId = "") {
       }))
     );
 
-    list.innerHTML = talentsWithFiles.length
+    setSafeHtml(list, talentsWithFiles.length
       ? talentsWithFiles.map(renderTalentCard).join("")
-      : `<article class="talent-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 재능글이 없습니다.</h3><p>첫 재능글을 작성해 보세요.</p></div></article>`;
+      : `<article class="talent-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 재능글이 없습니다.</h3><p>첫 재능글을 작성해 보세요.</p></div></article>`);
   } catch (error) {
-    list.innerHTML = `<article class="talent-card"><div class="card-body"><span class="kicker">ERROR</span><h3>재능글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`;
+    setSafeHtml(list, `<article class="talent-card"><div class="card-body"><span class="kicker">ERROR</span><h3>재능글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`);
   }
 }
 
@@ -723,7 +735,7 @@ async function loadTalentDetail(talentPostId) {
     ]);
     renderTalentDetail(talent, files);
     const fileTarget = document.querySelector("[data-talent-files]");
-    if (fileTarget) fileTarget.innerHTML = renderTalentDetailFiles(files);
+    setSafeHtml(fileTarget, renderTalentDetailFiles(files));
     bindTalentDetailActions(talent);
     loadLinkedPortfolio(talent);
   } catch (error) {
@@ -731,7 +743,7 @@ async function loadTalentDetail(talentPostId) {
     setText("[data-talent-meta]", "재능글을 불러오지 못했습니다.");
     setText("[data-talent-title]", error.message);
     const content = document.querySelector("[data-talent-content]");
-    if (content) content.innerHTML = "";
+    if (content) content.replaceChildren();
   }
 }
 
@@ -740,7 +752,7 @@ async function loadLinkedPortfolio(talent) {
   if (!target) return;
 
   if (!talent.portfolioId) {
-    target.innerHTML = "";
+    target.replaceChildren();
     return;
   }
 
@@ -748,10 +760,10 @@ async function loadLinkedPortfolio(talent) {
     const portfolio = await getPortfolio(talent.portfolioId);
     const files = await getPortfolioFiles(talent.portfolioId).catch(() => []);
     portfolioCache.set(String(portfolio.portfolioId), { ...portfolio, files });
-    target.innerHTML = renderLinkedPortfolio(portfolio, files);
+    setSafeHtml(target, renderLinkedPortfolio(portfolio, files));
     bindPortfolioCardOpen(target);
   } catch (error) {
-    target.innerHTML = `<section class="linked-portfolio-section"><span class="kicker">Portfolio</span><p>연결된 포트폴리오를 불러오지 못했습니다: ${escapeHtml(error.message)}</p></section>`;
+    setSafeHtml(target, `<section class="linked-portfolio-section"><span class="kicker">Portfolio</span><p>연결된 포트폴리오를 불러오지 못했습니다: ${escapeHtml(error.message)}</p></section>`);
   }
 }
 
@@ -761,7 +773,7 @@ function renderTalentCard(talent) {
     <article class="talent-card">
       ${thumbnail ? `
       <a class="visual has-image" href="#/talent/${talent.talentPostId}" aria-label="${escapeHtml(talent.title)} 상세">
-        <img src="${escapeHtml(thumbnail.fileUrl)}" alt="" />
+        <img src="${escapeHtml(safeImageUrl(thumbnail.fileUrl))}" alt="" />
         <span>${escapeHtml(talent.categoryName || "Talent")}</span>
       </a>
       ` : ""}
@@ -795,18 +807,18 @@ function renderTalentDetail(talent, files = []) {
   setText("[data-talent-duration]", `예상 작업기간 ${formatDuration(talent)}`);
 
   const content = document.querySelector("[data-talent-content]");
-  if (content) content.innerHTML = renderMarkdown("", talent.content || "");
+  setSafeHtml(content, renderMarkdown("", talent.content || ""));
 
   const hero = document.querySelector(".detail-hero");
   const thumbnail = getTalentPreviewImage(files);
   if (hero) {
     hero.classList.toggle("has-image", Boolean(thumbnail));
-    hero.innerHTML = thumbnail
+    setSafeHtml(hero, thumbnail
       ? `
-        <img src="${escapeHtml(thumbnail.fileUrl)}" alt="" />
+        <img src="${escapeHtml(safeImageUrl(thumbnail.fileUrl))}" alt="" />
         <span data-talent-category>${escapeHtml(talent.categoryName || "Talent")}</span>
       `
-      : `<span data-talent-category>${escapeHtml(talent.categoryName || "Talent")}</span>`;
+      : `<span data-talent-category>${escapeHtml(talent.categoryName || "Talent")}</span>`);
   }
 }
 
@@ -818,7 +830,7 @@ function renderTalentAuthor(talent) {
   if (!avatar) return;
 
   if (talent.authorProfileImageUrl) {
-    avatar.innerHTML = `<img src="${escapeHtml(talent.authorProfileImageUrl)}" alt="" />`;
+    setSafeHtml(avatar, `<img src="${escapeHtml(safeImageUrl(talent.authorProfileImageUrl))}" alt="" />`);
     return;
   }
 
@@ -842,7 +854,7 @@ async function bindTalentDetailActions(talent) {
 
   if (isOwner) {
     chatButton.remove();
-    actions.insertAdjacentHTML("beforeend", `
+    appendSafeHtml(actions, "beforeend", `
       <a class="button quiet" href="#/talent-new?id=${escapeHtml(talent.talentPostId)}">수정하기</a>
       <button class="button quiet" type="button" data-talent-inactive="${escapeHtml(talent.talentPostId)}">비활성화</button>
       <button class="button quiet danger" type="button" data-talent-delete="${escapeHtml(talent.talentPostId)}">삭제</button>
@@ -952,13 +964,13 @@ async function loadTalentSettingsOptions(form) {
   try {
     const categories = await fetchCategories();
     if (categorySelect) {
-      categorySelect.innerHTML = categories.length
+      setSafeHtml(categorySelect, categories.length
         ? `<option value="">카테고리 선택</option>${categories.map((category) => `<option value="${category.categoryId}">${escapeHtml(category.name)}</option>`).join("")}`
-        : `<option value="">등록된 카테고리가 없습니다</option>`;
+        : `<option value="">등록된 카테고리가 없습니다</option>`);
       categorySelect.addEventListener("change", renderSelected);
     }
   } catch {
-    if (categorySelect) categorySelect.innerHTML = `<option value="">카테고리를 불러오지 못했습니다</option>`;
+    setSafeHtml(categorySelect, `<option value="">카테고리를 불러오지 못했습니다</option>`);
   }
 
   await loadTalentPortfolioOptions(form);
@@ -984,12 +996,12 @@ async function loadTalentPortfolioOptions(form) {
 
     form.__talentPortfolios = portfoliosWithFiles;
     cachePortfolios(portfoliosWithFiles);
-    list.innerHTML = portfoliosWithFiles.length
+    setSafeHtml(list, portfoliosWithFiles.length
       ? portfoliosWithFiles.map(renderTalentPortfolioOption).join("")
-      : `<p>등록된 포트폴리오가 없습니다.</p>`;
+      : `<p>등록된 포트폴리오가 없습니다.</p>`);
     syncSelectedTalentPortfolio(form);
   } catch (error) {
-    list.innerHTML = `<p>포트폴리오를 불러오지 못했습니다: ${escapeHtml(error.message)}</p>`;
+    setSafeHtml(list, `<p>포트폴리오를 불러오지 못했습니다: ${escapeHtml(error.message)}</p>`);
   }
 }
 
@@ -1134,16 +1146,16 @@ function renderTalentSettingsSummary(form) {
   const durationUnit = durationUnitLabel(formData.get("durationUnit"));
 
   if (!validateTalentSettings(form)) {
-    summary.innerHTML = `<span>상세 설정을 입력해 주세요.</span>`;
+    setSafeHtml(summary, `<span>상세 설정을 입력해 주세요.</span>`);
     return;
   }
 
-  summary.innerHTML = `
+  setSafeHtml(summary, `
     <span>${escapeHtml(category)}</span>
     <strong>${formatOptionalMoney(price)}</strong>
     <span>${duration ? `예상 ${duration}${durationUnit}` : "기간 협의"}</span>
     <span>${portfolioTitle ? escapeHtml(portfolioTitle) : "포트폴리오 미연결"}</span>
-  `;
+  `);
 }
 
 function optionalNumber(value) {
@@ -1163,16 +1175,16 @@ function renderTalentThumbnailPreview(container, existingFiles, thumbnailFile = 
   const imageUrl = previewUrl || existingThumbnail?.fileUrl || "";
 
   container.hidden = !imageUrl;
-  container.innerHTML = imageUrl
+  setSafeHtml(container, imageUrl
     ? `
-      <img src="${escapeHtml(imageUrl)}" alt="" />
+      <img src="${escapeHtml(safeImageUrl(imageUrl))}" alt="" />
       <div>
         <span>대표 이미지</span>
         <strong>${escapeHtml(thumbnailFile?.name || existingThumbnail?.originalFileName || "대표 이미지")}</strong>
       </div>
       ${thumbnailFile ? `<button type="button" aria-label="대표 이미지 선택 취소" data-remove-selected-talent-thumbnail>x</button>` : ""}
     `
-    : "";
+    : "");
 }
 
 function renderTalentDetailFiles(files) {
@@ -1192,8 +1204,8 @@ function renderTalentDetailFiles(files) {
 function renderTalentDetailFile(file) {
   const isImage = String(file.contentType || "").startsWith("image/");
   return `
-    <a class="talent-file-card ${isImage ? "is-image" : ""}" href="${escapeHtml(file.fileUrl)}" target="_blank" rel="noreferrer">
-      ${isImage ? `<img src="${escapeHtml(file.fileUrl)}" alt="" />` : `<span>${fileIcon(file.contentType)}</span>`}
+    <a class="talent-file-card ${isImage ? "is-image" : ""}" href="${escapeHtml(safeUrl(file.fileUrl))}" target="_blank" rel="noopener noreferrer">
+      ${isImage ? `<img src="${escapeHtml(safeImageUrl(file.fileUrl))}" alt="" />` : `<span>${fileIcon(file.contentType)}</span>`}
       <div>
         <strong>${escapeHtml(file.originalFileName)}</strong>
         <small>${formatFileSize(Number(file.fileSize || 0))}${file.thumbnail ? " · 대표" : ""}</small>
@@ -1206,7 +1218,7 @@ function renderTalentPortfolioOption(portfolio) {
   const image = getPortfolioFilePreviewImage(portfolio);
   return `
     <button class="talent-portfolio-option ${image ? "has-media" : "text-only"}" type="button" aria-pressed="false" data-select-talent-portfolio="${escapeHtml(portfolio.portfolioId)}" data-portfolio-title="${escapeHtml(portfolio.title || "")}">
-      ${image ? `<span class="talent-portfolio-thumb"><img src="${escapeHtml(image.fileUrl)}" alt="" /></span>` : ""}
+      ${image ? `<span class="talent-portfolio-thumb"><img src="${escapeHtml(safeImageUrl(image.fileUrl))}" alt="" /></span>` : ""}
       <div>
         <strong>${escapeHtml(portfolio.title || "제목 없는 포트폴리오")}</strong>
         <span>${escapeHtml(markdownExcerpt(portfolio.description || "") || "설명 없음")}</span>
@@ -1229,7 +1241,7 @@ function renderLinkedPortfolio(portfolio, files) {
         <span class="kicker">Linked Portfolio</span>
       </div>
       <button class="linked-portfolio-card ${image ? "has-media" : "text-only"}" type="button" data-portfolio-detail="${escapeHtml(portfolio.portfolioId)}" aria-label="${escapeHtml(portfolio.title)} 포트폴리오 상세 보기">
-        ${image ? `<img src="${escapeHtml(image.fileUrl)}" alt="" />` : ""}
+        ${image ? `<img src="${escapeHtml(safeImageUrl(image.fileUrl))}" alt="" />` : ""}
         <div>
           <h2>${escapeHtml(portfolio.title)}</h2>
           <p>${escapeHtml(markdownExcerpt(portfolio.description || ""))}</p>
@@ -1318,7 +1330,7 @@ function renderRequestCard(request) {
     <article class="request-card request-list-card">
       ${thumbnail ? `
       <a class="visual has-image" href="#/request/${request.requestPostId}" aria-label="${escapeHtml(request.title)} 상세">
-        <img src="${escapeHtml(thumbnail.fileUrl)}" alt="" />
+        <img src="${escapeHtml(safeImageUrl(thumbnail.fileUrl))}" alt="" />
         <span>${escapeHtml(request.categoryName || "Request")}</span>
       </a>
       ` : ""}
@@ -1350,18 +1362,18 @@ function renderRequestDetail(request, files = []) {
   setText("[data-request-meta]", `${authorLabel(request)} · 등록일 ${formatDate(request.createdAt)}`);
 
   const content = document.querySelector("[data-request-content]");
-  if (content) content.innerHTML = renderMarkdown("", request.content || "");
+  setSafeHtml(content, renderMarkdown("", request.content || ""));
 
   const hero = document.querySelector(".detail-hero");
   const thumbnail = getRequestPreviewImage(files);
   if (hero) {
     hero.classList.toggle("has-image", Boolean(thumbnail));
-    hero.innerHTML = thumbnail
+    setSafeHtml(hero, thumbnail
       ? `
-        <img src="${escapeHtml(thumbnail.fileUrl)}" alt="" />
+        <img src="${escapeHtml(safeImageUrl(thumbnail.fileUrl))}" alt="" />
         <span data-request-category>${escapeHtml(request.categoryName || "Request")}</span>
       `
-      : `<span data-request-category>${escapeHtml(request.categoryName || "Request")}</span>`;
+      : `<span data-request-category>${escapeHtml(request.categoryName || "Request")}</span>`);
   }
 }
 
@@ -1401,12 +1413,6 @@ function formatBudget(request) {
   return `${formatMoney(Number(request.budgetMin || 0))} - ${formatMoney(Number(request.budgetMax || 0))}`;
 }
 
-function escapeHtml(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (char) => (
-    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]
-  ));
-}
-
 async function loadMyPage() {
   const message = document.querySelector("[data-my-page-message]");
 
@@ -1436,7 +1442,7 @@ function renderMyPageAvatar(myPage) {
   if (!avatar) return;
 
   if (myPage.profileImageUrl) {
-    avatar.innerHTML = `<img src="${escapeHtml(myPage.profileImageUrl)}" alt="" />`;
+    setSafeHtml(avatar, `<img src="${escapeHtml(safeImageUrl(myPage.profileImageUrl))}" alt="" />`);
     return;
   }
 
@@ -1456,10 +1462,10 @@ async function loadPortfolioPreview() {
       }))
     );
     cachePortfolios(portfoliosWithFiles);
-    preview.innerHTML = renderPortfolioPreviewCards(portfoliosWithFiles);
+    setSafeHtml(preview, renderPortfolioPreviewCards(portfoliosWithFiles));
     bindPortfolioCardOpen(preview);
   } catch (error) {
-    preview.innerHTML = `<article class="portfolio-card"><span>ERROR</span><h3>포트폴리오를 불러오지 못했습니다.</h3><p>${error.message}</p></article>`;
+    setSafeHtml(preview, `<article class="portfolio-card"><span>ERROR</span><h3>포트폴리오를 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></article>`);
   }
 }
 
@@ -1476,13 +1482,13 @@ async function loadPortfolioList() {
       }))
     );
     cachePortfolios(portfoliosWithFiles);
-    list.innerHTML = portfolios.length
+    setSafeHtml(list, portfolios.length
       ? renderPortfolioPreviewCards(portfoliosWithFiles, { showEdit: true })
-      : `<article class="portfolio-card text-only"><h3>등록된 포트폴리오가 없습니다.</h3><p>마이페이지에서 포트폴리오 정보를 확인할 수 있습니다.</p></article>`;
+      : `<article class="portfolio-card text-only"><h3>등록된 포트폴리오가 없습니다.</h3><p>마이페이지에서 포트폴리오 정보를 확인할 수 있습니다.</p></article>`);
     bindPortfolioCardOpen(list);
     bindPortfolioCardActions(list);
   } catch (error) {
-    list.innerHTML = `<article class="portfolio-card text-only"><h3>포트폴리오를 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></article>`;
+    setSafeHtml(list, `<article class="portfolio-card text-only"><h3>포트폴리오를 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></article>`);
   }
 }
 
@@ -1734,7 +1740,7 @@ function openPortfolioModal(portfolioId) {
 
   const modal = getPortfolioModal();
   const content = modal.querySelector("[data-portfolio-modal-content]");
-  content.innerHTML = renderPortfolioModalContent(portfolio);
+  setSafeHtml(content, renderPortfolioModalContent(portfolio));
   modal.hidden = false;
   document.body.classList.add("modal-open");
   modal.querySelector("[data-portfolio-modal-close]")?.focus();
@@ -1756,7 +1762,7 @@ function getPortfolioModal() {
   modal.className = "modal-backdrop";
   modal.dataset.portfolioModal = "";
   modal.hidden = true;
-  modal.innerHTML = `
+  setSafeHtml(modal, `
     <div class="portfolio-detail-modal" role="dialog" aria-modal="true" aria-label="포트폴리오 상세">
       <div class="modal-head">
         <span class="kicker">Portfolio</span>
@@ -1764,7 +1770,7 @@ function getPortfolioModal() {
       </div>
       <div data-portfolio-modal-content></div>
     </div>
-  `;
+  `);
 
   modal.addEventListener("click", (event) => {
     if (event.target === modal || event.target.closest("[data-portfolio-modal-close]")) {
@@ -1799,7 +1805,7 @@ function renderPortfolioModalFiles(files) {
     <div class="portfolio-detail-files">
       <h3>첨부파일</h3>
       ${attachmentFiles.map((file) => `
-        <a href="${escapeHtml(file.fileUrl)}" target="_blank" rel="noreferrer">
+        <a href="${escapeHtml(safeUrl(file.fileUrl))}" target="_blank" rel="noopener noreferrer">
           <span>${escapeHtml(file.originalFileName)}</span>
           <small>${formatFileSize(Number(file.fileSize || 0))}</small>
         </a>
@@ -1814,7 +1820,7 @@ function renderPortfolioPreviewMedia(portfolio) {
 
   return `
     <div class="portfolio-card-media">
-      <img src="${escapeHtml(image.fileUrl)}" alt="" />
+      <img src="${escapeHtml(safeImageUrl(image.fileUrl))}" alt="" />
       ${image.thumbnail ? `<small>대표</small>` : ""}
     </div>
   `;
@@ -1867,8 +1873,8 @@ function renderPortfolioFileItem(portfolioId, file) {
   const isImage = String(file.contentType || "").startsWith("image/");
   return `
     <div class="portfolio-file-item">
-      <a class="portfolio-file-link" href="${escapeHtml(file.fileUrl)}" target="_blank" rel="noreferrer">
-        ${isImage ? `<img src="${escapeHtml(file.fileUrl)}" alt="" />` : `<span>${fileIcon(file.contentType)}</span>`}
+      <a class="portfolio-file-link" href="${escapeHtml(safeUrl(file.fileUrl))}" target="_blank" rel="noopener noreferrer">
+        ${isImage ? `<img src="${escapeHtml(safeImageUrl(file.fileUrl))}" alt="" />` : `<span>${fileIcon(file.contentType)}</span>`}
         <strong>${escapeHtml(file.originalFileName)}</strong>
         ${file.thumbnail ? `<small>대표</small>` : ""}
       </a>
@@ -1975,10 +1981,10 @@ function renderPortfolioEditorFiles(container, existingFiles, selectedFiles, por
   if (!container) return;
 
   container.hidden = existingFiles.length + selectedFiles.length === 0;
-  container.innerHTML = [
+  setSafeHtml(container, [
     ...existingFiles.map((file) => renderExistingPortfolioEditorFile(file, portfolioId)),
     ...selectedFiles.map((file, index) => renderSelectedPortfolioFile(file, index)),
-  ].join("");
+  ].join(""));
 }
 
 function renderExistingPortfolioEditorFile(file, portfolioId) {
@@ -1991,7 +1997,7 @@ function renderExistingPortfolioEditorFile(file, portfolioId) {
         <small>기존 파일 · ${escapeHtml(file.contentType || "file")} · ${formatFileSize(Number(file.fileSize || 0))}${file.thumbnail ? " · 대표" : ""}</small>
       </div>
       <div class="inline-file-actions">
-        <a href="${escapeHtml(file.fileUrl)}" target="_blank" rel="noreferrer">보기</a>
+        <a href="${escapeHtml(safeUrl(file.fileUrl))}" target="_blank" rel="noopener noreferrer">보기</a>
         ${portfolioId && isImage && !file.thumbnail ? `<button type="button" data-portfolio-file-thumbnail="${escapeHtml(file.portfolioFileId)}">대표</button>` : ""}
         ${portfolioId ? `
           <label>
@@ -2024,7 +2030,8 @@ function markdownImageText(fileName, url) {
 
 function getFirstMarkdownImageUrl(markdown) {
   const match = String(markdown || "").match(/!\[[^\]]*]\(([^)\s]+)(?:\s+"[^"]*")?\)/);
-  return match ? match[1] : null;
+  if (!match) return null;
+  return safeImageUrl(match[1]) || null;
 }
 
 function insertTextAtCursor(textarea, text) {
@@ -2067,7 +2074,10 @@ function renderMarkdown(title, markdown) {
     const image = trimmed.match(/^!\[(.*?)]\((.*?)\)$/);
     if (image) {
       flushParagraph();
-      blocks.push(`<img src="${escapeHtml(image[2])}" alt="${escapeHtml(image[1])}" />`);
+      const imageUrl = safeImageUrl(image[2]);
+      if (imageUrl) {
+        blocks.push(`<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(image[1])}" />`);
+      }
       return;
     }
 
