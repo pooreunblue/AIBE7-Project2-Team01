@@ -1,5 +1,7 @@
 # AI 기능 개발 가이드
 
+상세 연동 규칙은 [B Matching 연동 계약](./matching-integration-contract.md)에서 확인한다.
+
 ## 1. 목표
 
 Talent와 Request를 자연어로 검색하고, 원본 데이터와 사용자 Reputation을 함께 검증해 적합한 후보와 추천 이유를 제공한다. Portfolio 임베딩은 다른 AI 기능에서 사용할 수 있지만 B Matching 검색 대상에서는 제외한다.
@@ -86,7 +88,7 @@ Markdown 이미지 문법과 URL은 제거하되 의미가 있는 본문과 기�
 → targetType 확인(TALENT 또는 REQUEST)
 → 초기에는 API가 구조화된 검색 조건을 직접 받음
 → 서버가 검색 계획 검증
-→ targetType/status/category metadata filter
+→ targetType metadata filter
 → Vector Search로 후보 추출
 → targetId로 Talent 또는 Request 원본 일괄 조회
 → 가격/예산/카테고리/상태/기간 최종 검증
@@ -100,7 +102,7 @@ B는 Portfolio Document를 검색하거나 Ranking에 직접 사용하지 않는
 
 `VectorSearchService`는 Spring AI `VectorStoreRetriever`로 검색하고, `AiMatchingService`는 원본 조회와 전체 흐름을 조정하며, `MatchRankingService`는 외부 의존성 없이 점수만 계산한다. Ranking은 서버가 결정하고 LLM은 내부 UUID나 임의 SQL/filter 또는 순위를 만들지 않는다.
 
-상태와 명시적 category, 가격 상한, 예산 범위, 기간, 마감일은 필수 조건이면 Filtering으로 처리한다. 초기 MatchScore는 semantic score 중심으로 시작하고 금액 선호가 있을 때만 amount fit을 추가한다. Reputation은 C 계약이 완료된 뒤 반영한다.
+상태와 명시적 category, 가격 상한, 예산 범위, 기간, 마감일은 VectorStore metadata가 아닌 SQL 원본을 기준으로 필수 Filtering 처리한다. 초기 MatchScore는 semantic score 중심으로 시작하고 금액 선호가 있을 때만 amount fit을 추가한다. Reputation은 C 계약이 완료된 뒤 반영한다.
 
 ## 6. 개발 순서
 

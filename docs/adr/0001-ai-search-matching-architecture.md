@@ -6,6 +6,7 @@
 - 관련 문서:
   - [AI 기능 개발 가이드](../ai/ai-development-guide.md)
   - [A-B Embedding 연동 계약](../ai/a-b-embedding-contract.md)
+  - [B Matching 연동 계약](../ai/matching-integration-contract.md)
   - [Spring AI 개발 환경 설정 가이드](../ai/spring-ai-setup-guide.md)
 
 ## 1. 배경
@@ -87,7 +88,7 @@ Matching은 Vector Search만으로 결정하지 않고 다음 순서를 사용�
 
 ```text
 사용자 Query와 구조화 조건
-→ targetType/status/category metadata filter
+→ targetType metadata filter
 → Vector Similarity Search
 → targetId 목록 추출
 → Talent 또는 Request 원본 Entity 일괄 조회
@@ -136,7 +137,8 @@ AI API 또는 VectorStore 장애가 원본 Talent, Request, Portfolio CRUD를 �
 ### B
 
 - `VectorStoreRetriever`와 `SearchRequest`를 이용한 읽기 전용 검색
-- `targetType`, `status`, 선택적 `categoryId` metadata filter
+- `targetType` metadata filter
+- SQL 원본 기준 status, category, 금액, 기간 검증
 - `Document.getScore()` 기반 semantic score 추출
 - `findAllById` 기반 원본 Entity 일괄 조회
 - 필수 조건 Filtering, MatchScore, TOP 후보 선정

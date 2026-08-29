@@ -169,18 +169,15 @@ B는 Spring AI `VectorStoreRetriever`와 `SearchRequest`를 사용한다.
 ```text
 TALENT 검색
 targetType == 'TALENT'
-AND status == 'ACTIVE'
-AND categoryId == 요청 categoryId  # categoryId가 있을 때만
 
 REQUEST 검색
 targetType == 'REQUEST'
-AND status == 'OPEN'
-AND categoryId == 요청 categoryId  # categoryId가 있을 때만
 ```
 
 규칙:
 
 - Filter 문자열을 사용자 입력으로 직접 조합하지 않고 `FilterExpressionBuilder`를 사용한다.
+- status와 category metadata는 현재 필터에 사용하지 않고 SQL 원본 값으로 검증한다.
 - Vector 후보는 내부 `topK` 20~30개로 시작하고 최종 응답은 3~5개만 반환한다.
 - 초기 similarity threshold는 0으로 두고 테스트 데이터의 score 분포를 확인한 뒤 조정한다.
 - 유사도는 검색 결과 `Document.getScore()`를 사용한다.
@@ -214,7 +211,8 @@ AND categoryId == 요청 categoryId  # categoryId가 있을 때만
 
 - TALENT 검색에 REQUEST/PORTFOLIO가 포함되지 않는다.
 - REQUEST 검색에 TALENT/PORTFOLIO가 포함되지 않는다.
-- status와 선택적 category filter가 적용된다.
+- targetType metadata filter가 적용된다.
+- status와 선택적 category 조건은 SQL 원본 기준으로 적용된다.
 - targetId와 similarity score를 안정적으로 추출한다.
 - 원본 Entity를 ID별 반복 호출하지 않고 일괄 조회한다.
 - stale 또는 잘못된 Vector Document가 최종 후보에서 제외된다.

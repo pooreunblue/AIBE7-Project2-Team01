@@ -61,6 +61,24 @@ dependencies {
 tasks.named('test') {
     outputs.dir snippetsDir
     useJUnitPlatform()
+
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat = 'full'
+    }
+
+    afterSuite { descriptor, result ->
+        if (descriptor.parent == null) {
+            println ''
+            println '========== Test Summary =========='
+            println "Result : ${result.resultType}"
+            println "Total  : ${result.testCount}"
+            println "Passed : ${result.successfulTestCount}"
+            println "Failed : ${result.failedTestCount}"
+            println "Skipped: ${result.skippedTestCount}"
+            println '=================================='
+        }
+    }
 }
 
 tasks.named('asciidoctor') {
