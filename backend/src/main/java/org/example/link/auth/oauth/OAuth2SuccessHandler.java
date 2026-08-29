@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.cookie.CookieUtil;
+import org.example.link.auth.config.AuthProperties;
 import org.example.link.auth.jwt.JwtProvider;
 import org.example.link.auth.service.RefreshTokenService;
 import org.example.link.domain.user.entity.Role;
@@ -23,6 +24,7 @@ public class OAuth2SuccessHandler
     private final JwtProvider jwtProvider;
     private final RefreshTokenService refreshTokenService;
     private final CookieUtil cookieUtil;
+    private final AuthProperties authProperties;
 
     @Override
     public void onAuthenticationSuccess(
@@ -61,7 +63,7 @@ public class OAuth2SuccessHandler
         );
 
         response.sendRedirect(
-                "http://localhost:3000/oauth2/success"
+                authProperties.frontendOrigin() + "/oauth2/success"
         );
     }
 }
