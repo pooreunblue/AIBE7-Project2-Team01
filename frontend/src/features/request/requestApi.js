@@ -20,6 +20,14 @@ export async function createRequest(payload) {
   return unwrapApiResponse(response);
 }
 
+export async function updateRequest(requestPostId, payload) {
+  const response = await apiRequest(`/requests/${requestPostId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+  return unwrapApiResponse(response);
+}
+
 export async function uploadRequestFile(requestPostId, file) {
   const formData = new FormData();
   formData.append("file", file);

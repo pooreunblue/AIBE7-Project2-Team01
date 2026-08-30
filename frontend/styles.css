@@ -1162,6 +1162,7 @@ dd {
 
 .message-stream {
   display: grid;
+  align-items: start;
   align-content: end;
   gap: 10px;
   min-height: 0;
@@ -1174,12 +1175,16 @@ dd {
 }
 
 .bubble {
+  justify-self: start;
+  width: fit-content;
   max-width: min(520px, 84%);
   margin: 0;
   padding: 12px 14px;
   border-radius: var(--radius);
   background: #fff;
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .bubble.me {

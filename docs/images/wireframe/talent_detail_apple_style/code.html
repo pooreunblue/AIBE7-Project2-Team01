@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TalentPulse - Talent Details</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "inverse-primary": "#adc6ff",
+                "surface-tint": "#005bc1",
+                "on-primary-container": "#fefcff",
+                "system-gray": "#8E8E93",
+                "surface-dim": "#d9dade",
+                "system-orange": "#FF9500",
+                "on-secondary-fixed-variant": "#46464b",
+                "tertiary-fixed-dim": "#53e16f",
+                "surface-container": "#ededf2",
+                "primary-fixed-dim": "#adc6ff",
+                "on-error-container": "#93000a",
+                "on-secondary": "#ffffff",
+                "tertiary": "#006b27",
+                "secondary-fixed-dim": "#c6c6cb",
+                "surface-container-high": "#e8e8ed",
+                "inverse-on-surface": "#f0f0f5",
+                "system-red": "#FF3B30",
+                "on-tertiary-fixed-variant": "#00531c",
+                "on-secondary-fixed": "#1a1b1f",
+                "system-green": "#34C759",
+                "on-background": "#1a1c1f",
+                "on-tertiary-fixed": "#002107",
+                "on-surface-variant": "#414755",
+                "secondary-container": "#e0dfe4",
+                "on-tertiary": "#ffffff",
+                "primary": "#0058bc",
+                "secondary": "#5d5e63",
+                "primary-container": "#0070eb",
+                "on-tertiary-container": "#f7fff2",
+                "surface-base": "#FFFFFF",
+                "tertiary-container": "#008733",
+                "outline-variant": "#c1c6d7",
+                "surface-container-low": "#f3f3f8",
+                "background": "#f9f9fe",
+                "on-primary-fixed": "#001a41",
+                "surface-container-highest": "#e2e2e7",
+                "surface-variant": "#e2e2e7",
+                "primary-fixed": "#d8e2ff",
+                "surface-grouped": "#F2F2F7",
+                "secondary-fixed": "#e3e2e7",
+                "outline": "#717786",
+                "on-primary-fixed-variant": "#004493",
+                "inverse-surface": "#2e3034",
+                "on-surface": "#1a1c1f",
+                "surface-container-lowest": "#ffffff",
+                "on-secondary-container": "#626267",
+                "tertiary-fixed": "#72fe88",
+                "on-primary": "#ffffff",
+                "on-error": "#ffffff",
+                "surface-bright": "#f9f9fe",
+                "error": "#ba1a1a",
+                "surface": "#f9f9fe",
+                "error-container": "#ffdad6"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-md": "16px",
+                "gutter": "16px",
+                "margin-desktop": "32px",
+                "unit": "8px",
+                "margin-mobile": "16px",
+                "stack-sm": "8px",
+                "stack-lg": "32px"
+        },
+        "fontFamily": {
+                "headline-md": [
+                        "Inter"
+                ],
+                "display-lg": [
+                        "Inter"
+                ],
+                "body-lg": [
+                        "Inter"
+                ],
+                "label-sm": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-md": [
+                        "22px",
+                        {
+                                "lineHeight": "28px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "34px",
+                        {
+                                "lineHeight": "41px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "17px",
+                        {
+                                "lineHeight": "22px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-sm": [
+                        "11px",
+                        {
+                                "lineHeight": "13px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "30px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-md": [
+                        "13px",
+                        {
+                                "lineHeight": "18px",
+                                "letterSpacing": "0.01em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-md": [
+                        "15px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "28px",
+                        {
+                                "lineHeight": "34px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f3f8; } /* surface-container-low */
+        .glass-panel { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(0,0,0,0.05); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-on-surface antialiased bg-surface-container-low pb-24 md:pb-0">
+<!-- Top Navigation (Desktop) -->
+<nav class="hidden md:flex sticky top-0 w-full z-50 bg-white/80 dark:bg-surface/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5 shadow-sm justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto">
+<div class="flex items-center gap-stack-lg">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">TalentPulse</span>
+<div class="flex gap-stack-lg">
+<a class="text-on-surface-variant font-medium hover:opacity-75 transition-opacity font-body-lg text-body-lg" href="#">Talent</a>
+<a class="text-on-surface-variant font-medium hover:opacity-75 transition-opacity font-body-lg text-body-lg" href="#">Requests</a>
+<a class="text-on-surface-variant font-medium hover:opacity-75 transition-opacity font-body-lg text-body-lg" href="#">Categories</a>
+</div>
+</div>
+<div class="flex items-center gap-stack-md text-primary dark:text-primary-fixed">
+<button class="hover:opacity-75 transition-opacity p-2"><span class="material-symbols-outlined">notifications</span></button>
+<button class="hover:opacity-75 transition-opacity p-2"><span class="material-symbols-outlined">chat</span></button>
+<button class="hover:opacity-75 transition-opacity p-2"><span class="material-symbols-outlined">account_circle</span></button>
+</div>
+</nav>
+<!-- Mobile Header (Back & Actions) -->
+<header class="md:hidden sticky top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-black/5 flex justify-between items-center px-margin-mobile py-4">
+<button class="text-on-surface"><span class="material-symbols-outlined">arrow_back</span></button>
+<div class="flex gap-stack-sm">
+<button class="text-on-surface"><span class="material-symbols-outlined">share</span></button>
+<button class="text-on-surface"><span class="material-symbols-outlined">favorite_border</span></button>
+</div>
+</header>
+<main class="max-w-7xl mx-auto md:px-margin-desktop px-0 pb-stack-lg">
+<!-- Hero Image Gallery -->
+<section class="relative w-full md:mt-stack-lg md:rounded-[16px] overflow-hidden aspect-video md:aspect-[21/9] bg-surface-dim">
+<img class="w-full h-full object-cover" data-alt="A high-resolution, professional photograph showing an expert modern web designer working on a clean, bright, minimalist dual-monitor setup. The environment is well-lit with natural light pouring in, casting soft shadows. The screen displays high-end UI designs featuring vibrant orange accents against stark white canvases. The overall mood conveys immense professional capability, precision, and premium quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiqhhIhSmI3-ySYHQ9iTz2y8hhFUAqRLlURzFvWE7OvbCIHc8zXHj_1UtD_p8csp9mZ0UwhDfrM-1_d744xNJrDTKDqdVhKAwmAG46fiEOmnbMmWwQKt-VdrRkba3swAkVEH2MKI-rChOA1xBe-0XiApH8o5rDZih1uKlDpRjgivXvE45p9YCiB9DCGnlFbmUXE-pdqFvaTM6StocR8jno5OP5OSQeBv0NlRWw-y69QHVl2owkcbnV"/>
+<div class="absolute bottom-4 right-4 bg-black/50 backdrop-blur-md text-white font-label-md text-label-md px-3 py-1 rounded-full">
+                1 / 5
+            </div>
+</section>
+<!-- Main Content Area -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-stack-lg mt-stack-lg px-margin-mobile md:px-0">
+<!-- Left Column: Details -->
+<div class="md:col-span-8 space-y-stack-lg">
+<!-- Title & Basic Info -->
+<div class="space-y-stack-sm">
+<div class="flex gap-2 mb-2">
+<span class="bg-surface-variant text-on-surface-variant font-label-md text-label-md px-3 py-1 rounded-full">Design &amp; Tech</span>
+<span class="bg-surface-variant text-on-surface-variant font-label-md text-label-md px-3 py-1 rounded-full">Web UI/UX</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface">Premium Modern Web Design &amp; Front-End Development</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Elevate your brand with meticulous, pixel-perfect user interfaces designed for modern audiences.</p>
+<div class="flex items-center gap-4 mt-4 pt-4 border-t border-black/5">
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">4.9</span>
+<span class="text-on-surface-variant font-body-md text-body-md">(128 reviews)</span>
+</div>
+<span class="text-on-surface-variant font-body-md text-body-md">•</span>
+<div class="flex items-center gap-1 text-on-surface-variant font-body-md text-body-md">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+                            Seoul, Gangnam
+                        </div>
+</div>
+</div>
+<!-- Seller Profile Card (Bento Style) -->
+<div class="bg-white rounded-[16px] p-stack-lg border border-black/5 flex flex-col sm:flex-row gap-stack-lg items-start sm:items-center">
+<div class="flex gap-stack-md items-center w-full sm:w-auto">
+<div class="w-[72px] h-[72px] rounded-full overflow-hidden bg-surface-dim border-2 border-primary-container">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a friendly, capable UI/UX designer looking directly at the camera with a warm smile. They are in a well-lit, minimalist studio setting with bright, natural lighting. The mood is trustworthy, approachable, and expert, reflecting a premium service provider." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfDNVuLUCAgsrO4w8dKnvykEq6E9bzExfuqQ1FHkLpkJ9IVvsli5w8_H8ZEimXUfzRkBGuwacN0ek9wzi8hBf-TkMEKA77ZerIgT8QGNPC671Bgik_fLttcEcPya4on5wYR-NEwG6tlO4PA4UQZKRO2RVDkXqAzfRhsE2KmLgwGqw6OO-l-KQLfBGXb_KwYnBtIdSF-e_nE0ssY3LqH3Kk-QFKUKcMbvt4N1sV4-O8F-q01ieroWgQ"/>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Alex Studio</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Top Rated Talent</p>
+</div>
+</div>
+<!-- Trust Indicator (Similar to Manner Temperature) -->
+<div class="sm:ml-auto flex flex-col items-end w-full sm:w-auto mt-4 sm:mt-0">
+<div class="flex justify-between w-full sm:w-32 mb-1">
+<span class="font-label-md text-label-md text-on-surface-variant">Trust Score</span>
+<span class="font-label-md text-label-md text-primary font-bold">98°</span>
+</div>
+<div class="w-full sm:w-32 h-2 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[98%]"></div>
+</div>
+<div class="flex gap-2 mt-3">
+<span class="bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm px-2 py-1 rounded-md">Fast Reply</span>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm px-2 py-1 rounded-md">Expert</span>
+</div>
+</div>
+</div>
+<!-- Service Details -->
+<div class="space-y-stack-md">
+<h2 class="font-headline-md text-headline-md text-on-surface">About This Service</h2>
+<div class="font-body-md text-body-md text-on-surface-variant space-y-4 leading-relaxed">
+<p>I specialize in crafting premium, minimalist user interfaces that prioritize user experience and aesthetic elegance. My approach involves deeply understanding your brand's core values and translating them into a digital presence that feels both trustworthy and modern.</p>
+<p>What you get with this service:</p>
+<ul class="list-disc pl-5 space-y-2">
+<li>Fully responsive design for desktop, tablet, and mobile.</li>
+<li>Interactive prototypes for user testing before development.</li>
+<li>High-fidelity mockups with meticulous attention to typography and whitespace.</li>
+<li>Clean, structured handoff files for your development team.</li>
+</ul>
+</div>
+</div>
+<!-- Portfolio Gallery -->
+<div class="space-y-stack-md">
+<h2 class="font-headline-md text-headline-md text-on-surface">Portfolio Gallery</h2>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-stack-md">
+<div class="aspect-[4/5] rounded-[16px] overflow-hidden bg-surface-dim border border-black/5 hover:shadow-md transition-shadow">
+<img class="w-full h-full object-cover" data-alt="A sleek, modern mobile application UI mockup displayed on a pristine white background. The design features a premium minimalist aesthetic with expansive whitespace, subtle glassmorphism effects, and vibrant orange accents. The interface is clean, professional, and sophisticated." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEyC_hERKfXt5-TNGvUh-WQcwkQPdzNGwZC8YmJB-3uauMsR8WzF8qE4_y_uFFm80jRgyonfuYCMnFjgnynuzAcoAnqfnRS928CVFxOZKzkpVGcLUPdn_c-f-AvIfGoG80l2YffEcULvbT1pj4FvMVr6N2iQzjZSASHgbX9K-MN6JuLpIVKtSx8TNSCq8-5UWz_adwps7t0ZFlLuArcZhjQU7V6jjHdt_xbt7B1yq2XcDxn6lqIqKz"/>
+</div>
+<div class="aspect-[4/5] rounded-[16px] overflow-hidden bg-surface-dim border border-black/5 hover:shadow-md transition-shadow">
+<img class="w-full h-full object-cover" data-alt="A sophisticated dashboard interface design showcasing data visualization. The layout uses a strict, clean grid system with soft ambient shadows creating depth. The color palette revolves around off-whites, crisp whites, and distinct primary color charts, evoking a sense of high utility and professional capability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnz2PGj9C_92V5lWx1mHhS4_O0KaI8UApgYHsZgVRLWf7W-V8-WsPY12k4K431v3T43pZRNpd-5QYdksU9M3Oxfn-kLlBhNLFPge3FocBp5zflKrKW_chPlTC2dMPNF2pDiAQAh_VGLYC0CkDfdxNiMH1-CavroHQx1kJ35yJtYIuwrrsuKmMcyfgYnJqNZr3GutatXlmQIkCEkUClHub_XHaKgbRTwg366XTf4u0WHLMLt90EomeF"/>
+</div>
+<div class="aspect-[4/5] rounded-[16px] overflow-hidden bg-surface-dim border border-black/5 hover:shadow-md transition-shadow hidden sm:block">
+<img class="w-full h-full object-cover" data-alt="A beautiful landing page design featuring large, expressive typography and a dynamic, asymmetric layout. The overall look is premium and minimalist, utilizing a bright, light-mode palette that feels airy and expansive, perfect for a high-end service provider." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCYoUhGnzgLhPfJV2OA8yjhv2vEdqiwudVp33IoxFlWF1LZ0uWRAOL9EzgewyLsCVre6UfE3Bel71RFmYHpedjn7DaARLEO3xYlLG7e6pbR1kzDZhtCj8OW3xQMRWbVZfY4-dnkozDS2eRt4hIMsa-m5szyFuleEd2HrajDLT__peirPGP4J_jtbSJaAJi1Zv7wrOli1Kug1yhoJEd2imkMn6pQTfFtIJaKadeoSskQk3CESjMChcC"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Sticky Action Bar (Desktop) -->
+<div class="hidden md:block md:col-span-4 relative">
+<div class="sticky top-[100px] bg-white rounded-[16px] p-stack-lg border border-black/5 shadow-sm space-y-stack-lg">
+<div class="space-y-stack-sm border-b border-black/5 pb-4">
+<h3 class="font-headline-md text-headline-md text-on-surface">Standard Package</h3>
+<div class="flex items-end gap-2">
+<span class="font-display-lg text-display-lg text-primary">₩ 500,000</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Includes 3 pages of premium UI design, responsive layout, and 2 rounds of revisions.</p>
+</div>
+<div class="space-y-4">
+<div class="flex items-center gap-2 text-on-surface-variant font-body-md text-body-md">
+<span class="material-symbols-outlined text-[20px]">schedule</span> Delivery in 7 days
+                        </div>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-md text-body-md">
+<span class="material-symbols-outlined text-[20px]">autorenew</span> 2 Revisions included
+                        </div>
+</div>
+<div class="flex flex-col gap-stack-sm pt-4">
+<button class="w-full bg-primary-container text-on-primary font-label-md text-label-md font-bold py-4 rounded-xl hover:opacity-90 transition-opacity">Request Transaction</button>
+<button class="w-full bg-primary-container/10 text-primary font-label-md text-label-md font-bold py-4 rounded-xl hover:bg-primary-container/20 transition-colors border border-primary-container/20">Chat with Seller</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Mobile Fixed Bottom Action Bar -->
+<div class="md:hidden fixed bottom-0 left-0 w-full z-50 bg-white/90 backdrop-blur-xl border-t border-black/5 shadow-[0_-4px_24px_rgba(0,0,0,0.04)] px-margin-mobile py-4 pb-safe flex gap-stack-sm items-center">
+<button class="p-3 text-on-surface-variant hover:text-primary transition-colors flex flex-col items-center justify-center border border-outline-variant rounded-xl bg-surface-container-lowest">
+<span class="material-symbols-outlined">favorite_border</span>
+</button>
+<button class="flex-1 bg-primary-container/10 text-primary font-label-md text-label-md font-bold py-3 rounded-xl hover:bg-primary-container/20 transition-colors">Chat</button>
+<button class="flex-1 bg-primary-container text-on-primary font-label-md text-label-md font-bold py-3 rounded-xl hover:opacity-90 transition-opacity">Request</button>
+</div>
+<!-- Desktop Footer -->
+<footer class="hidden md:flex flex-col items-center justify-center gap-stack-md w-full border-t border-outline-variant bg-surface-container-low dark:bg-surface-container-lowest py-stack-lg mt-stack-lg">
+<span class="font-headline-md text-headline-md font-bold text-primary">TalentPulse</span>
+<div class="flex gap-stack-lg">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Terms</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Privacy</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Help</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Contact</a>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant">© 2024 TalentPulse. Premium Marketplace.</p>
+</footer>
+</body></html>

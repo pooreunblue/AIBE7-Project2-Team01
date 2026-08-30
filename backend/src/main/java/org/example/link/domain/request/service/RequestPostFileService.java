@@ -39,9 +39,8 @@ public class RequestPostFileService {
     }
 
     @Transactional(readOnly = true)
-    public List<RequestPostFileResponse> getFiles(CustomUserDetails user, UUID postId) {
-        RequestPostEntity post = findPost(postId);
-        validateOwner(post, user.getUserId());
+    public List<RequestPostFileResponse> getFiles(UUID postId) {
+        findPost(postId);
         return requestPostFileRepository.findAllByRequestPostId(postId).stream()
                 .map(RequestPostFileResponse::from).toList();
     }

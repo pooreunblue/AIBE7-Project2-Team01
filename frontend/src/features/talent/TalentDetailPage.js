@@ -26,7 +26,7 @@ export function TalentDetailPage(id) {
         <span>Service Details</span>
         <strong data-talent-price>-</strong>
         <p data-talent-duration>예상 작업기간을 확인 중입니다.</p>
-        <button class="button primary" type="button" data-talent-chat disabled>Chat with Seller</button>
+        <button class="button primary" type="button" data-talent-chat disabled>판매자와 채팅</button>
       </aside>
     </section>
   `;
