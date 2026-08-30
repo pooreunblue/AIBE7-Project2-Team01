@@ -10,7 +10,7 @@ spring:
       genai:
         api-key: ${GEMINI_API_KEY}
         chat:
-          model: gemini-2.5-flash
+          model: gemini-3.1-flash-lite
         embedding:
           api-key: ${GEMINI_API_KEY}
           text:
