@@ -20,6 +20,14 @@ export async function createTalent(payload) {
   return unwrapApiResponse(response);
 }
 
+export async function generateTalentPost(payload, image) {
+  const formData = new FormData();
+  formData.append("data", new Blob([JSON.stringify(payload)], { type: "application/json" }));
+  if (image) formData.append("image", image);
+  const response = await apiRequest("/ai/generation/talents", { method: "POST", body: formData });
+  return unwrapApiResponse(response);
+}
+
 export async function updateTalent(talentPostId, payload) {
   const response = await apiRequest(`/talents/${talentPostId}`, {
     method: "PUT",
