@@ -10,7 +10,10 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const apiTarget = new URL(process.env.API_TARGET || "http://localhost:8080");
+const webSocketTarget = `${apiTarget.protocol === "https:" ? "wss:" : "ws:"}//${apiTarget.host}`;
 
+app.disable("x-powered-by");
+app.use(setSecurityHeaders);
 app.use("/api", proxyToSpring);
 app.use(express.static(__dirname));
 
@@ -22,6 +25,25 @@ app.listen(port, () => {
   console.log(`Frontend server: http://localhost:${port}`);
   console.log(`API proxy target: ${apiTarget.origin}`);
 });
+
+function setSecurityHeaders(req, res, next) {
+  res.setHeader("Content-Security-Policy", [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self'",
+    "img-src 'self' https: blob:",
+    `connect-src 'self' ${apiTarget.origin} ${webSocketTarget}`,
+    "font-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "frame-ancestors 'none'",
+    `form-action 'self' ${apiTarget.origin}`,
+  ].join("; "));
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  next();
+}
 
 function proxyToSpring(req, res) {
   const targetPath = req.originalUrl.replace(/^\/api/, "") || "/";
