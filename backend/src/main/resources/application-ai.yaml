@@ -19,6 +19,7 @@ spring:
 
     vectorstore:
       pgvector:
+        id-type: TEXT
         index-type: HNSW
         distance-type: COSINE_DISTANCE
         dimensions: 1536
