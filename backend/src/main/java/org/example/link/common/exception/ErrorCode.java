@@ -14,6 +14,7 @@ public enum ErrorCode {
     // AI matching
     MATCH_TARGET_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "매칭 검색은 TALENT 또는 REQUEST만 지원합니다."),
     INVALID_MATCH_CONDITION(HttpStatus.BAD_REQUEST, "검색 대상과 조건이 일치하지 않습니다."),
+    AI_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI 글 생성에 실패했습니다."),
 
     //storage
     INVALID_FILE(HttpStatus.BAD_REQUEST, "유효하지 않은 파일입니다."),
