@@ -1,8 +1,10 @@
 # AI 기능 개발 가이드
 
+상세 연동 규칙은 [B Matching 연동 계약](./matching-integration-contract.md)에서 확인한다.
+
 ## 1. 목표
 
-Talent, Request, Portfolio를 임베딩하여 자연어로 검색하고, 원본 데이터와 사용자 Reputation을 함께 검증해 적합한 후보와 추천 이유를 제공한다.
+Talent와 Request를 자연어로 검색하고, 원본 데이터와 사용자 Reputation을 함께 검증해 적합한 후보와 추천 이유를 제공한다. Portfolio 임베딩은 다른 AI 기능에서 사용할 수 있지만 B Matching 검색 대상에서는 제외한다.
 
 ```text
 게시글/포트폴리오
@@ -19,7 +21,7 @@ Talent, Request, Portfolio를 임베딩하여 자연어로 검색하고, 원본 
 | 담당 | 영역 | 주요 작업 |
 | --- | --- | --- |
 | A | Generation / Embedding | AI 게시글 생성, Talent/Request/Portfolio 임베딩, 생성·수정·삭제에 따른 VectorStore 데이터 관리 |
-| B | Matching / RAG | 자연어 검색, Vector Search, 조건 검증, MatchScore, Reputation 반영, 최종 후보와 추천 이유 생성 |
+| B | Matching / RAG | Talent/Request 자연어 검색, Vector Search, 원본 조건 검증, MatchScore, Reputation 반영, 최종 후보와 추천 이유 생성 |
 | C | Review / Reputation | Review CRUD, 리뷰 분석, 사용자 Reputation 계산, B가 사용할 Reputation 정보 제공 |
 
 Review는 현재 placeholder만 존재한다. C가 Review 구조와 Reputation 응답 계약을 먼저 정하고, B는 Review Repository를 직접 사용하지 않고 C가 제공하는 Service/DTO를 통해 Reputation을 조회한다.
@@ -36,7 +38,7 @@ ai
 └── reputation      # C, Review 분석 결과 제공
 
 A: Domain CRUD → Document 생성 → EmbeddingService → VectorStore
-B: AI Chat → 검색 계획 → Vector Search → 원본 DB → Ranking → 추천
+B: AI Chat → TALENT/REQUEST 검색 계획 → Vector Search → 원본 DB → Ranking → 추천
 C: Review CRUD/분석 → ReputationService → B Ranking
 ```
 
@@ -83,11 +85,12 @@ Markdown 이미지 문법과 URL은 제거하되 의미가 있는 본문과 기�
 
 ```text
 사용자 Query
-→ LLM이 targetType과 검색 조건을 구조화
+→ targetType 확인(TALENT 또는 REQUEST)
+→ 초기에는 API가 구조화된 검색 조건을 직접 받음
 → 서버가 검색 계획 검증
-→ targetType/status/category metadata filter
+→ targetType metadata filter
 → Vector Search로 후보 추출
-→ targetId로 Talent/Request/Portfolio 원본 일괄 조회
+→ targetId로 Talent 또는 Request 원본 일괄 조회
 → 가격/예산/카테고리/상태/기간 최종 검증
 → 서버 MatchScore 계산
 → C의 Reputation 정보 반영
@@ -95,19 +98,26 @@ Markdown 이미지 문법과 URL은 제거하되 의미가 있는 본문과 기�
 → LLM이 추천 이유 생성
 ```
 
-LLM은 내부 UUID나 임의 SQL/filter를 만들지 않는다. Ranking은 서버가 계산하며 LLM이 순위를 임의로 변경하지 않는다.
+B는 Portfolio Document를 검색하거나 Ranking에 직접 사용하지 않는다. 초기 API는 `query`, `targetType`, 선택적 `categoryId`와 금액·기간 조건을 받으며 자연어 조건 추출은 검색 흐름이 안정된 뒤 추가한다.
+
+`VectorSearchService`는 Spring AI `VectorStoreRetriever`로 검색하고, `AiMatchingService`는 원본 조회와 전체 흐름을 조정하며, `MatchRankingService`는 외부 의존성 없이 점수만 계산한다. Ranking은 서버가 결정하고 LLM은 내부 UUID나 임의 SQL/filter 또는 순위를 만들지 않는다.
+
+상태와 명시적 category, 가격 상한, 예산 범위, 기간, 마감일은 VectorStore metadata가 아닌 SQL 원본을 기준으로 필수 Filtering 처리한다. 초기 MatchScore는 semantic score 중심으로 시작하고 금액 선호가 있을 때만 amount fit을 추가한다. Reputation은 C 계약이 완료된 뒤 반영한다.
 
 ## 6. 개발 순서
 
 - [ ] 공통 Document ID, metadata key, text 규격 확정
 - [ ] VectorStore ID 타입을 합성 ID 규칙과 일치시키기
-- [ ] Talent 저장·수정·삭제 및 검색 검증
-- [ ] Request와 Portfolio 임베딩 확장
-- [ ] B 자연어 검색 계획 및 Vector Search 구현
-- [ ] 원본 DB 조건 Filtering과 MatchScore 구현
+- [ ] A가 Talent 저장·수정·삭제와 검색용 metadata 준비
+- [ ] B가 TALENT Vector Search와 similarity score 추출 검증
+- [ ] B가 Talent 원본 Entity 일괄 조회와 필수 조건 Filtering 구현
+- [ ] B가 구조화된 TALENT Matching API와 단순 Ranking 완성
+- [ ] A가 Request/Portfolio 임베딩 확장
+- [ ] B가 REQUEST Matching으로 확장(Portfolio 검색 제외)
 - [ ] C Review CRUD와 작성 가능 조건 구현
 - [ ] C 리뷰 분석 및 Reputation 응답 계약 구현
 - [ ] B Ranking에 Reputation 연동
+- [ ] LLM 자연어 Query 조건 분석
 - [ ] LLM 추천 이유 생성
 - [ ] 기존 데이터 재임베딩과 장애 복구 방법 준비
 - [ ] 프론트 AI 채팅 연동
