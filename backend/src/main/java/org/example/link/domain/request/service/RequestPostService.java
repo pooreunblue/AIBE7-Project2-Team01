@@ -3,6 +3,7 @@ package org.example.link.domain.request.service;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
+import org.example.link.ai.embedding.service.EmbeddingService;
 import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
@@ -29,6 +30,7 @@ public class RequestPostService {
     private final RequestPostRepository requestPostRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final EmbeddingService embeddingService;
 
     @Transactional
     public RequestPostEntity create(RequestPostRequestDto requestPostRequestDto, CustomUserDetails userDetails) {
@@ -36,7 +38,9 @@ public class RequestPostService {
         UserEntity user = getUser(userId);
         CategoryEntity category = getCategory(requestPostRequestDto);
         RequestPostEntity requestPostEntity = createRequestPost(user, category, requestPostRequestDto);
-        return requestPostRepository.save(requestPostEntity);
+        RequestPostEntity saved = requestPostRepository.save(requestPostEntity);
+        embeddingService.upsertRequest(saved);
+        return saved;
     }
 
     public List<RequestPostEntity> readAll() {
@@ -65,6 +69,7 @@ public class RequestPostService {
         validateAuth(requestPostEntity, userId);
         CategoryEntity category = getCategory(requestPostRequestDto);
         updateRequestPost(requestPostRequestDto, requestPostEntity, category);
+        embeddingService.replaceRequest(requestPostEntity);
         return requestPostEntity;
     }
 
@@ -74,6 +79,7 @@ public class RequestPostService {
         RequestPostEntity requestPostEntity = getRequestPost(requestPostId);
         validateAuth(requestPostEntity, userId);
         requestPostRepository.delete(requestPostEntity);
+        embeddingService.deleteRequest(requestPostId);
     }
 
     @Transactional
@@ -82,6 +88,7 @@ public class RequestPostService {
         RequestPostEntity requestPostEntity = getRequestPost(requestPostId);
         validateAuth(requestPostEntity, userId);
         requestPostEntity.closeStatus();
+        embeddingService.deleteRequest(requestPostId);
         return requestPostEntity;
     }
 
