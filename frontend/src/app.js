@@ -2212,10 +2212,9 @@ function handleOAuthSuccess() {
 }
 
 async function refreshAfterOAuth() {
-  const apiBaseUrl = window.__API_BASE_URL__ || "/api";
-  const baseUrl = apiBaseUrl.endsWith("/") ? apiBaseUrl.slice(0, -1) : apiBaseUrl;
-  await fetch(`${baseUrl}/auth/refresh`, {
+  const { apiRequest } = await import("./api/api.js");
+  await apiRequest("/auth/refresh", {
     method: "POST",
-    credentials: "include",
+    skipAuthRefresh: true,
   });
 }
