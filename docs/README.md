@@ -33,6 +33,7 @@
 
 - [거래 정합성 및 임베딩 AFTER_COMMIT](./troubleshooting/거래-정합성-및-임베딩-AFTER-COMMIT.md)
 - [MVP 리뷰 기능 범위 조정](./troubleshooting/MVP-리뷰-기능-범위-조정.md)
+- [게시글 목록 N+1 및 페이지네이션](./troubleshooting/게시글-목록-N-PLUS-ONE-및-페이지네이션.md)
 
 ## DB 변경
 
