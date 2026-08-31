@@ -3,7 +3,7 @@ export function AiSearchPage() {
     <section class="section ai-match-page" data-ai-match-page>
       <form class="ai-match-panel" data-ai-match-form>
         <div class="search-box wide">
-          <span class="spark">✦</span>
+          <button class="spark ai-search-logo-button" type="button" data-ai-match-ai-submit aria-label="AI 검색">✦</button>
           <input name="query" type="search" placeholder="예: 50만원 이하 Spring 백엔드 개발자 찾아줘" aria-label="AI search" required />
           <button type="submit">Search</button>
         </div>

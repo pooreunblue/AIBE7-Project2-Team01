@@ -310,9 +310,28 @@ a.button {
   justify-self: center;
 }
 
-.spark {
+.spark,
+.ai-search-logo-button {
   color: var(--blue);
   font-weight: 900;
+}
+
+.ai-search-logo-button {
+  display: inline-grid;
+  width: 24px;
+  height: 34px;
+  min-width: 24px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.ai-search-logo-button:hover {
+  background: #eaf2ff;
 }
 
 .search-box input {
@@ -322,7 +341,7 @@ a.button {
   outline: 0;
 }
 
-.search-box button,
+.search-box > button:not(.ai-search-logo-button),
 .message-compose button {
   height: 38px;
   border: 0;

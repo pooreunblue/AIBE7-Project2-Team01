@@ -100,6 +100,16 @@ function bindPageEvents() {
   bindErrorPage();
 
   document.querySelectorAll("form").forEach((form) => {
+    form.querySelector("[data-home-ai-submit]")?.addEventListener("click", () => {
+      const formData = new FormData(form);
+      const query = String(formData.get("query") || "").trim();
+      if (query) {
+        window.location.hash = `/ai-search?query=${encodeURIComponent(query)}&mode=ai`;
+      } else {
+        window.location.hash = "/ai-search?mode=ai";
+      }
+    });
+
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       if (form.matches("[data-search-form]")) {
@@ -123,6 +133,7 @@ function bindAiMatchPage() {
   if (!form) return;
 
   const initialQuery = currentQueryParam("query");
+  const initialMode = currentQueryParam("mode");
   if (initialQuery) {
     setFormValue(form, "query", initialQuery);
   }
@@ -132,7 +143,13 @@ function bindAiMatchPage() {
   bindAiMatchForm(form);
 
   if (initialQuery) {
-    categoriesReady.finally(() => runAiMatchSearch(form));
+    categoriesReady.finally(() => {
+      if (initialMode === "ai") {
+        runAiMatchSearch(form);
+        return;
+      }
+      runTextMatchSearch(form);
+    });
   }
 }
 
@@ -160,10 +177,37 @@ function bindAiMatchTargetTabs(form) {
 }
 
 function bindAiMatchForm(form) {
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
+  form.querySelector("[data-ai-match-ai-submit]")?.addEventListener("click", () => {
     runAiMatchSearch(form);
   });
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    runTextMatchSearch(form);
+  });
+}
+
+async function runTextMatchSearch(form) {
+  const query = String(form.elements.query?.value || "").trim();
+  if (!query) return;
+
+  const results = document.querySelector("[data-ai-match-results]");
+  const submitButton = form.querySelector("button[type='submit']");
+
+  if (submitButton) submitButton.disabled = true;
+  renderTextSearchLoading(results);
+
+  try {
+    const targetType = getSelectedAiTarget(form);
+    const posts = await fetchTextSearchPosts(targetType, query);
+    const filteredPosts = filterTextSearchPosts(posts, targetType, buildAiMatchCondition(form, targetType));
+    const postsWithFiles = await attachPostFiles(filteredPosts, targetType);
+    renderTextSearchResults(results, targetType, postsWithFiles);
+  } catch (error) {
+    renderTextSearchError(results, error);
+  } finally {
+    if (submitButton) submitButton.disabled = false;
+  }
 }
 
 async function runAiMatchSearch(form) {
@@ -171,8 +215,10 @@ async function runAiMatchSearch(form) {
   if (!query) return;
 
   const results = document.querySelector("[data-ai-match-results]");
+  const aiButton = form.querySelector("[data-ai-match-ai-submit]");
   const submitButton = form.querySelector("button[type='submit']");
 
+  if (aiButton) aiButton.disabled = true;
   if (submitButton) submitButton.disabled = true;
   renderAiMatchLoading(results);
 
@@ -191,8 +237,110 @@ async function runAiMatchSearch(form) {
   } catch (error) {
     renderAiMatchError(results, error);
   } finally {
+    if (aiButton) aiButton.disabled = false;
     if (submitButton) submitButton.disabled = false;
   }
+}
+
+async function fetchTextSearchPosts(targetType, query) {
+  if (targetType === "REQUEST") {
+    return fetchRequests(query);
+  }
+  return fetchTalents(query);
+}
+
+function filterTextSearchPosts(posts, targetType, condition) {
+  return posts.filter((post) => {
+    if (!matchesTextCategory(post, condition.categoryId)) {
+      return false;
+    }
+    if (targetType === "REQUEST") {
+      return matchesTextRequestCondition(post, condition);
+    }
+    return matchesTextTalentCondition(post, condition);
+  });
+}
+
+function matchesTextCategory(post, categoryId) {
+  if (!categoryId) {
+    return true;
+  }
+  return String(post.categoryId || "") === String(categoryId);
+}
+
+function matchesTextTalentCondition(talent, condition) {
+  if (condition.maxPrice != null && Number(talent.price || 0) > Number(condition.maxPrice)) {
+    return false;
+  }
+
+  if (condition.maxEstimatedDuration == null) {
+    return true;
+  }
+  if (!condition.durationUnit) {
+    return true;
+  }
+
+  const candidateDays = durationToDays(talent.estimatedDuration, talent.durationUnit);
+  const maximumDays = durationToDays(condition.maxEstimatedDuration, condition.durationUnit);
+  return candidateDays <= maximumDays;
+}
+
+function matchesTextRequestCondition(request, condition) {
+  if (!overlapsTextBudget(request, condition)) {
+    return false;
+  }
+  return matchesTextDueDate(request.dueDate, condition);
+}
+
+function overlapsTextBudget(request, condition) {
+  const minBudget = condition.minBudget;
+  const maxBudget = condition.maxBudget;
+
+  if (minBudget == null && maxBudget == null) {
+    return true;
+  }
+
+  const requestMin = Number(request.budgetMin || 0);
+  const requestMax = Number(request.budgetMax || 0);
+  if (minBudget != null && requestMax < Number(minBudget)) {
+    return false;
+  }
+  if (maxBudget != null && requestMin > Number(maxBudget)) {
+    return false;
+  }
+  return true;
+}
+
+function matchesTextDueDate(dueDate, condition) {
+  if (!condition.dueDateFrom && !condition.dueDateTo) {
+    return true;
+  }
+  if (!dueDate) {
+    return false;
+  }
+  if (condition.dueDateFrom && dueDate < condition.dueDateFrom) {
+    return false;
+  }
+  if (condition.dueDateTo && dueDate > condition.dueDateTo) {
+    return false;
+  }
+  return true;
+}
+
+async function attachPostFiles(posts, targetType) {
+  return Promise.all(posts.map(async (post) => {
+    if (targetType === "REQUEST") {
+      return {
+        ...post,
+        files: await getRequestFiles(post.requestPostId).catch(() => []),
+      };
+    }
+
+    return {
+      ...post,
+      files: await getTalentFiles(post.talentPostId).catch(() => []),
+    };
+  }));
 }
 
 function applyAiMatchAnalysis(form, analysis) {
@@ -303,6 +451,17 @@ function renderAiMatchLoading(container) {
   `);
 }
 
+function renderTextSearchLoading(container) {
+  if (!container) return;
+  setSafeHtml(container, `
+    <article class="ai-search-state">
+      <span>TEXT SEARCH</span>
+      <h3>키워드로 게시글을 찾고 있습니다.</h3>
+      <p>AI 분석 없이 입력한 검색어와 선택한 필터만 사용합니다.</p>
+    </article>
+  `);
+}
+
 function renderAiMatchFallbackNotice(container, error) {
   if (!container) return;
   setSafeHtml(container, `
@@ -311,6 +470,42 @@ function renderAiMatchFallbackNotice(container, error) {
       <h3>입력한 조건으로 바로 검색합니다.</h3>
       <p>${escapeHtml(error.message)}</p>
     </article>
+  `);
+}
+
+function renderTextSearchResults(container, targetType, posts) {
+  if (!container) return;
+
+  if (!posts.length) {
+    setSafeHtml(container, `
+      <article class="ai-search-state">
+        <span>EMPTY</span>
+        <h3>텍스트 검색 결과가 없습니다.</h3>
+        <p>검색어를 줄이거나 카테고리, 가격, 예산 조건을 넓혀보세요.</p>
+      </article>
+    `);
+    return;
+  }
+
+  const cards = posts.map((post) => {
+    if (targetType === "REQUEST") {
+      return renderRequestCard(post);
+    }
+    return renderTalentCard(post);
+  }).join("");
+
+  setSafeHtml(container, `
+    <div class="ai-result-header">
+      <div>
+        <span class="kicker">TEXT</span>
+        <h2>${escapeHtml(aiTargetLabel(targetType))} 텍스트 검색 결과</h2>
+        <p class="ai-result-summary">AI 분석 없이 키워드 검색 결과를 표시합니다.</p>
+      </div>
+      <strong>${posts.length}개</strong>
+    </div>
+    <div class="ai-result-grid">
+      ${cards}
+    </div>
   `);
 }
 
@@ -391,6 +586,17 @@ function renderAiMatchError(container, error) {
     <article class="ai-search-state">
       <span>ERROR</span>
       <h3>AI 매칭 결과를 불러오지 못했습니다.</h3>
+      <p>${escapeHtml(error.message)}</p>
+    </article>
+  `);
+}
+
+function renderTextSearchError(container, error) {
+  if (!container) return;
+  setSafeHtml(container, `
+    <article class="ai-search-state">
+      <span>ERROR</span>
+      <h3>텍스트 검색 결과를 불러오지 못했습니다.</h3>
       <p>${escapeHtml(error.message)}</p>
     </article>
   `);
@@ -493,6 +699,17 @@ function stringOrNull(value) {
     return null;
   }
   return normalized;
+}
+
+function durationToDays(duration, unit) {
+  const value = Number(duration || 0);
+  if (unit === "WEEK") {
+    return value * 7;
+  }
+  if (unit === "MONTH") {
+    return value * 30;
+  }
+  return value;
 }
 
 // 상세 페이지처럼 스켈레톤을 먼저 그린 뒤 데이터 로딩이 실패했을 때,
