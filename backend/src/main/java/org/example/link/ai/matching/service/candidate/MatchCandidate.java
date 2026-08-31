@@ -20,6 +20,7 @@ public record MatchCandidate(
         String categoryName,
         String title,
         String content,
+        String thumbnailUrl,
         Long price,
         Integer estimatedDuration,
         DurationUnit durationUnit,

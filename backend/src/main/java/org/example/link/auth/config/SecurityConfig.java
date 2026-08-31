@@ -69,6 +69,7 @@ public class SecurityConfig {
                         ).permitAll()
                                 .requestMatchers(HttpMethod.GET, "/requests/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/talents/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/ai/matches").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/requests").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/talents").authenticated()
                                 .requestMatchers(HttpMethod.PUT, "/requests/**").authenticated()

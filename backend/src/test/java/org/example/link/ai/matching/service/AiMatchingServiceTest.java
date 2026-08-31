@@ -10,9 +10,11 @@ import org.example.link.ai.matching.service.filter.MatchCandidateFilter;
 import org.example.link.ai.matching.service.ranking.MatchRankingService;
 import org.example.link.ai.matching.service.search.VectorSearchService;
 import org.example.link.domain.request.entity.RequestPostEntity;
+import org.example.link.domain.request.repository.RequestPostFileRepository;
 import org.example.link.domain.request.repository.RequestPostRepository;
 import org.example.link.domain.request.util.RequestPostStatus;
 import org.example.link.domain.talent.entity.TalentPostEntity;
+import org.example.link.domain.talent.repository.TalentPostFileRepository;
 import org.example.link.domain.talent.repository.TalentPostRepository;
 import org.example.link.domain.talent.util.TalentPostStatus;
 import org.junit.jupiter.api.Test;
@@ -31,6 +33,8 @@ class AiMatchingServiceTest {
     private final VectorSearchService vectorSearchService = mock(VectorSearchService.class);
     private final TalentPostRepository talentPostRepository = mock(TalentPostRepository.class);
     private final RequestPostRepository requestPostRepository = mock(RequestPostRepository.class);
+    private final TalentPostFileRepository talentPostFileRepository = mock(TalentPostFileRepository.class);
+    private final RequestPostFileRepository requestPostFileRepository = mock(RequestPostFileRepository.class);
     private final AiMatchingService aiMatchingService = new AiMatchingService(
             vectorSearchService,
             new MatchConditionValidator(),
@@ -38,7 +42,9 @@ class AiMatchingServiceTest {
             new MatchRankingService(),
             new MatchCandidateFactory(),
             talentPostRepository,
-            requestPostRepository
+            requestPostRepository,
+            talentPostFileRepository,
+            requestPostFileRepository
     );
 
     @Test
