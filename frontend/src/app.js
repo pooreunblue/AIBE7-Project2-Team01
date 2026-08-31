@@ -7,6 +7,7 @@ import {
   setSafeHtml,
 } from "./shared/security/xss.js";
 import { uploadTempImage } from "./api/uploadApi.js";
+import { ErrorPage, errorState } from "./features/error/ErrorPage.js";
 import { parseRoute, resolvePage } from "./router.js";
 import { login, logout, signup } from "./features/auth/authApi.js";
 import { getCurrentUser, getCurrentUserId } from "./auth/currentUser.js";
@@ -61,7 +62,15 @@ const isHandlingOAuthSuccess = handleOAuthSuccess();
 async function render() {
   const sequence = ++renderSequence;
   teardownChatPage();
-  const { route, content } = resolvePage(parseRoute());
+
+  let route = "error";
+  let content = ErrorPage(500);
+  try {
+    ({ route, content } = resolvePage(parseRoute()));
+  } catch (error) {
+    content = ErrorPage(500, error?.message || "");
+  }
+
   const currentUser = await getCurrentUser({ optional: true });
   if (sequence !== renderSequence) return;
   setSafeHtml(app, shell(content, route, { isLoggedIn: Boolean(currentUser) }));
@@ -86,6 +95,7 @@ function bindPageEvents() {
   bindRequestCreatePage();
   initChatPage();
   initCheckoutPage();
+  bindErrorPage();
 
   document.querySelectorAll("form").forEach((form) => {
     form.addEventListener("submit", (event) => {
@@ -94,6 +104,28 @@ function bindPageEvents() {
         window.location.hash = "/ai-search";
       }
     });
+  });
+}
+
+// 상세 페이지처럼 스켈레톤을 먼저 그린 뒤 데이터 로딩이 실패했을 때,
+// 라우트 영역 전체를 400/500번대 예외 화면으로 교체한다.
+function showRouteError(error) {
+  const routeView = document.querySelector(".route-view");
+  if (!routeView) return;
+  setSafeHtml(routeView, errorState(error));
+  bindErrorPage();
+}
+
+function bindErrorPage() {
+  const backButton = document.querySelector("[data-error-back]");
+  if (!backButton) return;
+
+  backButton.addEventListener("click", () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.hash = "/home";
+    }
   });
 }
 
@@ -498,10 +530,7 @@ async function loadRequestDetail(requestPostId) {
     renderRequestDetail(request, files);
     bindRequestChatButton(request);
   } catch (error) {
-    setText("[data-request-category]", "ERROR");
-    setText("[data-request-title]", "의뢰글을 불러오지 못했습니다.");
-    const content = document.querySelector("[data-request-content]");
-    setSafeHtml(content, `<p>${escapeHtml(error.message)}</p>`);
+    showRouteError(error);
   }
 }
 
@@ -808,11 +837,7 @@ async function loadTalentDetail(talentPostId) {
     bindTalentDetailActions(talent);
     loadLinkedPortfolio(talent);
   } catch (error) {
-    setText("[data-talent-category]", "ERROR");
-    setText("[data-talent-meta]", "재능글을 불러오지 못했습니다.");
-    setText("[data-talent-title]", error.message);
-    const content = document.querySelector("[data-talent-content]");
-    if (content) content.replaceChildren();
+    showRouteError(error);
   }
 }
 

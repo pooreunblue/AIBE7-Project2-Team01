@@ -44,6 +44,8 @@ function getHeaderTitle(route) {
     portfolios: "Portfolio",
     "portfolio-new": getPortfolioWriteTitle(),
     checkout: "Payment",
+    "not-found": "Not Found",
+    error: "Error",
   };
 
   return titles[route] || "TalentPulse";
