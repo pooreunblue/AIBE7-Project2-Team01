@@ -5,7 +5,7 @@ export async function fetchRequests(keyword = "") {
   return page.content;
 }
 
-export async function fetchRequestPage({ keyword = "", page = 0, size = 20 } = {}) {
+export async function fetchRequestPage({ keyword = "", page = 0, size = 20, conditions = {} } = {}) {
   const query = keyword.trim();
   const params = new URLSearchParams({
     page: String(page),
@@ -13,11 +13,20 @@ export async function fetchRequestPage({ keyword = "", page = 0, size = 20 } = {
     sort: "createdAt,desc",
   });
   if (query) params.set("keyword", query);
+  setIfPresent(params, "categoryId", conditions.categoryId);
+  setIfPresent(params, "minBudget", conditions.minBudget);
+  setIfPresent(params, "maxBudget", conditions.maxBudget);
+  setIfPresent(params, "dueDateFrom", conditions.dueDateFrom);
+  setIfPresent(params, "dueDateTo", conditions.dueDateTo);
 
   const path = query ? "/requests/search" : "/requests";
   const response = await apiRequest(`${path}?${params}`);
   const data = unwrapApiResponse(response);
   return normalizePage(data);
+}
+
+function setIfPresent(params, name, value) {
+  if (value !== null && value !== undefined && value !== "") params.set(name, String(value));
 }
 
 export async function fetchRequest(requestPostId) {

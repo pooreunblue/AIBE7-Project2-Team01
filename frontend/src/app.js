@@ -561,8 +561,11 @@ async function loadRequestList(keyword = "", categoryId = "", pageNumber = 0, re
   if (!list) return { content: [], page: 0, last: true };
 
   try {
-    const page = await fetchRequestPage({ keyword, page: pageNumber });
-    const filteredRequests = filterByConditions(filterByCategory(page.content, categoryId), "REQUEST", conditions);
+    const page = await fetchRequestPage({
+      keyword, page: pageNumber,
+      conditions: { ...conditions, categoryId: conditions.categoryId || categoryId },
+    });
+    const filteredRequests = page.content;
     const requestsWithFiles = await Promise.all(
       filteredRequests.map(async (request) => ({
         ...request,
@@ -912,8 +915,11 @@ async function loadTalentList(keyword = "", categoryId = "", pageNumber = 0, res
   if (!list) return { content: [], page: 0, last: true };
 
   try {
-    const page = await fetchTalentPage({ keyword, page: pageNumber });
-    const filteredTalents = filterByConditions(filterByCategory(page.content, categoryId), "TALENT", conditions);
+    const page = await fetchTalentPage({
+      keyword, page: pageNumber,
+      conditions: { ...conditions, categoryId: conditions.categoryId || categoryId },
+    });
+    const filteredTalents = page.content;
     const talentsWithFiles = await Promise.all(
       filteredTalents.map(async (talent) => ({
         ...talent,

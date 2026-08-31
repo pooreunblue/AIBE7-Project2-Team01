@@ -5,7 +5,7 @@ export async function fetchTalents(keyword = "") {
   return page.content;
 }
 
-export async function fetchTalentPage({ keyword = "", page = 0, size = 20 } = {}) {
+export async function fetchTalentPage({ keyword = "", page = 0, size = 20, conditions = {} } = {}) {
   const query = keyword.trim();
   const params = new URLSearchParams({
     page: String(page),
@@ -13,11 +13,19 @@ export async function fetchTalentPage({ keyword = "", page = 0, size = 20 } = {}
     sort: "createdAt,desc",
   });
   if (query) params.set("keyword", query);
+  setIfPresent(params, "categoryId", conditions.categoryId);
+  setIfPresent(params, "maxPrice", conditions.maxPrice);
+  setIfPresent(params, "maxEstimatedDuration", conditions.maxEstimatedDuration);
+  setIfPresent(params, "durationUnit", conditions.durationUnit);
 
   const path = query ? "/talents/search" : "/talents";
   const response = await apiRequest(`${path}?${params}`);
   const data = unwrapApiResponse(response);
   return normalizePage(data);
+}
+
+function setIfPresent(params, name, value) {
+  if (value !== null && value !== undefined && value !== "") params.set(name, String(value));
 }
 
 export async function fetchTalent(talentPostId) {
