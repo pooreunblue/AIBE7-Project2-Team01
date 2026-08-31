@@ -30,6 +30,7 @@ import {
   createRequest,
   fetchRequest,
   fetchRequests,
+  generateRequestPost,
   getRequestFiles,
   setRequestThumbnail,
   updateRequest,
@@ -40,6 +41,7 @@ import {
   deleteTalent,
   fetchTalent,
   fetchTalents,
+  generateTalentPost,
   getTalentFiles,
   inactiveTalent,
   setTalentThumbnail,
@@ -357,6 +359,37 @@ function bindRequestCreatePage() {
     renderTalentThumbnailPreview(thumbnailPreview, existingFiles, thumbnailFile, thumbnailPreviewUrl);
   });
 
+  form.querySelector("[data-request-ai-generate]")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    const message = form.querySelector("[data-request-create-message]");
+    if (!validateRequestSettings(form)) {
+      if (message) message.textContent = "AI 작성 전에 카테고리와 예산을 입력해 주세요.";
+      openRequestSettingsModal(form);
+      return;
+    }
+    const formData = new FormData(form);
+    button.disabled = true;
+    if (message) message.textContent = "AI가 글을 작성하는 중입니다.";
+    try {
+      const generated = await generateRequestPost({
+        content: formData.get("content"),
+        categoryId: formData.get("categoryId"),
+        budgetMin: Number(formData.get("budgetMin")),
+        budgetMax: Number(formData.get("budgetMax")),
+        dueDate: formData.get("dueDate") || null,
+      }, thumbnailFile);
+      form.elements.title.value = generated.title || "";
+      form.elements.content.value = generated.content || "";
+      form.elements.title.dispatchEvent(new Event("input", { bubbles: true }));
+      form.elements.content.dispatchEvent(new Event("input", { bubbles: true }));
+      if (message) message.textContent = "AI 작성 결과를 확인하고 수정해 주세요.";
+    } catch (error) {
+      if (message) message.textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+
   thumbnailPreview?.addEventListener("click", (event) => {
     if (!event.target.closest("[data-remove-selected-talent-thumbnail]")) return;
     thumbnailFile = null;
@@ -653,6 +686,38 @@ function bindTalentCreatePage() {
     if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
     thumbnailPreviewUrl = thumbnailFile ? URL.createObjectURL(thumbnailFile) : null;
     renderTalentThumbnailPreview(thumbnailPreview, existingFiles, thumbnailFile, thumbnailPreviewUrl);
+  });
+
+  form.querySelector("[data-talent-ai-generate]")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    const message = form.querySelector("[data-talent-message]");
+    if (!validateTalentSettings(form)) {
+      if (message) message.textContent = "AI 작성 전에 카테고리와 상세정보를 입력해 주세요.";
+      openTalentSettingsModal(form);
+      return;
+    }
+    const formData = new FormData(form);
+    button.disabled = true;
+    if (message) message.textContent = "AI가 글을 작성하는 중입니다.";
+    try {
+      const generated = await generateTalentPost({
+        content: formData.get("content"),
+        categoryId: formData.get("categoryId"),
+        price: Number(formData.get("price")),
+        estimatedDuration: Number(formData.get("estimatedDuration")),
+        durationUnit: formData.get("durationUnit"),
+        portfolioId: formData.get("portfolioId") || null,
+      }, thumbnailFile);
+      form.elements.title.value = generated.title || "";
+      form.elements.content.value = generated.content || "";
+      form.elements.title.dispatchEvent(new Event("input", { bubbles: true }));
+      form.elements.content.dispatchEvent(new Event("input", { bubbles: true }));
+      if (message) message.textContent = "AI 작성 결과를 확인하고 수정해 주세요.";
+    } catch (error) {
+      if (message) message.textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
   });
 
   thumbnailPreview?.addEventListener("click", (event) => {

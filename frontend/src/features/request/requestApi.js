@@ -20,6 +20,14 @@ export async function createRequest(payload) {
   return unwrapApiResponse(response);
 }
 
+export async function generateRequestPost(payload, image) {
+  const formData = new FormData();
+  formData.append("data", new Blob([JSON.stringify(payload)], { type: "application/json" }));
+  if (image) formData.append("image", image);
+  const response = await apiRequest("/ai/generation/requests", { method: "POST", body: formData });
+  return unwrapApiResponse(response);
+}
+
 export async function updateRequest(requestPostId, payload) {
   const response = await apiRequest(`/requests/${requestPostId}`, {
     method: "PUT",

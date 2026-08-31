@@ -11,6 +11,11 @@ public enum ErrorCode {
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."),
     DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "이미 존재하는 데이터입니다."),
 
+    // AI matching
+    MATCH_TARGET_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "매칭 검색은 TALENT 또는 REQUEST만 지원합니다."),
+    INVALID_MATCH_CONDITION(HttpStatus.BAD_REQUEST, "검색 대상과 조건이 일치하지 않습니다."),
+    AI_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI 글 생성에 실패했습니다."),
+
     //storage
     INVALID_FILE(HttpStatus.BAD_REQUEST, "유효하지 않은 파일입니다."),
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다."),

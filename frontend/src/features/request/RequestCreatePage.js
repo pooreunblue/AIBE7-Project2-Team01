@@ -11,6 +11,7 @@ export function RequestCreatePage() {
             <input name="markdownImage" type="file" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" data-markdown-image-input />
             <button class="button quiet" type="button" data-request-thumbnail-trigger>대표 이미지 추가</button>
             <input name="thumbnailImage" type="file" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" data-request-thumbnail-input />
+            <button class="button quiet" type="button" data-request-ai-generate>AI로 글 다듬기</button>
           </div>
           <div class="talent-thumbnail-preview" data-request-thumbnail-preview hidden></div>
           <div class="talent-detail-summary" data-request-detail-summary>
