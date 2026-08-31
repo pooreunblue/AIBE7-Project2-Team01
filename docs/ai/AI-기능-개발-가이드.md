@@ -1,6 +1,6 @@
 # AI 기능 개발 가이드
 
-상세 연동 규칙은 [B Matching 연동 계약](./matching-integration-contract.md)에서 확인한다.
+상세 연동 규칙은 [B Matching 연동 계약](./B-매칭-연동-계약.md)에서 확인한다.
 
 ## 1. 목표
 
@@ -98,14 +98,14 @@ B는 Portfolio Document를 검색하거나 Ranking에 직접 사용하지 않는
 
 ## 6. 개발 순서
 
-- [ ] 공통 Document ID, metadata key, text 규격 확정
-- [ ] VectorStore ID 타입을 합성 ID 규칙과 일치시키기
-- [ ] A가 Talent 저장·수정·삭제와 검색용 metadata 준비
-- [ ] B가 TALENT Vector Search와 similarity score 추출 검증
-- [ ] B가 Talent 원본 Entity 일괄 조회와 필수 조건 Filtering 구현
-- [ ] B가 구조화된 TALENT Matching API와 단순 Ranking 완성
-- [ ] A가 Request/Portfolio 임베딩 확장
-- [ ] B가 REQUEST Matching으로 확장(Portfolio 검색 제외)
+- [x] 공통 Document ID, metadata key, text 규격 확정
+- [x] VectorStore ID 타입을 합성 ID 규칙과 일치시키기
+- [x] Talent 저장·수정·삭제와 검색용 metadata 준비
+- [x] TALENT Vector Search와 similarity score 추출 검증
+- [x] Talent 원본 Entity 일괄 조회와 필수 조건 Filtering 구현
+- [x] 구조화된 TALENT Matching API와 단순 Ranking 완성
+- [x] Request 임베딩과 Matching 확장(Portfolio 검색 제외)
+- [ ] Portfolio 임베딩 lifecycle 확장
 - [ ] LLM 자연어 Query 조건 분석
 - [x] LLM 추천 이유 생성
 - [ ] 기존 데이터 재임베딩과 장애 복구 방법 준비

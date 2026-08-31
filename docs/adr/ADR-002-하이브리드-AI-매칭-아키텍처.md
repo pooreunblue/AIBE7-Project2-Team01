@@ -3,7 +3,7 @@
 - 상태: 승인됨 (Accepted)
 - 결정일: 2026-08-29
 - 적용 범위: Talent/Request 자연어 검색, 후보 필터링, Ranking 및 추천 이유 연동
-- 구현 상태: `feature/ai-matching` 브랜치에 B Matching과 LLM 추천 이유 생성 구현 존재
+- 구현 상태: Backend Matching, 썸네일 응답과 LLM 추천 이유 생성 완료. Frontend 연동 예정
 
 ## 배경
 
@@ -199,7 +199,7 @@ B는 Embedding 저장 코드를 수정하지 않는다.
 
 ## 구현 위치
 
-다음 코드는 현재 `feature/ai-matching` 브랜치에 존재하며 통합 브랜치 반영이 필요하다.
+현재 구현 위치는 다음과 같다.
 
 - Controller: `backend/src/main/java/org/example/link/ai/matching/controller/AiMatchingController.java`
 - DTO: `backend/src/main/java/org/example/link/ai/matching/dto/`
@@ -207,6 +207,7 @@ B는 Embedding 저장 코드를 수정하지 않는다.
 - Vector 검색: `backend/src/main/java/org/example/link/ai/matching/service/search/VectorSearchService.java`
 - 후보 생성·검증: `backend/src/main/java/org/example/link/ai/matching/service/candidate/`, `service/filter/`, `service/condition/`
 - Ranking: `backend/src/main/java/org/example/link/ai/matching/service/ranking/MatchRankingService.java`
+- 추천 이유: `backend/src/main/java/org/example/link/ai/matching/service/recommendation/RecommendationReasonService.java`
 - 테스트: `backend/src/test/java/org/example/link/ai/matching/`
 
 ## 후속 규칙

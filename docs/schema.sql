@@ -3,6 +3,7 @@
 -- 대상: PostgreSQL (Neon)
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS vector;
 
 -- =========================================================
 -- USERS
@@ -67,7 +68,7 @@ CREATE TABLE talent_posts (
     talent_post_id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id              UUID NOT NULL REFERENCES users (user_id),
     category_id          UUID NOT NULL REFERENCES categories (category_id),
-    portfolio_id         UUID NOT NULL REFERENCES portfolios (portfolio_id),
+    portfolio_id         UUID REFERENCES portfolios (portfolio_id),
     title                VARCHAR(255) NOT NULL,
     content              TEXT NOT NULL,
     price                BIGINT NOT NULL,
@@ -222,3 +223,18 @@ CREATE TABLE wallet_transactions (
     created_at             TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now(),
     CONSTRAINT uk_wallet_transaction_trade_type UNIQUE (trade_id, transaction_type)
 );
+
+-- =========================================================
+-- SPRING AI PGVECTOR STORE
+-- =========================================================
+-- application-ai.yaml의 id-type, dimension, distance-type과 일치해야 한다.
+CREATE TABLE vector_store (
+    id         TEXT PRIMARY KEY,
+    content    TEXT,
+    metadata   JSON,
+    embedding  VECTOR(1536)
+);
+
+CREATE INDEX vector_store_embedding_hnsw_idx
+    ON vector_store
+    USING HNSW (embedding vector_cosine_ops);
