@@ -1,10 +1,6 @@
-import { pageTitle } from "../../shared/ui/index.js";
-
 export function AiSearchPage() {
   return `
     <section class="section ai-match-page" data-ai-match-page>
-      ${pageTitle("AI Search", "필요한 재능과 요청을 자연어로 찾아보세요.", "검색 문장을 분석해 가능한 상세 조건을 자동으로 채웁니다.")}
-
       <form class="ai-match-panel" data-ai-match-form>
         <div class="search-box wide">
           <span class="spark">✦</span>
@@ -67,16 +63,11 @@ export function AiSearchPage() {
         </div>
       </form>
 
-      <div class="ai-insight" data-ai-match-insight>
-        <strong>AI Insight</strong>
-        <span>검색어를 입력하면 분석된 조건과 추천 결과를 보여드립니다.</span>
-      </div>
-
       <div class="ai-match-results" data-ai-match-results>
-        <article class="empty-state">
-          <span>READY</span>
+        <article class="ai-search-state">
+          <span>AI MATCHING</span>
           <h3>검색을 시작해보세요.</h3>
-          <p>재능글과 요청글 중 상황에 맞는 대상을 선택하거나, 검색 문장으로 자동 전환할 수 있습니다.</p>
+          <p>검색 문장을 입력하면 재능글과 요청글 중 필요한 결과를 찾아드립니다.</p>
         </article>
       </div>
     </section>

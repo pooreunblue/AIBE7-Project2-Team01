@@ -171,26 +171,23 @@ async function runAiMatchSearch(form) {
   if (!query) return;
 
   const results = document.querySelector("[data-ai-match-results]");
-  const insight = document.querySelector("[data-ai-match-insight] span");
   const submitButton = form.querySelector("button[type='submit']");
 
   if (submitButton) submitButton.disabled = true;
-  if (insight) insight.textContent = "검색 문장을 분석하고 있습니다.";
   renderAiMatchLoading(results);
 
   let analysis = null;
   try {
     analysis = await analyzeAiMatchQuery(query);
     applyAiMatchAnalysis(form, analysis);
-    updateAiMatchInsight(analysis);
   } catch (error) {
-    if (insight) insight.textContent = `분석 실패: ${error.message}. 입력한 조건으로 검색합니다.`;
+    renderAiMatchFallbackNotice(results, error);
   }
 
   try {
     const payload = buildAiMatchPayload(form, query, analysis);
     const response = await searchAiMatches(payload);
-    renderAiMatchResults(results, response);
+    renderAiMatchResults(results, response, analysis);
   } catch (error) {
     renderAiMatchError(results, error);
   } finally {
@@ -201,6 +198,7 @@ async function runAiMatchSearch(form) {
 function applyAiMatchAnalysis(form, analysis) {
   if (!analysis) return;
 
+  resetAiMatchConditions(form);
   setAiMatchTarget(form, analysis.targetType);
   setFormValue(form, "query", analysis.semanticQuery || analysis.originalQuery);
 
@@ -215,15 +213,21 @@ function applyAiMatchAnalysis(form, analysis) {
   setFormValue(form, "dueDateTo", condition.dueDateTo);
 }
 
-function updateAiMatchInsight(analysis) {
-  const insight = document.querySelector("[data-ai-match-insight] span");
-  if (!insight || !analysis) return;
+function resetAiMatchConditions(form) {
+  const conditionFieldNames = [
+    "categoryId",
+    "maxPrice",
+    "maxEstimatedDuration",
+    "durationUnit",
+    "minBudget",
+    "maxBudget",
+    "dueDateFrom",
+    "dueDateTo",
+  ];
 
-  const targetLabel = aiTargetLabel(analysis.targetType);
-  const conditionLabels = aiConditionLabels(analysis.condition || {});
-  const categoryLabel = analysis.categoryName || "전체 카테고리";
-  const details = [targetLabel, categoryLabel, ...conditionLabels].filter(Boolean);
-  insight.textContent = `분석 결과: ${details.join(" · ")}`;
+  for (const fieldName of conditionFieldNames) {
+    setFormValue(form, fieldName, "");
+  }
 }
 
 function buildAiMatchPayload(form, originalQuery, analysis) {
@@ -290,21 +294,33 @@ function getSelectedAiTarget(form) {
 function renderAiMatchLoading(container) {
   if (!container) return;
   setSafeHtml(container, `
-    <article class="empty-state">
+    <article class="ai-search-state is-loading">
       <span>SEARCHING</span>
       <h3>조건에 맞는 후보를 찾고 있습니다.</h3>
-      <p>의미 검색 결과를 가져온 뒤 원본 데이터 기준으로 조건을 확인합니다.</p>
+      <p>검색 문장을 읽고 어울리는 게시글을 확인하는 중입니다.</p>
+      <div class="ai-search-progress" aria-hidden="true"><i></i></div>
     </article>
   `);
 }
 
-function renderAiMatchResults(container, response) {
+function renderAiMatchFallbackNotice(container, error) {
+  if (!container) return;
+  setSafeHtml(container, `
+    <article class="ai-search-state">
+      <span>ANALYSIS SKIPPED</span>
+      <h3>입력한 조건으로 바로 검색합니다.</h3>
+      <p>${escapeHtml(error.message)}</p>
+    </article>
+  `);
+}
+
+function renderAiMatchResults(container, response, analysis = null) {
   if (!container) return;
 
   const candidates = response?.candidates || [];
   if (!candidates.length) {
     setSafeHtml(container, `
-      <article class="empty-state">
+      <article class="ai-search-state">
         <span>EMPTY</span>
         <h3>조건에 맞는 결과가 없습니다.</h3>
         <p>검색어를 조금 넓히거나 가격, 예산, 기간 조건을 낮춰보세요.</p>
@@ -314,12 +330,14 @@ function renderAiMatchResults(container, response) {
   }
 
   const title = aiTargetLabel(response.targetType);
+  const analysisSummary = renderAiMatchAnalysisSummary(analysis);
   const cards = candidates.map(renderAiMatchCandidate).join("");
   setSafeHtml(container, `
     <div class="ai-result-header">
       <div>
         <span class="kicker">${escapeHtml(response.targetType || "MATCH")}</span>
         <h2>${escapeHtml(title)} 추천 결과</h2>
+        ${analysisSummary}
       </div>
       <strong>${candidates.length}개</strong>
     </div>
@@ -370,12 +388,25 @@ function renderAiMatchCandidate(candidate) {
 function renderAiMatchError(container, error) {
   if (!container) return;
   setSafeHtml(container, `
-    <article class="empty-state">
+    <article class="ai-search-state">
       <span>ERROR</span>
       <h3>AI 매칭 결과를 불러오지 못했습니다.</h3>
       <p>${escapeHtml(error.message)}</p>
     </article>
   `);
+}
+
+function renderAiMatchAnalysisSummary(analysis) {
+  if (!analysis) {
+    return "";
+  }
+
+  const targetLabel = aiTargetLabel(analysis.targetType);
+  const conditionLabels = aiConditionLabels(analysis.condition || {});
+  const categoryLabel = analysis.categoryName || "전체 카테고리";
+  const details = [targetLabel, categoryLabel, ...conditionLabels].filter(Boolean);
+
+  return `<p class="ai-result-summary">${escapeHtml(details.join(" · "))}</p>`;
 }
 
 function aiTargetLabel(targetType) {
@@ -426,14 +457,24 @@ function currentQueryParam(name) {
 }
 
 function addPositiveNumber(target, key, rawValue) {
-  const value = Number(rawValue);
+  const normalized = stringOrNull(rawValue);
+  if (!normalized) {
+    return;
+  }
+
+  const value = Number(normalized);
   if (Number.isFinite(value) && value >= 0) {
     target[key] = value;
   }
 }
 
 function addPositiveInteger(target, key, rawValue) {
-  const value = Number(rawValue);
+  const normalized = stringOrNull(rawValue);
+  if (!normalized) {
+    return;
+  }
+
+  const value = Number(normalized);
   if (Number.isInteger(value) && value > 0) {
     target[key] = value;
   }
