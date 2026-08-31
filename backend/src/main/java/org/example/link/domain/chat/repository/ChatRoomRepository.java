@@ -1,15 +1,21 @@
 package org.example.link.domain.chat.repository;
 
+import jakarta.persistence.LockModeType;
 import java.util.UUID;
 
 import org.example.link.domain.chat.entity.ChatRoom;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, UUID> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select cr from ChatRoom cr where cr.id = :chatRoomId")
+    Optional<ChatRoom> findByIdForUpdate(@Param("chatRoomId") UUID chatRoomId);
 
     @Query("""
             select cr from ChatRoom cr

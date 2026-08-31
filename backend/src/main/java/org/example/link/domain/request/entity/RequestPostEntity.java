@@ -74,6 +74,7 @@ public class RequestPostEntity extends BaseEntity {
             Long budgetMax,
             LocalDate dueDate
     ) {
+        requireStatus(RequestPostStatus.OPEN);
         this.title = title;
         this.content = content;
         this.category = category;

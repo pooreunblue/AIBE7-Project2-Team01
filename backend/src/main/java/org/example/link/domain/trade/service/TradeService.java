@@ -12,8 +12,10 @@ import org.example.link.domain.chat.repository.ChatRoomRepository;
 import org.example.link.domain.chat.service.ChatMessagePublisher;
 import org.example.link.domain.request.entity.RequestPostEntity;
 import org.example.link.domain.request.repository.RequestPostRepository;
+import org.example.link.domain.request.util.RequestPostStatus;
 import org.example.link.domain.talent.entity.TalentPostEntity;
 import org.example.link.domain.talent.repository.TalentPostRepository;
+import org.example.link.domain.talent.util.TalentPostStatus;
 import org.example.link.domain.trade.dto.TradeCreateRequest;
 import org.example.link.domain.trade.dto.TradeResponse;
 import org.example.link.domain.trade.entity.TradeEntity;
@@ -56,7 +58,7 @@ public class TradeService {
             throw new CustomException(ErrorCode.INVALID_INPUT);
         }
 
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+        ChatRoom chatRoom = chatRoomRepository.findByIdForUpdate(chatRoomId)
                 .orElseThrow(() -> new CustomException(ErrorCode.CHAT_ROOM_NOT_FOUND));
 
         if (!chatParticipantRepository.existsByChatRoomIdAndUserId(chatRoomId, userId)) {
@@ -101,8 +103,11 @@ public class TradeService {
             if (!request.requestPostId().equals(chatRoom.getRequestPostId())) {
                 throw new CustomException(ErrorCode.CHATROOM_POST_MISMATCH);
             }
-            RequestPostEntity post = requestPostRepository.findById(request.requestPostId())
+            RequestPostEntity post = requestPostRepository.findByIdForUpdate(request.requestPostId())
                     .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+            if (post.getStatus() != RequestPostStatus.OPEN) {
+                throw new CustomException(ErrorCode.INVALID_REQUEST_POST_STATUS);
+            }
             UUID ownerId = post.getUser().getId();
             UUID payeeId = findCounterpartId(chatRoom.getId(), ownerId);
             if (!userId.equals(payeeId)) {
@@ -116,6 +121,9 @@ public class TradeService {
         }
         TalentPostEntity post = talentPostRepository.findById(request.talentPostId())
                 .orElseThrow(() -> new CustomException(ErrorCode.TALENT_POST_NOT_FOUND));
+        if (post.getStatus() != TalentPostStatus.ACTIVE) {
+            throw new CustomException(ErrorCode.INVALID_INPUT);
+        }
         UUID ownerId = post.getUser().getId();
         if (!userId.equals(ownerId)) {
             throw new CustomException(ErrorCode.TRADE_CREATE_ACCESS_DENIED);
@@ -135,8 +143,7 @@ public class TradeService {
 
     @Transactional
     public TradeResponse pay(UUID userId, UUID tradeId) {
-        TradeEntity trade = tradeRepository.findById(tradeId)
-                .orElseThrow(() -> new CustomException(ErrorCode.TRADE_NOT_FOUND));
+        TradeEntity trade = getTradeForUpdate(tradeId);
         if (!trade.getPayerId().equals(userId)) {
             throw new CustomException(ErrorCode.TRADE_ACCESS_DENIED);
         }
@@ -144,6 +151,7 @@ public class TradeService {
             throw new CustomException(ErrorCode.INVALID_TRADE_STATUS);
         }
 
+        startRequestTradeIfPresent(trade);
         walletService.withdraw(trade.getPayerId(), trade.getAmount(), trade);
         trade.paid();
 
@@ -158,8 +166,7 @@ public class TradeService {
 
     @Transactional
     public TradeResponse complete(UUID userId, UUID tradeId) {
-        TradeEntity trade = tradeRepository.findById(tradeId)
-                .orElseThrow(() -> new CustomException(ErrorCode.TRADE_NOT_FOUND));
+        TradeEntity trade = getTradeForUpdate(tradeId);
         if (!trade.getPayerId().equals(userId)) {
             throw new CustomException(ErrorCode.TRADE_ACCESS_DENIED);
         }
@@ -167,6 +174,7 @@ public class TradeService {
             throw new CustomException(ErrorCode.INVALID_TRADE_STATUS);
         }
 
+        completeRequestTradeIfPresent(trade);
         walletService.deposit(trade.getPayeeId(), trade.getAmount(), trade);
         trade.complete();
         return TradeResponse.from(trade);
@@ -174,12 +182,13 @@ public class TradeService {
 
     @Transactional
     public TradeResponse cancel(UUID userId, UUID tradeId) {
-        TradeEntity trade = getOwnedTrade(userId, tradeId);
+        TradeEntity trade = getOwnedTradeForUpdate(userId, tradeId);
         if (trade.getStatus() != TradeStatus.PENDING && trade.getStatus() != TradeStatus.PAID) {
             throw new CustomException(ErrorCode.INVALID_TRADE_STATUS);
         }
 
         if (trade.getStatus() == TradeStatus.PAID) {
+            reopenRequestTradeIfPresent(trade);
             walletService.refund(trade.getPayerId(), trade.getAmount(), trade);
         }
         trade.cancel();
@@ -189,10 +198,54 @@ public class TradeService {
     private TradeEntity getOwnedTrade(UUID userId, UUID tradeId) {
         TradeEntity trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRADE_NOT_FOUND));
+        validateTradeOwner(userId, trade);
+        return trade;
+    }
+
+    private TradeEntity getOwnedTradeForUpdate(UUID userId, UUID tradeId) {
+        TradeEntity trade = getTradeForUpdate(tradeId);
+        validateTradeOwner(userId, trade);
+        return trade;
+    }
+
+    private TradeEntity getTradeForUpdate(UUID tradeId) {
+        return tradeRepository.findByIdForUpdate(tradeId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRADE_NOT_FOUND));
+    }
+
+    private void validateTradeOwner(UUID userId, TradeEntity trade) {
         if (!trade.getPayerId().equals(userId) && !trade.getPayeeId().equals(userId)) {
             throw new CustomException(ErrorCode.TRADE_ACCESS_DENIED);
         }
-        return trade;
+    }
+
+    private void startRequestTradeIfPresent(TradeEntity trade) {
+        if (trade.getRequestPostId() == null) {
+            return;
+        }
+        RequestPostEntity requestPost = getRequestPostForUpdate(trade.getRequestPostId());
+        requestPost.startTrade();
+    }
+
+    private void completeRequestTradeIfPresent(TradeEntity trade) {
+        if (trade.getRequestPostId() == null) {
+            return;
+        }
+        RequestPostEntity requestPost = getRequestPostForUpdate(trade.getRequestPostId());
+        requestPost.completeTrade();
+    }
+
+    private void reopenRequestTradeIfPresent(TradeEntity trade) {
+        if (trade.getRequestPostId() == null) {
+            return;
+        }
+        RequestPostEntity requestPost = getRequestPostForUpdate(trade.getRequestPostId());
+        requestPost.reopenAfterTradeCancellation();
+    }
+
+    private RequestPostEntity getRequestPostForUpdate(UUID requestPostId) {
+        return requestPostRepository.findByIdForUpdate(requestPostId)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
     }
 
     private UUID findCounterpartId(UUID chatRoomId, UUID excludeUserId) {

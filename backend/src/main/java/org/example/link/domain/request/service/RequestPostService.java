@@ -65,7 +65,7 @@ public class RequestPostService {
             RequestPostRequestDto requestPostRequestDto,
             CustomUserDetails userDetails) throws AccessDeniedException {
         UUID userId = getUserId(userDetails);
-        RequestPostEntity requestPostEntity = getRequestPost(requestPostId);
+        RequestPostEntity requestPostEntity = getRequestPostForUpdate(requestPostId);
         validateAuth(requestPostEntity, userId);
         CategoryEntity category = getCategory(requestPostRequestDto);
         updateRequestPost(requestPostRequestDto, requestPostEntity, category);
@@ -76,8 +76,9 @@ public class RequestPostService {
     @Transactional
     public void delete(UUID requestPostId, CustomUserDetails userDetails) throws AccessDeniedException {
         UUID userId = getUserId(userDetails);
-        RequestPostEntity requestPostEntity = getRequestPost(requestPostId);
+        RequestPostEntity requestPostEntity = getRequestPostForUpdate(requestPostId);
         validateAuth(requestPostEntity, userId);
+        validateOpenStatus(requestPostEntity);
         requestPostRepository.delete(requestPostEntity);
         embeddingService.deleteRequest(requestPostId);
     }
@@ -85,7 +86,7 @@ public class RequestPostService {
     @Transactional
     public RequestPostEntity closeStatus(UUID requestPostId, CustomUserDetails userDetails) throws AccessDeniedException {
         UUID userId = getUserId(userDetails);
-        RequestPostEntity requestPostEntity = getRequestPost(requestPostId);
+        RequestPostEntity requestPostEntity = getRequestPostForUpdate(requestPostId);
         validateAuth(requestPostEntity, userId);
         requestPostEntity.closeStatus();
         embeddingService.deleteRequest(requestPostId);
@@ -123,6 +124,18 @@ public class RequestPostService {
         return requestPostRepository.findById(requestPostId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
     }
+
+    private RequestPostEntity getRequestPostForUpdate(UUID requestPostId) {
+        return requestPostRepository.findByIdForUpdate(requestPostId)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+    }
+
+    private void validateOpenStatus(RequestPostEntity requestPostEntity) {
+        if (requestPostEntity.getStatus() != RequestPostStatus.OPEN) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST_POST_STATUS);
+        }
+    }
+
     private void validateAuth(RequestPostEntity requestPostEntity, UUID userId) throws AccessDeniedException {
         if (!requestPostEntity.getUser().getId().equals(userId)) {
             throw new CustomException(ErrorCode.POST_ACCESS_DENIED);
