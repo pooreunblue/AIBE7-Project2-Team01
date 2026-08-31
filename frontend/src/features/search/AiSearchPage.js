@@ -1,6 +1,4 @@
 import { fetchCategories } from "../category/categoryApi.js";
-import { fetchRequests, getRequestFiles } from "../request/requestApi.js";
-import { fetchTalents, getTalentFiles } from "../talent/talentApi.js";
 import { escapeHtml, safeImageUrl, safeUrl, setSafeHtml } from "../../shared/security/xss.js";
 import { formatMoney } from "../../shared/ui/index.js";
 import { analyzeAiMatchQuery, searchAiMatches } from "./matchingApi.js";
@@ -11,75 +9,80 @@ export function AiSearchPage() {
   return `
     <section class="section ai-search-page" data-ai-search-page>
       <form class="ai-match-form" data-ai-match-form>
-        <div class="ai-target-control" role="radiogroup" aria-label="검색 대상">
-          <label>
-            <input type="radio" name="targetType" value="TALENT" checked />
-            <span>재능글 찾기</span>
-          </label>
-          <label>
-            <input type="radio" name="targetType" value="REQUEST" />
-            <span>요청글 찾기</span>
-          </label>
-        </div>
-
         <div class="search-box wide ai-query-box">
-          <button class="spark ai-search-logo-button" type="button" data-ai-match-ai-submit aria-label="AI 검색">✦</button>
+          <span class="spark ai-search-logo" aria-hidden="true">✦</span>
           <input name="query" type="search" placeholder="예: 50만원 이하 Spring 백엔드 개발자 찾아줘" aria-label="검색어" required />
           <button type="submit">Search</button>
         </div>
 
-        <div class="ai-condition-bar">
-          <label class="field ai-category-field">
-            <span>카테고리</span>
-            <select name="categoryId" data-ai-category>
-              <option value="">전체 카테고리</option>
-            </select>
-          </label>
+        <button class="ai-filter-toggle" type="button" data-ai-filter-toggle aria-expanded="false" aria-controls="ai-match-options">
+          <span>상세 조건</span>
+          <strong aria-hidden="true">⌄</strong>
+        </button>
 
-          <div class="ai-target-fields" data-ai-target-fields="TALENT">
-            <label class="field">
-              <span>최대 가격</span>
-              <input type="number" name="maxPrice" min="0" step="1000" placeholder="제한 없음" />
+        <div class="ai-match-options" id="ai-match-options" data-ai-match-options hidden>
+          <div class="ai-target-control" role="radiogroup" aria-label="검색 대상">
+            <label>
+              <input type="radio" name="targetType" value="TALENT" checked />
+              <span>재능글 찾기</span>
             </label>
-            <label class="field">
-              <span>최대 작업 기간</span>
-              <input type="number" name="maxEstimatedDuration" min="1" placeholder="제한 없음" />
-            </label>
-            <label class="field compact-field">
-              <span>기간 단위</span>
-              <select name="durationUnit">
-                <option value="">전체</option>
-                <option value="DAY">일</option>
-                <option value="WEEK">주</option>
-                <option value="MONTH">개월</option>
-              </select>
+            <label>
+              <input type="radio" name="targetType" value="REQUEST" />
+              <span>요청글 찾기</span>
             </label>
           </div>
 
-          <div class="ai-target-fields" data-ai-target-fields="REQUEST" hidden>
-            <label class="field">
-              <span>최소 예산</span>
-              <input type="number" name="minBudget" min="0" step="1000" placeholder="제한 없음" disabled />
+          <div class="ai-condition-bar">
+            <label class="field ai-category-field">
+              <span>카테고리</span>
+              <select name="categoryId" data-ai-category>
+                <option value="">전체 카테고리</option>
+              </select>
             </label>
-            <label class="field">
-              <span>최대 예산</span>
-              <input type="number" name="maxBudget" min="0" step="1000" placeholder="제한 없음" disabled />
-            </label>
-            <label class="field">
-              <span>마감일 시작</span>
-              <input type="date" name="dueDateFrom" disabled />
-            </label>
-            <label class="field">
-              <span>마감일 종료</span>
-              <input type="date" name="dueDateTo" disabled />
-            </label>
+
+            <div class="ai-target-fields" data-ai-target-fields="TALENT">
+              <label class="field">
+                <span>최대 가격</span>
+                <input type="number" name="maxPrice" min="0" step="1000" placeholder="제한 없음" />
+              </label>
+              <label class="field">
+                <span>최대 작업 기간</span>
+                <input type="number" name="maxEstimatedDuration" min="1" placeholder="제한 없음" />
+              </label>
+              <label class="field compact-field">
+                <span>기간 단위</span>
+                <select name="durationUnit">
+                  <option value="">전체</option>
+                  <option value="DAY">일</option>
+                  <option value="WEEK">주</option>
+                  <option value="MONTH">개월</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="ai-target-fields" data-ai-target-fields="REQUEST" hidden>
+              <label class="field">
+                <span>최소 예산</span>
+                <input type="number" name="minBudget" min="0" step="1000" placeholder="제한 없음" disabled />
+              </label>
+              <label class="field">
+                <span>최대 예산</span>
+                <input type="number" name="maxBudget" min="0" step="1000" placeholder="제한 없음" disabled />
+              </label>
+              <label class="field">
+                <span>마감일 시작</span>
+                <input type="date" name="dueDateFrom" disabled />
+              </label>
+              <label class="field">
+                <span>마감일 종료</span>
+                <input type="date" name="dueDateTo" disabled />
+              </label>
+            </div>
           </div>
         </div>
       </form>
 
-      <div class="ai-match-results" data-ai-match-results>
-        ${renderSearchState("AI MATCHING", "검색을 시작해보세요.", "왼쪽 로고는 AI 검색, 오른쪽 Search는 텍스트 검색으로 동작합니다.")}
-      </div>
+      <div class="ai-match-results" data-ai-match-results></div>
     </section>
   `;
 }
@@ -96,29 +99,45 @@ export function initAiSearchPage() {
 
   applyInitialSearch(form, params);
   bindTargetType(form);
+  bindFilterToggle(form);
   bindSearchActions(form);
 
   const initialQuery = form.elements.query.value.trim();
   if (initialQuery) {
     categoriesReady.finally(() => {
-      if (params.get("mode") === "ai") {
-        runAiSearch(form);
-        return;
-      }
-      runTextSearch(form);
+      runAiSearch(form);
     });
   }
 }
 
 function bindSearchActions(form) {
-  form.querySelector("[data-ai-match-ai-submit]")?.addEventListener("click", () => {
-    runAiSearch(form);
-  });
-
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    runTextSearch(form);
+    runAiSearch(form);
   });
+}
+
+function bindFilterToggle(form) {
+  const toggle = form.querySelector("[data-ai-filter-toggle]");
+  const options = form.querySelector("[data-ai-match-options]");
+  if (!toggle || !options) {
+    return;
+  }
+
+  toggle.addEventListener("click", () => {
+    const isExpanded = toggle.getAttribute("aria-expanded") === "true";
+    setFilterExpanded(toggle, options, !isExpanded);
+  });
+}
+
+function setFilterExpanded(toggle, options, expanded) {
+  toggle.setAttribute("aria-expanded", String(expanded));
+  options.hidden = !expanded;
+
+  const icon = toggle.querySelector("strong");
+  if (icon) {
+    icon.textContent = expanded ? "⌃" : "⌄";
+  }
 }
 
 function applyInitialSearch(form, params) {
@@ -171,9 +190,8 @@ async function runAiSearch(form) {
   }
 
   const results = getResults();
-  const aiButton = form.querySelector("[data-ai-match-ai-submit]");
   const submitButton = form.querySelector("button[type='submit']");
-  setButtonsDisabled([aiButton, submitButton], true);
+  setButtonsDisabled([submitButton], true);
   renderLoading(results, "AI SEARCH", "AI가 검색 문장을 분석하고 있습니다.");
 
   let analysis = null;
@@ -190,32 +208,6 @@ async function runAiSearch(form) {
     renderAiResults(results, response, analysis);
   } catch (error) {
     renderError(results, "AI 매칭 결과를 불러오지 못했습니다.", error);
-  } finally {
-    setButtonsDisabled([aiButton, submitButton], false);
-  }
-}
-
-async function runTextSearch(form) {
-  const query = readQuery(form);
-  if (!query) {
-    focusQuery(form);
-    return;
-  }
-
-  const results = getResults();
-  const submitButton = form.querySelector("button[type='submit']");
-  setButtonsDisabled([submitButton], true);
-  renderLoading(results, "TEXT SEARCH", "AI 없이 키워드 검색을 진행하고 있습니다.");
-
-  try {
-    const targetType = getSelectedTargetType(form);
-    const posts = await fetchTextPosts(targetType, query);
-    const condition = buildCondition(form, targetType);
-    const filteredPosts = filterTextPosts(posts, targetType, condition);
-    const postsWithFiles = await attachFiles(filteredPosts, targetType);
-    renderTextResults(results, targetType, postsWithFiles);
-  } catch (error) {
-    renderError(results, "텍스트 검색 결과를 불러오지 못했습니다.", error);
   } finally {
     setButtonsDisabled([submitButton], false);
   }
@@ -272,100 +264,6 @@ function buildCondition(form, targetType) {
   return condition;
 }
 
-async function fetchTextPosts(targetType, query) {
-  if (targetType === "REQUEST") {
-    return fetchRequests(query);
-  }
-  return fetchTalents(query);
-}
-
-function filterTextPosts(posts, targetType, condition) {
-  return posts.filter((post) => {
-    if (!matchesCategory(post, condition.categoryId)) {
-      return false;
-    }
-    if (targetType === "REQUEST") {
-      return matchesRequestCondition(post, condition);
-    }
-    return matchesTalentCondition(post, condition);
-  });
-}
-
-function matchesCategory(post, categoryId) {
-  if (!categoryId) {
-    return true;
-  }
-  return String(post.categoryId || "") === String(categoryId);
-}
-
-function matchesTalentCondition(talent, condition) {
-  if (condition.maxPrice != null && Number(talent.price || 0) > Number(condition.maxPrice)) {
-    return false;
-  }
-  if (condition.maxEstimatedDuration == null || !condition.durationUnit) {
-    return true;
-  }
-
-  const candidateDays = durationToDays(talent.estimatedDuration, talent.durationUnit);
-  const maximumDays = durationToDays(condition.maxEstimatedDuration, condition.durationUnit);
-  return candidateDays <= maximumDays;
-}
-
-function matchesRequestCondition(request, condition) {
-  if (!overlapsBudget(request, condition)) {
-    return false;
-  }
-  return matchesDueDate(request.dueDate, condition);
-}
-
-function overlapsBudget(request, condition) {
-  if (condition.minBudget == null && condition.maxBudget == null) {
-    return true;
-  }
-
-  const requestMin = Number(request.budgetMin || 0);
-  const requestMax = Number(request.budgetMax || 0);
-  if (condition.minBudget != null && requestMax < Number(condition.minBudget)) {
-    return false;
-  }
-  if (condition.maxBudget != null && requestMin > Number(condition.maxBudget)) {
-    return false;
-  }
-  return true;
-}
-
-function matchesDueDate(dueDate, condition) {
-  if (!condition.dueDateFrom && !condition.dueDateTo) {
-    return true;
-  }
-  if (!dueDate) {
-    return false;
-  }
-  if (condition.dueDateFrom && dueDate < condition.dueDateFrom) {
-    return false;
-  }
-  if (condition.dueDateTo && dueDate > condition.dueDateTo) {
-    return false;
-  }
-  return true;
-}
-
-async function attachFiles(posts, targetType) {
-  return Promise.all(posts.map(async (post) => {
-    if (targetType === "REQUEST") {
-      return {
-        ...post,
-        files: await getRequestFiles(post.requestPostId).catch(() => []),
-      };
-    }
-
-    return {
-      ...post,
-      files: await getTalentFiles(post.talentPostId).catch(() => []),
-    };
-  }));
-}
-
 function renderAiResults(container, response, analysis) {
   const candidates = response?.candidates || [];
   if (!candidates.length) {
@@ -380,28 +278,6 @@ function renderAiResults(container, response, analysis) {
         <span class="kicker">AI ${escapeHtml(targetLabel(response.targetType))} 추천</span>
         <h2>조건에 가까운 결과</h2>
         ${summary}
-      </div>
-      <span>${candidates.length}개</span>
-    </div>
-    <div class="ai-result-list">
-      ${candidates.map(renderMatchCandidate).join("")}
-    </div>
-  `);
-}
-
-function renderTextResults(container, targetType, posts) {
-  if (!posts.length) {
-    setSafeHtml(container, renderSearchState("EMPTY", "텍스트 검색 결과가 없습니다.", "검색어를 줄이거나 카테고리, 가격, 예산 조건을 넓혀보세요."));
-    return;
-  }
-
-  const candidates = posts.map((post) => toTextCandidate(post, targetType));
-  setSafeHtml(container, `
-    <div class="ai-result-heading">
-      <div>
-        <span class="kicker">TEXT ${escapeHtml(targetLabel(targetType))} 검색</span>
-        <h2>키워드 검색 결과</h2>
-        <p class="ai-result-summary">AI 분석 없이 입력한 검색어와 선택 조건만 사용했습니다.</p>
       </div>
       <span>${candidates.length}개</span>
     </div>
@@ -447,41 +323,6 @@ function renderMatchCandidate(candidate) {
       </div>
     </article>
   `;
-}
-
-function toTextCandidate(post, targetType) {
-  const thumbnail = getPreviewImage(post.files || []);
-  if (targetType === "REQUEST") {
-    return {
-      targetType,
-      targetId: post.requestPostId,
-      authorNickname: post.authorNickname || post.nickname,
-      categoryName: post.categoryName,
-      title: post.title,
-      content: post.content,
-      thumbnailUrl: thumbnail?.fileUrl,
-      budgetMin: post.budgetMin,
-      budgetMax: post.budgetMax,
-      dueDate: post.dueDate,
-      matchScore: null,
-      recommendationReason: null,
-    };
-  }
-
-  return {
-    targetType,
-    targetId: post.talentPostId,
-    authorNickname: post.authorNickname || post.nickname,
-    categoryName: post.categoryName,
-    title: post.title,
-    content: post.content,
-    thumbnailUrl: thumbnail?.fileUrl,
-    price: post.price,
-    estimatedDuration: post.estimatedDuration,
-    durationUnit: post.durationUnit,
-    matchScore: null,
-    recommendationReason: null,
-  };
 }
 
 function renderLoading(container, label, message) {
@@ -645,20 +486,4 @@ function targetLabel(targetType) {
 function durationUnitLabel(unit) {
   const labels = { DAY: "일", WEEK: "주", MONTH: "개월" };
   return labels[unit] || "일";
-}
-
-function durationToDays(duration, unit) {
-  const value = Number(duration || 0);
-  if (unit === "WEEK") {
-    return value * 7;
-  }
-  if (unit === "MONTH") {
-    return value * 30;
-  }
-  return value;
-}
-
-function getPreviewImage(files) {
-  const imageFiles = files.filter((file) => String(file.contentType || "").startsWith("image/"));
-  return imageFiles.find((file) => file.thumbnail) || imageFiles[0] || null;
 }

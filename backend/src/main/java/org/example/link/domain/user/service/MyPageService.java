@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import org.example.link.domain.user.dto.MyPageResponse;
+import org.example.link.domain.user.dto.PublicUserResponse;
 import org.example.link.domain.user.dto.UpdateUserRequest;
 import org.example.link.domain.user.entity.UserEntity;
 import org.example.link.domain.wallet.entity.WalletEntity;
@@ -22,6 +23,12 @@ public class MyPageService {
         UserEntity user = userService.getUserEntity(userId);
         WalletEntity wallet = walletService.getWalletEntity(userId);
         return MyPageResponse.from(user, wallet);
+    }
+
+    @Transactional(readOnly = true)
+    public PublicUserResponse getPublicUser(UUID userId) {
+        UserEntity user = userService.getUserEntity(userId);
+        return PublicUserResponse.from(user);
     }
 
     //닉네임 수정

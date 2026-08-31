@@ -1,11 +1,14 @@
 package org.example.link.domain.user.controller;
 
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.response.ApiResponse;
 import org.example.link.domain.user.dto.MyPageResponse;
+import org.example.link.domain.user.dto.PublicUserResponse;
 import org.example.link.domain.user.dto.SignupRequest;
 import org.example.link.domain.user.dto.SignupResponse;
 import org.example.link.domain.user.dto.UpdateUserRequest;
@@ -69,6 +72,16 @@ public class UserController {
                 myPageService.getMyPage(
                         user.getUserId()
                 )
+        );
+    }
+
+    @GetMapping("/public/{userId}")
+    @Operation(summary = "공개 사용자 정보 조회")
+    public ApiResponse<PublicUserResponse> getPublicUser(
+            @PathVariable UUID userId
+    ) {
+        return ApiResponse.ok(
+                myPageService.getPublicUser(userId)
         );
     }
 

@@ -54,6 +54,7 @@ public class SecurityConfig {
                                 "/",
                                 "/categories",
                                 "/users/signup",
+                                "/users/public/**",
                                 "/auth/login",
                                 "/auth/csrf",
                                 "/auth/refresh",
