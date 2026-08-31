@@ -8,15 +8,8 @@ export function RequestListPage() {
           <span class="kicker">Requests</span>
           <h1>등록된 의뢰와 일을 찾아보세요.</h1>
         </div>
-        <div class="filter-actions">
-          <select aria-label="Sort">
-            <option>Popular first</option>
-            <option>Newest first</option>
-          </select>
-          <button type="button">Filters</button>
-        </div>
       </div>
-      ${listToolbar("의뢰", "All", "#/requests")}
+      ${listToolbar("의뢰", "All", "#/requests", { withFilters: true })}
       <div class="request-grid" data-request-list>
         <article class="request-card">
           <div class="card-body">

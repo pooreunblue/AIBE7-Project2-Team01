@@ -512,13 +512,15 @@ a.button {
 }
 
 .list-search {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   width: min(680px, 100%);
 }
 
 .list-search input {
+  flex: 1 1 220px;
+  min-width: 0;
   min-height: 42px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -527,6 +529,7 @@ a.button {
 }
 
 .list-search button {
+  flex: 0 0 auto;
   min-height: 42px;
   border: 0;
   border-radius: var(--radius);
@@ -534,6 +537,26 @@ a.button {
   background: var(--blue);
   color: #fff;
   font-weight: 800;
+}
+
+.list-search .list-filters-button {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.list-filter-modal {
+  width: min(460px, 100%);
+}
+
+.list-filter-form {
+  display: grid;
+  gap: 14px;
+}
+
+.list-filter-form .form-actions {
+  margin-top: 4px;
 }
 
 .filter-actions select,
