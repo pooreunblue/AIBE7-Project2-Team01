@@ -51,11 +51,11 @@ class ChatServiceTest {
     );
 
     @Test
-    void getMyRooms_resolvesPostTitlesInBatch_withoutPerRoomQuery() {
+    void getMyRoomsResolvesPostTitlesWithoutPerRoomQuery() {
         UserEntity me = user("나");
-        UserEntity otherA = user("A");
-        UserEntity otherB = user("B");
-        UserEntity otherC = user("C");
+        UserEntity otherUserA = user("A");
+        UserEntity otherUserB = user("B");
+        UserEntity otherUserC = user("C");
 
         UUID talentId1 = UUID.randomUUID();
         UUID talentId2 = UUID.randomUUID();
@@ -65,12 +65,12 @@ class ChatServiceTest {
         ChatRoom room2 = room(talentId2, null);
         ChatRoom room3 = room(null, requestId1);
 
-        ChatParticipant myP1 = participant(room1, me);
-        ChatParticipant myP2 = participant(room2, me);
-        ChatParticipant myP3 = participant(room3, me);
-        ChatParticipant otherP1 = participant(room1, otherA);
-        ChatParticipant otherP2 = participant(room2, otherB);
-        ChatParticipant otherP3 = participant(room3, otherC);
+        ChatParticipant myParticipant1 = participant(room1, me);
+        ChatParticipant myParticipant2 = participant(room2, me);
+        ChatParticipant myParticipant3 = participant(room3, me);
+        ChatParticipant otherParticipant1 = participant(room1, otherUserA);
+        ChatParticipant otherParticipant2 = participant(room2, otherUserB);
+        ChatParticipant otherParticipant3 = participant(room3, otherUserC);
 
         TalentPostEntity talentPost1 = talentPost(talentId1, "재능글1");
         TalentPostEntity talentPost2 = talentPost(talentId2, "재능글2");
@@ -79,9 +79,9 @@ class ChatServiceTest {
         UUID myId = me.getId();
         when(userRepository.findByEmail("me@example.com")).thenReturn(Optional.of(me));
         when(chatParticipantRepository.findByUserIdWithRoom(myId))
-                .thenReturn(List.of(myP1, myP2, myP3));
+                .thenReturn(List.of(myParticipant1, myParticipant2, myParticipant3));
         when(chatParticipantRepository.findOthersWithUserByChatRoomIdIn(anyCollection(), eq(myId)))
-                .thenReturn(List.of(otherP1, otherP2, otherP3));
+                .thenReturn(List.of(otherParticipant1, otherParticipant2, otherParticipant3));
         when(talentPostRepository.findByIdIn(anyCollection()))
                 .thenReturn(List.of(talentPost1, talentPost2));
         when(requestPostRepository.findByIdIn(anyCollection()))
@@ -103,7 +103,7 @@ class ChatServiceTest {
     }
 
     @Test
-    void getMyRooms_returnsEmpty_withoutTouchingPostRepositories() {
+    void getMyRoomsReturnsEmptyWithoutQueryingPostRepositories() {
         UserEntity me = user("나");
         UUID myId = me.getId();
         when(userRepository.findByEmail("me@example.com")).thenReturn(Optional.of(me));
