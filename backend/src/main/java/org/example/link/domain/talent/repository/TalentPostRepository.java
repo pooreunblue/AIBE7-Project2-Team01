@@ -13,6 +13,11 @@ import java.util.List;
 import java.util.UUID;
 
 public interface TalentPostRepository extends JpaRepository<TalentPostEntity, UUID> {
+    /** 목록 응답에 필요한 연관 엔티티를 한 번에 조회한다. */
+    @Override
+    @EntityGraph(attributePaths = {"user", "category", "portfolio"})
+    Page<TalentPostEntity> findAll(Pageable pageable);
+
     /** 벡터 검색 후보를 일괄 조회하고 응답에 필요한 작성자와 카테고리도 함께 로딩한다. */
     @EntityGraph(attributePaths = {"user", "category"})
     List<TalentPostEntity> findByIdIn(Collection<UUID> ids);
@@ -25,6 +30,7 @@ public interface TalentPostRepository extends JpaRepository<TalentPostEntity, UU
            OR
            LOWER(t.content) LIKE LOWER(CONCAT('%', :keyword, '%')))
     """)
+    @EntityGraph(attributePaths = {"user", "category", "portfolio"})
     Page<TalentPostEntity> search(
             @Param("keyword") String keyword,
             Pageable pageable

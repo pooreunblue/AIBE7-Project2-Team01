@@ -17,6 +17,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface RequestPostRepository extends JpaRepository<RequestPostEntity, UUID> {
+    /** 목록 응답에 필요한 작성자와 카테고리를 한 번에 조회한다. */
+    @Override
+    @EntityGraph(attributePaths = {"user", "category"})
+    Page<RequestPostEntity> findAll(Pageable pageable);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from RequestPostEntity r where r.id = :requestPostId")
     Optional<RequestPostEntity> findByIdForUpdate(@Param("requestPostId") UUID requestPostId);
@@ -33,6 +38,7 @@ public interface RequestPostRepository extends JpaRepository<RequestPostEntity, 
            OR
            LOWER(r.content) LIKE LOWER(CONCAT('%', :keyword, '%')))
     """)
+    @EntityGraph(attributePaths = {"user", "category"})
     Page<RequestPostEntity> search(
             @Param("keyword") String keyword,
             Pageable pageable

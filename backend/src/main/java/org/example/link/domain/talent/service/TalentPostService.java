@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.AccessDeniedException;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -49,8 +48,9 @@ public class TalentPostService {
         return saved;
     }
 
-    public List<TalentPostEntity> readAll() {
-        return talentPostRepository.findAll();
+    @Transactional(readOnly = true)
+    public Page<TalentPostEntity> readAll(Pageable pageable) {
+        return talentPostRepository.findAll(pageable);
     }
 
     public TalentPostEntity readOne(UUID talentPostId) {
