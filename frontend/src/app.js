@@ -382,6 +382,7 @@ function bindRequestListPage() {
       current: conditions,
       onApply: (next) => {
         conditions = next;
+        syncCategoryTabs(next.categoryId);
         loadPage(true);
       },
     });
@@ -706,7 +707,7 @@ async function loadCategoryTabs(tabRows) {
       }))];
 
       setSafeHtml(row, items.map((item) => `
-        <a class="tab ${String(item.categoryId || "") === String(activeCategoryId || "") ? "active" : ""}" href="${escapeHtml(safeUrl(item.href))}">${escapeHtml(item.name)}</a>
+        <a class="tab ${String(item.categoryId || "") === String(activeCategoryId || "") ? "active" : ""}" data-category-id="${escapeHtml(String(item.categoryId || ""))}" href="${escapeHtml(safeUrl(item.href))}">${escapeHtml(item.name)}</a>
       `).join(""));
     });
   } catch {
@@ -762,6 +763,7 @@ function bindTalentListPage() {
       current: conditions,
       onApply: (next) => {
         conditions = next;
+        syncCategoryTabs(next.categoryId);
         loadPage(true);
       },
     });
@@ -1485,6 +1487,14 @@ function currentCategoryId() {
 function filterByCategory(posts, categoryId) {
   if (!categoryId) return posts;
   return posts.filter((post) => String(post.categoryId || "") === String(categoryId));
+}
+
+// Filters 모달에서 카테고리를 고르면 하단 카테고리 탭의 active 표시도 맞춘다.
+function syncCategoryTabs(categoryId) {
+  const target = String(categoryId || "");
+  document.querySelectorAll("[data-category-tabs] .tab").forEach((tab) => {
+    tab.classList.toggle("active", String(tab.dataset.categoryId || "") === target);
+  });
 }
 
 // Filters 모달로 받은 조건을 현재 로드된 목록에 클라이언트에서 적용한다 (카테고리 탭의 filterByCategory와 동일한 방식).
