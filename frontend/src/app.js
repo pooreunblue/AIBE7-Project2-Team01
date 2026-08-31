@@ -16,6 +16,7 @@ import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
 import { startChat } from "./features/chat/startChat.js";
 import { initCheckoutPage } from "./features/payment/CheckoutPage.js";
 import { initAiSearchPage } from "./features/search/AiSearchPage.js";
+import { openListFilterModal } from "./features/search/listFilterModal.js";
 import {
   createPortfolio,
   deletePortfolio,
@@ -341,9 +342,11 @@ function bindRequestListPage() {
   if (!list) return;
 
   const searchForm = document.querySelector("[data-list-search]");
+  const filtersButton = document.querySelector("[data-list-filters]");
   const loadMoreButton = document.querySelector("[data-request-load-more]");
   const categoryId = currentCategoryId();
   let keyword = "";
+  let conditions = {};
   let nextPage = 0;
   let loading = false;
 
@@ -354,7 +357,7 @@ function bindRequestListPage() {
     loading = true;
     if (loadMoreButton) loadMoreButton.disabled = true;
     try {
-      const page = await loadRequestList(keyword, categoryId, nextPage, reset);
+      const page = await loadRequestList(keyword, categoryId, nextPage, reset, conditions);
       nextPage = Number(page.page || 0) + 1;
       if (loadMoreButton) loadMoreButton.hidden = Boolean(page.last);
     } catch {
@@ -371,6 +374,17 @@ function bindRequestListPage() {
     event.preventDefault();
     keyword = String(new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "");
     loadPage(true);
+  });
+
+  filtersButton?.addEventListener("click", () => {
+    openListFilterModal({
+      targetType: "REQUEST",
+      current: conditions,
+      onApply: (next) => {
+        conditions = next;
+        loadPage(true);
+      },
+    });
   });
 
   loadMoreButton?.addEventListener("click", () => loadPage(false));
@@ -531,13 +545,13 @@ async function loadRequestEditForm(form, requestPostId) {
   }
 }
 
-async function loadRequestList(keyword = "", categoryId = "", pageNumber = 0, reset = true) {
+async function loadRequestList(keyword = "", categoryId = "", pageNumber = 0, reset = true, conditions = {}) {
   const list = document.querySelector("[data-request-list]");
   if (!list) return { content: [], page: 0, last: true };
 
   try {
     const page = await fetchRequestPage({ keyword, page: pageNumber });
-    const filteredRequests = filterByCategory(page.content, categoryId);
+    const filteredRequests = filterByConditions(filterByCategory(page.content, categoryId), "REQUEST", conditions);
     const requestsWithFiles = await Promise.all(
       filteredRequests.map(async (request) => ({
         ...request,
@@ -708,9 +722,11 @@ function bindTalentListPage() {
   if (!list) return;
 
   const searchForm = document.querySelector("[data-list-search]");
+  const filtersButton = document.querySelector("[data-list-filters]");
   const loadMoreButton = document.querySelector("[data-talent-load-more]");
   const categoryId = currentCategoryId();
   let keyword = "";
+  let conditions = {};
   let nextPage = 0;
   let loading = false;
 
@@ -721,7 +737,7 @@ function bindTalentListPage() {
     loading = true;
     if (loadMoreButton) loadMoreButton.disabled = true;
     try {
-      const page = await loadTalentList(keyword, categoryId, nextPage, reset);
+      const page = await loadTalentList(keyword, categoryId, nextPage, reset, conditions);
       nextPage = Number(page.page || 0) + 1;
       if (loadMoreButton) loadMoreButton.hidden = Boolean(page.last);
     } catch {
@@ -738,6 +754,17 @@ function bindTalentListPage() {
     event.preventDefault();
     keyword = String(new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "");
     loadPage(true);
+  });
+
+  filtersButton?.addEventListener("click", () => {
+    openListFilterModal({
+      targetType: "TALENT",
+      current: conditions,
+      onApply: (next) => {
+        conditions = next;
+        loadPage(true);
+      },
+    });
   });
 
   loadMoreButton?.addEventListener("click", () => loadPage(false));
@@ -868,13 +895,13 @@ function bindTalentCreatePage() {
   });
 }
 
-async function loadTalentList(keyword = "", categoryId = "", pageNumber = 0, reset = true) {
+async function loadTalentList(keyword = "", categoryId = "", pageNumber = 0, reset = true, conditions = {}) {
   const list = document.querySelector("[data-list='talents']");
   if (!list) return { content: [], page: 0, last: true };
 
   try {
     const page = await fetchTalentPage({ keyword, page: pageNumber });
-    const filteredTalents = filterByCategory(page.content, categoryId);
+    const filteredTalents = filterByConditions(filterByCategory(page.content, categoryId), "TALENT", conditions);
     const talentsWithFiles = await Promise.all(
       filteredTalents.map(async (talent) => ({
         ...talent,
@@ -1458,6 +1485,33 @@ function currentCategoryId() {
 function filterByCategory(posts, categoryId) {
   if (!categoryId) return posts;
   return posts.filter((post) => String(post.categoryId || "") === String(categoryId));
+}
+
+// Filters 모달로 받은 조건을 현재 로드된 목록에 클라이언트에서 적용한다 (카테고리 탭의 filterByCategory와 동일한 방식).
+// 목록 API가 조건 파라미터를 지원하지 않아, 정확한 필터링은 서버측 지원이 추가되어야 함.
+const DURATION_TO_DAYS = { DAY: 1, WEEK: 7, MONTH: 30 };
+
+function filterByConditions(posts, targetType, conditions = {}) {
+  const c = conditions || {};
+  return posts.filter((post) => {
+    if (c.categoryId && String(post.categoryId || "") !== String(c.categoryId)) return false;
+
+    if (targetType === "TALENT") {
+      if (c.maxPrice != null && Number(post.price ?? Infinity) > c.maxPrice) return false;
+      if (c.maxEstimatedDuration != null) {
+        const postDays = Number(post.estimatedDuration ?? Infinity) * (DURATION_TO_DAYS[post.durationUnit] || 1);
+        const maxDays = c.maxEstimatedDuration * (DURATION_TO_DAYS[c.durationUnit || "DAY"] || 1);
+        if (postDays > maxDays) return false;
+      }
+      return true;
+    }
+
+    if (c.minBudget != null && Number(post.budgetMax ?? 0) < c.minBudget) return false;
+    if (c.maxBudget != null && Number(post.budgetMin ?? Infinity) > c.maxBudget) return false;
+    if (c.dueDateFrom && post.dueDate && String(post.dueDate) < c.dueDateFrom) return false;
+    if (c.dueDateTo && post.dueDate && String(post.dueDate) > c.dueDateTo) return false;
+    return true;
+  });
 }
 
 function markdownExcerpt(markdown) {

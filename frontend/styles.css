@@ -527,6 +527,19 @@ a.button {
   font-weight: 700;
 }
 
+.list-filter-modal {
+  width: min(460px, 100%);
+}
+
+.list-filter-form {
+  display: grid;
+  gap: 14px;
+}
+
+.list-filter-form .form-actions {
+  margin-top: 4px;
+}
+
 .filter-actions select,
 .filter-actions button,
 .field input,
