@@ -18,7 +18,9 @@ import org.example.link.domain.chat.entity.ChatRoom;
 import org.example.link.domain.chat.repository.ChatMessageRepository;
 import org.example.link.domain.chat.repository.ChatParticipantRepository;
 import org.example.link.domain.chat.repository.ChatRoomRepository;
+import org.example.link.domain.request.entity.RequestPostEntity;
 import org.example.link.domain.request.repository.RequestPostRepository;
+import org.example.link.domain.talent.entity.TalentPostEntity;
 import org.example.link.domain.talent.repository.TalentPostRepository;
 import org.example.link.domain.trade.repository.TradeRepository;
 import org.example.link.domain.user.entity.UserEntity;
@@ -28,8 +30,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -181,19 +186,58 @@ public class ChatService {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        List<ChatParticipant> myParticipations = chatParticipantRepository.findByUserId(user.getId());
-        List<UUID> roomIds = myParticipations.stream()
-                .map(p -> p.getChatRoom().getId())
+        List<ChatParticipant> myParticipations = chatParticipantRepository.findByUserIdWithRoom(user.getId());
+        if (myParticipations.isEmpty()) {
+            return List.of();
+        }
+
+        List<ChatRoom> rooms = myParticipations.stream()
+                .map(ChatParticipant::getChatRoom)
+                .toList();
+        List<UUID> roomIds = rooms.stream()
+                .map(ChatRoom::getId)
                 .toList();
 
         Map<UUID, UserEntity> otherUserByRoomId = chatParticipantRepository
-                .findByChatRoomIdInAndUserIdNot(roomIds, user.getId()).stream()
+                .findOthersWithUserByChatRoomIdIn(roomIds, user.getId()).stream()
                 .collect(Collectors.toMap(p -> p.getChatRoom().getId(), ChatParticipant::getUser));
 
-        return myParticipations.stream()
-                .map(ChatParticipant::getChatRoom)
-                .map(room -> ChatRoomResponse.from(room, otherUserByRoomId.get(room.getId()), resolvePostTitle(room)))
+        Map<UUID, String> postTitleByRoomId = resolvePostTitles(rooms);
+
+        return rooms.stream()
+                .map(room -> ChatRoomResponse.from(
+                        room,
+                        otherUserByRoomId.get(room.getId()),
+                        postTitleByRoomId.get(room.getId())
+                ))
                 .toList();
+    }
+
+    /** 방 목록의 게시글 제목을 종류별 일괄 조회(findByIdIn)로 한 번에 해결한다 (방마다 개별 조회하던 N+1 제거). */
+    private Map<UUID, String> resolvePostTitles(List<ChatRoom> rooms) {
+        Set<UUID> talentPostIds = rooms.stream()
+                .map(ChatRoom::getTalentPostId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Set<UUID> requestPostIds = rooms.stream()
+                .map(ChatRoom::getRequestPostId).filter(Objects::nonNull).collect(Collectors.toSet());
+
+        Map<UUID, String> talentTitles = talentPostIds.isEmpty() ? Map.of()
+                : talentPostRepository.findByIdIn(talentPostIds).stream()
+                        .collect(Collectors.toMap(TalentPostEntity::getId, TalentPostEntity::getTitle));
+        Map<UUID, String> requestTitles = requestPostIds.isEmpty() ? Map.of()
+                : requestPostRepository.findByIdIn(requestPostIds).stream()
+                        .collect(Collectors.toMap(RequestPostEntity::getId, RequestPostEntity::getTitle));
+
+        Map<UUID, String> titleByRoomId = new HashMap<>();
+        for (ChatRoom room : rooms) {
+            String title = null;
+            if (room.getTalentPostId() != null) {
+                title = talentTitles.get(room.getTalentPostId());
+            } else if (room.getRequestPostId() != null) {
+                title = requestTitles.get(room.getRequestPostId());
+            }
+            titleByRoomId.put(room.getId(), title);
+        }
+        return titleByRoomId;
     }
 
     private String resolvePostTitle(ChatRoom room) {
