@@ -1,20 +1,20 @@
 import { fetchCategories } from "../category/categoryApi.js";
-import { escapeHtml, safeImageUrl, setSafeHtml } from "../../shared/security/xss.js";
-import { formatMoney, pageTitle } from "../../shared/ui/index.js";
-import { searchAiMatches } from "./matchingApi.js";
+import { fetchRequests, getRequestFiles } from "../request/requestApi.js";
+import { fetchTalents, getTalentFiles } from "../talent/talentApi.js";
+import { escapeHtml, safeImageUrl, safeUrl, setSafeHtml } from "../../shared/security/xss.js";
+import { formatMoney } from "../../shared/ui/index.js";
+import { analyzeAiMatchQuery, searchAiMatches } from "./matchingApi.js";
 
 const DEFAULT_TARGET_TYPE = "TALENT";
 
 export function AiSearchPage() {
   return `
     <section class="section ai-search-page" data-ai-search-page>
-      ${pageTitle("AI Matching", "어떤 도움이 필요한가요?", "자연어 검색과 정확한 조건을 함께 사용해 적합한 글을 추천합니다.")}
-
       <form class="ai-match-form" data-ai-match-form>
         <div class="ai-target-control" role="radiogroup" aria-label="검색 대상">
           <label>
             <input type="radio" name="targetType" value="TALENT" checked />
-            <span>전문가 찾기</span>
+            <span>재능글 찾기</span>
           </label>
           <label>
             <input type="radio" name="targetType" value="REQUEST" />
@@ -23,9 +23,9 @@ export function AiSearchPage() {
         </div>
 
         <div class="search-box wide ai-query-box">
-          <span class="spark" aria-hidden="true">✦</span>
-          <input name="query" type="search" placeholder="예: 50만원 이하 Spring 백엔드 개발" aria-label="AI 검색" required />
-          <button type="submit">검색</button>
+          <button class="spark ai-search-logo-button" type="button" data-ai-match-ai-submit aria-label="AI 검색">✦</button>
+          <input name="query" type="search" placeholder="예: 50만원 이하 Spring 백엔드 개발자 찾아줘" aria-label="검색어" required />
+          <button type="submit">Search</button>
         </div>
 
         <div class="ai-condition-bar">
@@ -48,6 +48,7 @@ export function AiSearchPage() {
             <label class="field compact-field">
               <span>기간 단위</span>
               <select name="durationUnit">
+                <option value="">전체</option>
                 <option value="DAY">일</option>
                 <option value="WEEK">주</option>
                 <option value="MONTH">개월</option>
@@ -76,10 +77,9 @@ export function AiSearchPage() {
         </div>
       </form>
 
-      <p class="ai-search-status" data-ai-search-status aria-live="polite">
-        검색 대상과 조건을 선택한 뒤 필요한 내용을 자연스럽게 입력해 주세요.
-      </p>
-      <div class="ai-match-results" data-ai-match-results></div>
+      <div class="ai-match-results" data-ai-match-results>
+        ${renderSearchState("AI MATCHING", "검색을 시작해보세요.", "왼쪽 로고는 AI 검색, 오른쪽 Search는 텍스트 검색으로 동작합니다.")}
+      </div>
     </section>
   `;
 }
@@ -89,50 +89,39 @@ export function initAiSearchPage() {
   if (!page) return;
 
   const form = page.querySelector("[data-ai-match-form]");
-  const status = page.querySelector("[data-ai-search-status]");
-  const results = page.querySelector("[data-ai-match-results]");
-  const submitButton = form.querySelector("button[type='submit']");
+  if (!form) return;
 
-  applyInitialSearch(form);
+  const params = hashSearchParams();
+  const categoriesReady = loadCategories(form);
+
+  applyInitialSearch(form, params);
   bindTargetType(form);
-  loadCategories(form);
+  bindSearchActions(form);
 
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const payload = buildMatchPayload(form);
-
-    if (!payload.query) {
-      status.textContent = "검색어를 입력해 주세요.";
-      form.elements.query.focus();
-      return;
-    }
-
-    submitButton.disabled = true;
-    status.textContent = "AI가 의미와 조건을 함께 비교하고 있습니다.";
-    results.replaceChildren();
-
-    try {
-      const response = await searchAiMatches(payload);
-      renderMatchResults(results, response);
-      const count = response?.candidates?.length || 0;
-      status.textContent = count
-        ? `${count}개의 추천 결과를 찾았습니다.`
-        : "조건에 맞는 추천 결과가 없습니다. 검색어나 조건을 조정해 보세요.";
-    } catch (error) {
-      status.textContent = error.message || "AI 매칭 검색에 실패했습니다.";
-      setSafeHtml(results, renderSearchError(error));
-    } finally {
-      submitButton.disabled = false;
-    }
-  });
-
-  if (form.elements.query.value.trim()) {
-    form.requestSubmit();
+  const initialQuery = form.elements.query.value.trim();
+  if (initialQuery) {
+    categoriesReady.finally(() => {
+      if (params.get("mode") === "ai") {
+        runAiSearch(form);
+        return;
+      }
+      runTextSearch(form);
+    });
   }
 }
 
-function applyInitialSearch(form) {
-  const params = hashSearchParams();
+function bindSearchActions(form) {
+  form.querySelector("[data-ai-match-ai-submit]")?.addEventListener("click", () => {
+    runAiSearch(form);
+  });
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    runTextSearch(form);
+  });
+}
+
+function applyInitialSearch(form, params) {
   form.elements.query.value = params.get("query") || "";
 
   const targetType = params.get("targetType");
@@ -143,7 +132,7 @@ function applyInitialSearch(form) {
 
 function bindTargetType(form) {
   const update = () => {
-    const selectedType = form.elements.targetType.value || DEFAULT_TARGET_TYPE;
+    const selectedType = getSelectedTargetType(form);
     form.querySelectorAll("[data-ai-target-fields]").forEach((group) => {
       const isActive = group.dataset.aiTargetFields === selectedType;
       group.hidden = !isActive;
@@ -174,9 +163,95 @@ async function loadCategories(form) {
   }
 }
 
-function buildMatchPayload(form) {
+async function runAiSearch(form) {
+  const query = readQuery(form);
+  if (!query) {
+    focusQuery(form);
+    return;
+  }
+
+  const results = getResults();
+  const aiButton = form.querySelector("[data-ai-match-ai-submit]");
+  const submitButton = form.querySelector("button[type='submit']");
+  setButtonsDisabled([aiButton, submitButton], true);
+  renderLoading(results, "AI SEARCH", "AI가 검색 문장을 분석하고 있습니다.");
+
+  let analysis = null;
+  try {
+    analysis = await analyzeAiMatchQuery(query);
+    applyAnalysis(form, analysis);
+  } catch {
+    renderLoading(results, "AI SEARCH", "분석을 건너뛰고 현재 조건으로 검색합니다.");
+  }
+
+  try {
+    const payload = buildAiMatchPayload(form, query, analysis);
+    const response = await searchAiMatches(payload);
+    renderAiResults(results, response, analysis);
+  } catch (error) {
+    renderError(results, "AI 매칭 결과를 불러오지 못했습니다.", error);
+  } finally {
+    setButtonsDisabled([aiButton, submitButton], false);
+  }
+}
+
+async function runTextSearch(form) {
+  const query = readQuery(form);
+  if (!query) {
+    focusQuery(form);
+    return;
+  }
+
+  const results = getResults();
+  const submitButton = form.querySelector("button[type='submit']");
+  setButtonsDisabled([submitButton], true);
+  renderLoading(results, "TEXT SEARCH", "AI 없이 키워드 검색을 진행하고 있습니다.");
+
+  try {
+    const targetType = getSelectedTargetType(form);
+    const posts = await fetchTextPosts(targetType, query);
+    const condition = buildCondition(form, targetType);
+    const filteredPosts = filterTextPosts(posts, targetType, condition);
+    const postsWithFiles = await attachFiles(filteredPosts, targetType);
+    renderTextResults(results, targetType, postsWithFiles);
+  } catch (error) {
+    renderError(results, "텍스트 검색 결과를 불러오지 못했습니다.", error);
+  } finally {
+    setButtonsDisabled([submitButton], false);
+  }
+}
+
+function applyAnalysis(form, analysis) {
+  if (!analysis) return;
+
+  resetConditions(form);
+  setTargetType(form, analysis.targetType);
+  form.elements.query.value = analysis.semanticQuery || analysis.originalQuery || "";
+
+  const condition = analysis.condition || {};
+  setControlValue(form, "categoryId", condition.categoryId);
+  setControlValue(form, "maxPrice", condition.maxPrice);
+  setControlValue(form, "maxEstimatedDuration", condition.maxEstimatedDuration);
+  setControlValue(form, "durationUnit", condition.durationUnit);
+  setControlValue(form, "minBudget", condition.minBudget);
+  setControlValue(form, "maxBudget", condition.maxBudget);
+  setControlValue(form, "dueDateFrom", condition.dueDateFrom);
+  setControlValue(form, "dueDateTo", condition.dueDateTo);
+}
+
+function buildAiMatchPayload(form, originalQuery, analysis) {
+  const targetType = getSelectedTargetType(form);
+  const semanticQuery = analysis?.semanticQuery || originalQuery;
+  return {
+    query: semanticQuery,
+    targetType,
+    condition: buildCondition(form, targetType),
+    limit: 5,
+  };
+}
+
+function buildCondition(form, targetType) {
   const data = new FormData(form);
-  const targetType = data.get("targetType") || DEFAULT_TARGET_TYPE;
   const condition = {
     categoryId: optionalText(data.get("categoryId")),
   };
@@ -187,34 +262,146 @@ function buildMatchPayload(form) {
     condition.durationUnit = condition.maxEstimatedDuration
       ? optionalText(data.get("durationUnit")) || "DAY"
       : null;
-  } else {
-    condition.minBudget = optionalNumber(data.get("minBudget"));
-    condition.maxBudget = optionalNumber(data.get("maxBudget"));
-    condition.dueDateFrom = optionalText(data.get("dueDateFrom"));
-    condition.dueDateTo = optionalText(data.get("dueDateTo"));
+    return condition;
   }
 
-  return {
-    query: String(data.get("query") || "").trim(),
-    targetType,
-    condition,
-    limit: 5,
-  };
+  condition.minBudget = optionalNumber(data.get("minBudget"));
+  condition.maxBudget = optionalNumber(data.get("maxBudget"));
+  condition.dueDateFrom = optionalText(data.get("dueDateFrom"));
+  condition.dueDateTo = optionalText(data.get("dueDateTo"));
+  return condition;
 }
 
-function renderMatchResults(container, response) {
+async function fetchTextPosts(targetType, query) {
+  if (targetType === "REQUEST") {
+    return fetchRequests(query);
+  }
+  return fetchTalents(query);
+}
+
+function filterTextPosts(posts, targetType, condition) {
+  return posts.filter((post) => {
+    if (!matchesCategory(post, condition.categoryId)) {
+      return false;
+    }
+    if (targetType === "REQUEST") {
+      return matchesRequestCondition(post, condition);
+    }
+    return matchesTalentCondition(post, condition);
+  });
+}
+
+function matchesCategory(post, categoryId) {
+  if (!categoryId) {
+    return true;
+  }
+  return String(post.categoryId || "") === String(categoryId);
+}
+
+function matchesTalentCondition(talent, condition) {
+  if (condition.maxPrice != null && Number(talent.price || 0) > Number(condition.maxPrice)) {
+    return false;
+  }
+  if (condition.maxEstimatedDuration == null || !condition.durationUnit) {
+    return true;
+  }
+
+  const candidateDays = durationToDays(talent.estimatedDuration, talent.durationUnit);
+  const maximumDays = durationToDays(condition.maxEstimatedDuration, condition.durationUnit);
+  return candidateDays <= maximumDays;
+}
+
+function matchesRequestCondition(request, condition) {
+  if (!overlapsBudget(request, condition)) {
+    return false;
+  }
+  return matchesDueDate(request.dueDate, condition);
+}
+
+function overlapsBudget(request, condition) {
+  if (condition.minBudget == null && condition.maxBudget == null) {
+    return true;
+  }
+
+  const requestMin = Number(request.budgetMin || 0);
+  const requestMax = Number(request.budgetMax || 0);
+  if (condition.minBudget != null && requestMax < Number(condition.minBudget)) {
+    return false;
+  }
+  if (condition.maxBudget != null && requestMin > Number(condition.maxBudget)) {
+    return false;
+  }
+  return true;
+}
+
+function matchesDueDate(dueDate, condition) {
+  if (!condition.dueDateFrom && !condition.dueDateTo) {
+    return true;
+  }
+  if (!dueDate) {
+    return false;
+  }
+  if (condition.dueDateFrom && dueDate < condition.dueDateFrom) {
+    return false;
+  }
+  if (condition.dueDateTo && dueDate > condition.dueDateTo) {
+    return false;
+  }
+  return true;
+}
+
+async function attachFiles(posts, targetType) {
+  return Promise.all(posts.map(async (post) => {
+    if (targetType === "REQUEST") {
+      return {
+        ...post,
+        files: await getRequestFiles(post.requestPostId).catch(() => []),
+      };
+    }
+
+    return {
+      ...post,
+      files: await getTalentFiles(post.talentPostId).catch(() => []),
+    };
+  }));
+}
+
+function renderAiResults(container, response, analysis) {
   const candidates = response?.candidates || [];
   if (!candidates.length) {
-    container.replaceChildren();
+    setSafeHtml(container, renderSearchState("EMPTY", "조건에 맞는 결과가 없습니다.", "검색어를 넓히거나 가격, 예산, 기간 조건을 조정해보세요."));
     return;
   }
 
-  const targetLabel = response.targetType === "REQUEST" ? "요청글" : "재능글";
+  const summary = renderAnalysisSummary(analysis);
   setSafeHtml(container, `
     <div class="ai-result-heading">
       <div>
-        <span class="kicker">${escapeHtml(targetLabel)} 추천</span>
+        <span class="kicker">AI ${escapeHtml(targetLabel(response.targetType))} 추천</span>
         <h2>조건에 가까운 결과</h2>
+        ${summary}
+      </div>
+      <span>${candidates.length}개</span>
+    </div>
+    <div class="ai-result-list">
+      ${candidates.map(renderMatchCandidate).join("")}
+    </div>
+  `);
+}
+
+function renderTextResults(container, targetType, posts) {
+  if (!posts.length) {
+    setSafeHtml(container, renderSearchState("EMPTY", "텍스트 검색 결과가 없습니다.", "검색어를 줄이거나 카테고리, 가격, 예산 조건을 넓혀보세요."));
+    return;
+  }
+
+  const candidates = posts.map((post) => toTextCandidate(post, targetType));
+  setSafeHtml(container, `
+    <div class="ai-result-heading">
+      <div>
+        <span class="kicker">TEXT ${escapeHtml(targetLabel(targetType))} 검색</span>
+        <h2>키워드 검색 결과</h2>
+        <p class="ai-result-summary">AI 분석 없이 입력한 검색어와 선택 조건만 사용했습니다.</p>
       </div>
       <span>${candidates.length}개</span>
     </div>
@@ -231,21 +418,23 @@ function renderMatchCandidate(candidate) {
     : `#/talent/${candidate.targetId}`;
   const imageUrl = safeImageUrl(candidate.thumbnailUrl);
   const reason = String(candidate.recommendationReason || "").trim();
-  const score = Math.round(Number(candidate.matchScore || 0) * 100);
+  const score = candidate.matchScore == null
+    ? null
+    : Math.round(Number(candidate.matchScore || 0) * 100);
 
   return `
     <article class="ai-result-card ${imageUrl ? "has-media" : "text-only"}">
       ${imageUrl ? `
-        <a class="ai-result-thumbnail" href="${escapeHtml(href)}" aria-label="${escapeHtml(candidate.title)} 상세 보기">
+        <a class="ai-result-thumbnail" href="${escapeHtml(safeUrl(href))}" aria-label="${escapeHtml(candidate.title)} 상세 보기">
           <img src="${escapeHtml(imageUrl)}" alt="" loading="lazy" />
         </a>
       ` : ""}
       <div class="ai-result-body">
         <div class="ai-result-meta">
           <span>${escapeHtml(candidate.categoryName || (isRequest ? "요청글" : "재능글"))}</span>
-          <strong>적합도 ${score}%</strong>
+          ${score == null ? "" : `<strong>적합도 ${score}%</strong>`}
         </div>
-        <h3><a href="${escapeHtml(href)}">${escapeHtml(candidate.title || "제목 없음")}</a></h3>
+        <h3><a href="${escapeHtml(safeUrl(href))}">${escapeHtml(candidate.title || "제목 없음")}</a></h3>
         <p>${escapeHtml(markdownExcerpt(candidate.content))}</p>
         ${reason ? `<div class="ai-recommendation-reason"><strong>추천 이유</strong><span>${escapeHtml(reason)}</span></div>` : ""}
         <div class="ai-result-footer">
@@ -253,23 +442,152 @@ function renderMatchCandidate(candidate) {
             <span>${escapeHtml(candidate.authorNickname || "작성자")}</span>
             <strong>${isRequest ? formatBudget(candidate) : formatOptionalMoney(candidate.price)}</strong>
           </div>
-          <a class="button quiet" href="${escapeHtml(href)}">상세보기</a>
+          <a class="button quiet" href="${escapeHtml(safeUrl(href))}">상세보기</a>
         </div>
       </div>
     </article>
   `;
 }
 
-function renderSearchError(error) {
+function toTextCandidate(post, targetType) {
+  const thumbnail = getPreviewImage(post.files || []);
+  if (targetType === "REQUEST") {
+    return {
+      targetType,
+      targetId: post.requestPostId,
+      authorNickname: post.authorNickname || post.nickname,
+      categoryName: post.categoryName,
+      title: post.title,
+      content: post.content,
+      thumbnailUrl: thumbnail?.fileUrl,
+      budgetMin: post.budgetMin,
+      budgetMax: post.budgetMax,
+      dueDate: post.dueDate,
+      matchScore: null,
+      recommendationReason: null,
+    };
+  }
+
+  return {
+    targetType,
+    targetId: post.talentPostId,
+    authorNickname: post.authorNickname || post.nickname,
+    categoryName: post.categoryName,
+    title: post.title,
+    content: post.content,
+    thumbnailUrl: thumbnail?.fileUrl,
+    price: post.price,
+    estimatedDuration: post.estimatedDuration,
+    durationUnit: post.durationUnit,
+    matchScore: null,
+    recommendationReason: null,
+  };
+}
+
+function renderLoading(container, label, message) {
+  setSafeHtml(container, `
+    <article class="ai-search-state is-loading">
+      <span>${escapeHtml(label)}</span>
+      <h3>검색 결과를 준비하고 있습니다.</h3>
+      <p>${escapeHtml(message)}</p>
+      <div class="ai-search-progress" aria-hidden="true"><i></i></div>
+    </article>
+  `);
+}
+
+function renderError(container, title, error) {
   const message = error?.status === 400
     ? "검색 대상과 입력 조건이 맞는지 확인해 주세요."
-    : "잠시 후 다시 검색해 주세요.";
+    : error?.message || "잠시 후 다시 검색해 주세요.";
+  setSafeHtml(container, renderSearchState("ERROR", title, message));
+}
+
+function renderSearchState(label, title, message) {
   return `
-    <div class="ai-result-empty">
-      <strong>검색 결과를 가져오지 못했습니다.</strong>
-      <span>${escapeHtml(message)}</span>
-    </div>
+    <article class="ai-search-state">
+      <span>${escapeHtml(label)}</span>
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(message)}</p>
+    </article>
   `;
+}
+
+function renderAnalysisSummary(analysis) {
+  if (!analysis) {
+    return "";
+  }
+
+  const details = [
+    targetLabel(analysis.targetType),
+    analysis.categoryName || "전체 카테고리",
+    ...conditionLabels(analysis.condition || {}),
+  ].filter(Boolean);
+
+  return `<p class="ai-result-summary">${escapeHtml(details.join(" · "))}</p>`;
+}
+
+function conditionLabels(condition) {
+  const labels = [];
+  if (condition.maxPrice != null) {
+    labels.push(`최대 ${formatMoney(Number(condition.maxPrice))}`);
+  }
+  if (condition.maxEstimatedDuration != null) {
+    labels.push(`최대 ${condition.maxEstimatedDuration}${durationUnitLabel(condition.durationUnit)}`);
+  }
+  if (condition.minBudget != null || condition.maxBudget != null) {
+    labels.push(`${formatMoney(Number(condition.minBudget || 0))} - ${formatMoney(Number(condition.maxBudget || 0))}`);
+  }
+  if (condition.dueDateFrom || condition.dueDateTo) {
+    labels.push(`${condition.dueDateFrom || "시작일 무관"} ~ ${condition.dueDateTo || "종료일 무관"}`);
+  }
+  return labels;
+}
+
+function resetConditions(form) {
+  for (const name of ["categoryId", "maxPrice", "maxEstimatedDuration", "durationUnit", "minBudget", "maxBudget", "dueDateFrom", "dueDateTo"]) {
+    setControlValue(form, name, "");
+  }
+}
+
+function setTargetType(form, targetType) {
+  const resolvedTargetType = targetType === "REQUEST" ? "REQUEST" : "TALENT";
+  form.elements.targetType.value = resolvedTargetType;
+  form.querySelectorAll('input[name="targetType"]').forEach((radio) => {
+    radio.checked = radio.value === resolvedTargetType;
+  });
+  form.querySelector('input[name="targetType"]')?.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function setControlValue(form, name, value) {
+  const control = form.elements[name];
+  if (!control || value == null) {
+    return;
+  }
+  control.value = String(value);
+}
+
+function getSelectedTargetType(form) {
+  return form.elements.targetType.value || DEFAULT_TARGET_TYPE;
+}
+
+function readQuery(form) {
+  return String(form.elements.query?.value || "").trim();
+}
+
+function focusQuery(form) {
+  form.elements.query?.focus();
+}
+
+function getResults() {
+  return document.querySelector("[data-ai-match-results]");
+}
+
+function setButtonsDisabled(buttons, disabled) {
+  buttons.forEach((button) => {
+    if (button) {
+      button.disabled = disabled;
+    }
+  });
 }
 
 function hashSearchParams() {
@@ -283,7 +601,9 @@ function optionalText(value) {
 }
 
 function optionalNumber(value) {
-  if (value == null || value === "") return null;
+  if (value == null || value === "") {
+    return null;
+  }
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
 }
@@ -309,6 +629,36 @@ function formatOptionalMoney(value) {
 }
 
 function formatBudget(candidate) {
-  if (candidate.budgetMin == null || candidate.budgetMax == null) return "예산 협의";
+  if (candidate.budgetMin == null || candidate.budgetMax == null) {
+    return "예산 협의";
+  }
   return `${formatMoney(Number(candidate.budgetMin))} - ${formatMoney(Number(candidate.budgetMax))}`;
+}
+
+function targetLabel(targetType) {
+  if (targetType === "REQUEST") {
+    return "요청글";
+  }
+  return "재능글";
+}
+
+function durationUnitLabel(unit) {
+  const labels = { DAY: "일", WEEK: "주", MONTH: "개월" };
+  return labels[unit] || "일";
+}
+
+function durationToDays(duration, unit) {
+  const value = Number(duration || 0);
+  if (unit === "WEEK") {
+    return value * 7;
+  }
+  if (unit === "MONTH") {
+    return value * 30;
+  }
+  return value;
+}
+
+function getPreviewImage(files) {
+  const imageFiles = files.filter((file) => String(file.contentType || "").startsWith("image/"));
+  return imageFiles.find((file) => file.thumbnail) || imageFiles[0] || null;
 }

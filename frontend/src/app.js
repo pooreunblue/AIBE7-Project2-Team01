@@ -100,6 +100,16 @@ function bindPageEvents() {
   bindErrorPage();
 
   document.querySelectorAll("form").forEach((form) => {
+    form.querySelector("[data-home-ai-submit]")?.addEventListener("click", () => {
+      const formData = new FormData(form);
+      const query = String(formData.get("query") || "").trim();
+      if (query) {
+        window.location.hash = `/ai-search?query=${encodeURIComponent(query)}&mode=ai`;
+      } else {
+        window.location.hash = "/ai-search?mode=ai";
+      }
+    });
+
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       if (form.matches("[data-search-form]")) {
