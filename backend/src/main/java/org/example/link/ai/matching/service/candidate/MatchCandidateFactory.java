@@ -33,7 +33,6 @@ public class MatchCandidateFactory {
                 null,
                 semanticScore,
                 score.amountScore(),
-                null,
                 score.matchScore(),
                 null
         );
@@ -63,7 +62,6 @@ public class MatchCandidateFactory {
                 request.getDueDate(),
                 semanticScore,
                 score.amountScore(),
-                null,
                 score.matchScore(),
                 null
         );

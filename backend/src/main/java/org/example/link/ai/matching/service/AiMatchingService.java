@@ -2,9 +2,9 @@ package org.example.link.ai.matching.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.link.ai.embedding.enums.EmbeddingTargetType;
-import org.example.link.ai.matching.dto.AiMatchRequest;
 import org.example.link.ai.matching.dto.AiMatchResponse;
 import org.example.link.ai.matching.dto.MatchCondition;
+import org.example.link.ai.matching.dto.SearchAiMatchRequest;
 import org.example.link.ai.matching.service.candidate.MatchCandidate;
 import org.example.link.ai.matching.service.candidate.MatchCandidateFactory;
 import org.example.link.ai.matching.service.condition.MatchConditionValidator;
@@ -47,7 +47,7 @@ public class AiMatchingService {
      * 매칭 처리 순서:
      * 조건 검증 -> 벡터 후보 검색 -> SQL 원본 조회/필터 -> 점수 계산 -> 상위 결과 반환
      */
-    public AiMatchResponse match(AiMatchRequest request) {
+    public AiMatchResponse match(SearchAiMatchRequest request) {
         MatchCondition condition = request.resolvedCondition();
         conditionValidator.validate(request.targetType(), condition);
 

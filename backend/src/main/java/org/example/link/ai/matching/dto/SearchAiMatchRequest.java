@@ -11,7 +11,7 @@ import org.example.link.ai.embedding.enums.EmbeddingTargetType;
  * 매칭 검색 요청이다.
  * query는 의미 검색에 사용하고, condition은 가격이나 카테고리 같은 정확한 조건에 사용한다.
  */
-public record AiMatchRequest(
+public record SearchAiMatchRequest(
         @NotBlank String query,
         @NotNull EmbeddingTargetType targetType,
         @Valid MatchCondition condition,

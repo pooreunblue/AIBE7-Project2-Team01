@@ -2,8 +2,8 @@
 
 - 상태: 승인됨 (Accepted)
 - 결정일: 2026-08-29
-- 적용 범위: Talent/Request 자연어 검색, 후보 필터링, Ranking, Reputation 및 추천 이유 연동
-- 구현 상태: `feature/ai-matching` 브랜치에 B Matching 기본 구현 존재, A Embedding 및 C Reputation 연동 필요
+- 적용 범위: Talent/Request 자연어 검색, 후보 필터링, Ranking 및 추천 이유 연동
+- 구현 상태: `feature/ai-matching` 브랜치에 B Matching 기본 구현 존재
 
 ## 배경
 
@@ -27,7 +27,6 @@ SQL 조건 검색만 사용하면 표현이 다른 유사 게시글을 찾기 �
 → 원본 Entity 일괄 조회
 → 상태·카테고리·금액·기간·마감 조건 검증
 → Java 서버에서 MatchScore 계산
-→ Reputation 반영
 → TOP 3~5 선정
 → LLM 추천 이유 생성
 ```
@@ -66,7 +65,7 @@ B는 Document ID 문자열을 직접 파싱하지 않고 `metadata.targetId`를 
 | --- | --- | --- |
 | `targetType` | String | `TALENT`, `REQUEST` 검색 범위 구분 |
 | `targetId` | String | 원본 Entity UUID 조회 |
-| `userId` | String | 작성자와 Reputation 연동 |
+| `userId` | String | 작성자 식별 및 응답 구성 |
 | `categoryId` | String | 카테고리 후보 정보 |
 | `status` | String | 후보 상태 정보 |
 
@@ -108,7 +107,6 @@ UUID와 enum은 문자열로 저장하며 null 값은 metadata에 넣지 않는�
 
 - semantic similarity
 - 명시적인 금액 조건이 있을 때 price/budget fit
-- C 연동 후 reputation score
 
 초기 MVP는 semantic similarity 중심의 단순한 가중치로 시작한다. 실제 검색 데이터와 테스트 결과 없이 복잡한 추천 공식을 추가하지 않는다.
 
@@ -138,16 +136,13 @@ LLM이 임의 SQL, 내부 UUID, VectorStore filter 또는 최종 Ranking을 생�
 | `MatchCandidateFilter` | 원본 데이터 기준 필수 조건 검사 |
 | `MatchRankingService` | MatchScore 계산과 정렬 |
 | `MatchConditionValidator` | targetType별 요청 조건 검증 |
-| `ReputationService` | C가 제공하는 사용자 Reputation 일괄 조회 |
-
-B는 Embedding 저장 코드를 수정하지 않고 Review Repository에도 직접 의존하지 않는다.
+B는 Embedding 저장 코드를 수정하지 않는다.
 
 ## 장애 처리
 
 - VectorStore 장애 시 정상 매칭 결과를 만들 수 없으므로 명확한 검색 실패로 처리한다.
 - 잘못되거나 누락된 개별 Vector Document는 해당 후보만 제외하고 전체 검색은 계속한다.
 - VectorStore와 원본 DB의 일시적 불일치는 SQL 원본 검증 단계에서 방어한다.
-- C Reputation 조회 실패 시 Reputation을 제외한 기본 점수로 결과를 반환한다.
 - 추천 이유 생성 실패 시 이미 계산된 후보와 점수는 유지하고 추천 이유만 생략할 수 있어야 한다.
 - AI 검색 장애가 Talent 또는 Request 원본 CRUD를 롤백시키지 않도록 한다.
 
@@ -190,7 +185,7 @@ B는 Embedding 저장 코드를 수정하지 않고 Review Repository에도 직�
 - 자연어의 의미적 유사성과 원본 데이터의 정확한 조건을 함께 반영할 수 있다.
 - stale Vector Document가 최종 추천으로 노출되는 위험을 줄인다.
 - Ranking이 Java 코드에 있어 결과를 재현하고 단위 테스트할 수 있다.
-- A Embedding, B Matching, C Reputation의 책임 경계가 명확해진다.
+- A Embedding과 B Matching의 책임 경계가 명확해진다.
 - Spring AI 표준 API와 기존 PostgreSQL 인프라를 재사용한다.
 
 ### 부정적 영향 및 비용
@@ -219,6 +214,5 @@ B는 Embedding 저장 코드를 수정하지 않고 Review Repository에도 직�
 - B Matching은 VectorStore에 Document를 저장하거나 삭제하지 않는다.
 - Metadata만 믿고 최종 후보를 반환하지 않으며 항상 원본 Entity를 검증한다.
 - 후보 원본 조회는 일괄 처리하여 N+1 조회를 만들지 않는다.
-- C Reputation은 Service/DTO 계약으로 연동하고 Review Repository를 직접 조회하지 않는다.
 - LLM이 최종 순위를 결정하게 하지 않는다.
 - Portfolio를 검색 대상에 추가하거나 Vector Database를 교체할 때는 이 ADR을 다시 검토한다.

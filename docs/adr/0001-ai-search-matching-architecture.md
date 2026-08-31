@@ -1,5 +1,7 @@
 # ADR-0001: Spring AI 기반 검색·매칭 아키텍처 도입
 
+> Review/Reputation의 MVP 연동 계획은 [ADR-003](./ADR-003-remove-review-reputation-from-mvp.md)에서 제외하기로 변경했다.
+
 - 상태: Accepted
 - 결정일: 2026-08-28
 - 대상: AI 게시글 생성, Embedding, Matching/RAG, Review/Reputation

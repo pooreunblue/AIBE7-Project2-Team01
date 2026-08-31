@@ -28,7 +28,6 @@ public record MatchCandidate(
         LocalDate dueDate,
         double semanticScore,
         Double amountScore,
-        Double reputationScore,
         double matchScore,
         String recommendationReason
 ) {

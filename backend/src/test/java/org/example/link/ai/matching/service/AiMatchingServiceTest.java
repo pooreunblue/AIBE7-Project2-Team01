@@ -1,9 +1,9 @@
 package org.example.link.ai.matching.service;
 
 import org.example.link.ai.embedding.enums.EmbeddingTargetType;
-import org.example.link.ai.matching.dto.AiMatchRequest;
 import org.example.link.ai.matching.dto.AiMatchResponse;
 import org.example.link.ai.matching.dto.MatchCondition;
+import org.example.link.ai.matching.dto.SearchAiMatchRequest;
 import org.example.link.ai.matching.service.candidate.MatchCandidateFactory;
 import org.example.link.ai.matching.service.condition.MatchConditionValidator;
 import org.example.link.ai.matching.service.filter.MatchCandidateFilter;
@@ -51,7 +51,7 @@ class AiMatchingServiceTest {
                 .thenReturn(List.of(new VectorSearchService.VectorMatch(targetId, 0.98)));
         when(talentPostRepository.findByIdIn(anyCollection())).thenReturn(List.of(inactiveTalent));
 
-        AiMatchResponse response = aiMatchingService.match(new AiMatchRequest(
+        AiMatchResponse response = aiMatchingService.match(new SearchAiMatchRequest(
                 "백엔드 개발",
                 EmbeddingTargetType.TALENT,
                 MatchCondition.empty(),
@@ -82,7 +82,7 @@ class AiMatchingServiceTest {
                 LocalDate.now(),
                 LocalDate.now().plusMonths(1)
         );
-        AiMatchResponse response = aiMatchingService.match(new AiMatchRequest(
+        AiMatchResponse response = aiMatchingService.match(new SearchAiMatchRequest(
                 "API 개발 요청",
                 EmbeddingTargetType.REQUEST,
                 condition,

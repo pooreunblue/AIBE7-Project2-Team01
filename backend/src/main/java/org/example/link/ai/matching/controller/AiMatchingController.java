@@ -3,8 +3,8 @@ package org.example.link.ai.matching.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.link.ai.matching.dto.AiMatchRequest;
 import org.example.link.ai.matching.dto.AiMatchResponse;
+import org.example.link.ai.matching.dto.SearchAiMatchRequest;
 import org.example.link.ai.matching.service.AiMatchingService;
 import org.example.link.common.response.ApiResponse;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +23,7 @@ public class AiMatchingController {
      */
     @PostMapping
     @Operation(summary = "AI 기반 재능글/요청글 매칭")
-    public ApiResponse<AiMatchResponse> match(@Valid @RequestBody AiMatchRequest request) {
+    public ApiResponse<AiMatchResponse> match(@Valid @RequestBody SearchAiMatchRequest request) {
         return ApiResponse.ok(aiMatchingService.match(request));
     }
 }
