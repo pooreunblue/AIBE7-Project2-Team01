@@ -107,13 +107,14 @@ export function categoryTabs(active = "All", href = "#/talents") {
   `;
 }
 
-export function listToolbar(label, activeCategory = "All", href = "#/talents") {
+export function listToolbar(label, activeCategory = "All", href = "#/talents", { withFilters = false } = {}) {
   const safeLabel = escapeHtml(label);
   return `
     <div class="list-toolbar">
       <form class="list-search" data-list-search>
         <input name="keyword" type="search" placeholder="${safeLabel} 검색" aria-label="${safeLabel} 검색" />
         <button type="submit">Search</button>
+        ${withFilters ? `<button class="list-filters-button" type="button" data-list-filters>Filters</button>` : ""}
       </form>
       ${categoryTabs(activeCategory, href)}
     </div>

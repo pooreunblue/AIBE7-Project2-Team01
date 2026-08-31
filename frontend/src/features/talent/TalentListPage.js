@@ -8,15 +8,8 @@ export function TalentListPage() {
           <span class="kicker">Experts</span>
           <h1>전문가/프리랜서를 찾아보세요.</h1>
         </div>
-        <div class="filter-actions">
-          <select aria-label="Sort">
-            <option>Popular first</option>
-            <option>Newest first</option>
-          </select>
-          <button type="button">Filters</button>
-        </div>
       </div>
-      ${listToolbar("전문가", "All", "#/talents")}
+      ${listToolbar("전문가", "All", "#/talents", { withFilters: true })}
       <div class="talent-grid" data-list="talents">
         <article class="talent-card">
           <div class="card-body">
