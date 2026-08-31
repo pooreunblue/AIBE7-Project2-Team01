@@ -8,6 +8,7 @@ import org.example.link.ai.matching.service.candidate.MatchCandidateFactory;
 import org.example.link.ai.matching.service.condition.MatchConditionValidator;
 import org.example.link.ai.matching.service.filter.MatchCandidateFilter;
 import org.example.link.ai.matching.service.ranking.MatchRankingService;
+import org.example.link.ai.matching.service.recommendation.RecommendationReasonService;
 import org.example.link.ai.matching.service.search.VectorSearchService;
 import org.example.link.domain.request.entity.RequestPostEntity;
 import org.example.link.domain.request.repository.RequestPostFileRepository;
@@ -25,6 +26,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,6 +38,7 @@ class AiMatchingServiceTest {
     private final RequestPostRepository requestPostRepository = mock(RequestPostRepository.class);
     private final TalentPostFileRepository talentPostFileRepository = mock(TalentPostFileRepository.class);
     private final RequestPostFileRepository requestPostFileRepository = mock(RequestPostFileRepository.class);
+    private final RecommendationReasonService recommendationReasonService = recommendationReasonService();
     private final AiMatchingService aiMatchingService = new AiMatchingService(
             vectorSearchService,
             new MatchConditionValidator(),
@@ -44,8 +48,16 @@ class AiMatchingServiceTest {
             talentPostRepository,
             requestPostRepository,
             talentPostFileRepository,
-            requestPostFileRepository
+            requestPostFileRepository,
+            recommendationReasonService
     );
+
+    private RecommendationReasonService recommendationReasonService() {
+        RecommendationReasonService service = mock(RecommendationReasonService.class);
+        when(service.addRecommendationReasons(anyString(), anyList()))
+                .thenAnswer(invocation -> invocation.getArgument(1));
+        return service;
+    }
 
     @Test
     void excludesInactiveTalentUsingSqlSourceOfTruth() {

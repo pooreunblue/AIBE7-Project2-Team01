@@ -3,7 +3,7 @@
 - 상태: 승인됨 (Accepted)
 - 결정일: 2026-08-29
 - 적용 범위: Talent/Request 자연어 검색, 후보 필터링, Ranking 및 추천 이유 연동
-- 구현 상태: `feature/ai-matching` 브랜치에 B Matching 기본 구현 존재
+- 구현 상태: `feature/ai-matching` 브랜치에 B Matching과 LLM 추천 이유 생성 구현 존재
 
 ## 배경
 
@@ -136,6 +136,7 @@ LLM이 임의 SQL, 내부 UUID, VectorStore filter 또는 최종 Ranking을 생�
 | `MatchCandidateFilter` | 원본 데이터 기준 필수 조건 검사 |
 | `MatchRankingService` | MatchScore 계산과 정렬 |
 | `MatchConditionValidator` | targetType별 요청 조건 검증 |
+| `RecommendationReasonService` | 최종 후보의 추천 이유를 한 번의 LLM 호출로 생성하고 실패 시 기존 결과 유지 |
 B는 Embedding 저장 코드를 수정하지 않는다.
 
 ## 장애 처리

@@ -107,7 +107,7 @@ B는 Portfolio Document를 검색하거나 Ranking에 직접 사용하지 않는
 - [ ] A가 Request/Portfolio 임베딩 확장
 - [ ] B가 REQUEST Matching으로 확장(Portfolio 검색 제외)
 - [ ] LLM 자연어 Query 조건 분석
-- [ ] LLM 추천 이유 생성
+- [x] LLM 추천 이유 생성
 - [ ] 기존 데이터 재임베딩과 장애 복구 방법 준비
 - [ ] 프론트 AI 채팅 연동
 

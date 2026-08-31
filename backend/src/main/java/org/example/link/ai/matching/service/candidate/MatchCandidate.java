@@ -32,4 +32,28 @@ public record MatchCandidate(
         double matchScore,
         String recommendationReason
 ) {
+    public MatchCandidate withRecommendationReason(String reason) {
+        return new MatchCandidate(
+                targetType,
+                targetId,
+                userId,
+                authorNickname,
+                authorProfileImageUrl,
+                categoryId,
+                categoryName,
+                title,
+                content,
+                thumbnailUrl,
+                price,
+                estimatedDuration,
+                durationUnit,
+                budgetMin,
+                budgetMax,
+                dueDate,
+                semanticScore,
+                amountScore,
+                matchScore,
+                reason
+        );
+    }
 }

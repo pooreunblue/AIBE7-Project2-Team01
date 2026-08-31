@@ -10,6 +10,7 @@ import org.example.link.ai.matching.service.candidate.MatchCandidateFactory;
 import org.example.link.ai.matching.service.condition.MatchConditionValidator;
 import org.example.link.ai.matching.service.filter.MatchCandidateFilter;
 import org.example.link.ai.matching.service.ranking.MatchRankingService;
+import org.example.link.ai.matching.service.recommendation.RecommendationReasonService;
 import org.example.link.ai.matching.service.search.VectorSearchService;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
@@ -48,6 +49,7 @@ public class AiMatchingService {
     private final RequestPostRepository requestPostRepository;
     private final TalentPostFileRepository talentPostFileRepository;
     private final RequestPostFileRepository requestPostFileRepository;
+    private final RecommendationReasonService recommendationReasonService;
 
     /**
      * 매칭 처리 순서:
@@ -68,8 +70,12 @@ public class AiMatchingService {
                 condition
         );
         List<MatchCandidate> rankedCandidates = rankAndLimit(candidates, request.resolvedLimit());
+        List<MatchCandidate> candidatesWithReasons = recommendationReasonService.addRecommendationReasons(
+                request.query(),
+                rankedCandidates
+        );
 
-        return new AiMatchResponse(request.query(), request.targetType(), rankedCandidates);
+        return new AiMatchResponse(request.query(), request.targetType(), candidatesWithReasons);
     }
 
     private List<MatchCandidate> findCandidates(
