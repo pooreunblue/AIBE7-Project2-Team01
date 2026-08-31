@@ -15,6 +15,7 @@ import { fetchCategories } from "./features/category/categoryApi.js";
 import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
 import { startChat } from "./features/chat/startChat.js";
 import { initCheckoutPage } from "./features/payment/CheckoutPage.js";
+import { initAiSearchPage } from "./features/search/AiSearchPage.js";
 import {
   createPortfolio,
   deletePortfolio,
@@ -30,19 +31,18 @@ import {
 import {
   createRequest,
   fetchRequest,
-  fetchRequests,
+  fetchRequestPage,
   generateRequestPost,
   getRequestFiles,
   setRequestThumbnail,
   updateRequest,
   uploadRequestFile,
 } from "./features/request/requestApi.js";
-import { analyzeAiMatchQuery, searchAiMatches } from "./features/search/matchingApi.js";
 import {
   createTalent,
   deleteTalent,
   fetchTalent,
-  fetchTalents,
+  fetchTalentPage,
   generateTalentPost,
   getTalentFiles,
   inactiveTalent,
@@ -94,7 +94,7 @@ function bindPageEvents() {
   bindRequestListPage();
   bindRequestDetailPage();
   bindRequestCreatePage();
-  bindAiMatchPage();
+  initAiSearchPage();
   initChatPage();
   initCheckoutPage();
   bindErrorPage();
@@ -113,603 +113,14 @@ function bindPageEvents() {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       if (form.matches("[data-search-form]")) {
-        const formData = new FormData(form);
-        const query = String(formData.get("query") || "").trim();
-        if (query) {
-          window.location.hash = `/ai-search?query=${encodeURIComponent(query)}`;
-        } else {
-          window.location.hash = "/ai-search";
-        }
+        const query = String(new FormData(form).get("query") || "").trim();
+        const params = new URLSearchParams();
+        if (query) params.set("query", query);
+        const suffix = params.toString() ? `?${params}` : "";
+        window.location.hash = `/ai-search${suffix}`;
       }
     });
   });
-}
-
-function bindAiMatchPage() {
-  const page = document.querySelector("[data-ai-match-page]");
-  if (!page) return;
-
-  const form = page.querySelector("[data-ai-match-form]");
-  if (!form) return;
-
-  const initialQuery = currentQueryParam("query");
-  const initialMode = currentQueryParam("mode");
-  if (initialQuery) {
-    setFormValue(form, "query", initialQuery);
-  }
-
-  const categoriesReady = loadAiMatchCategories(form);
-  bindAiMatchTargetTabs(form);
-  bindAiMatchForm(form);
-
-  if (initialQuery) {
-    categoriesReady.finally(() => {
-      if (initialMode === "ai") {
-        runAiMatchSearch(form);
-        return;
-      }
-      runTextMatchSearch(form);
-    });
-  }
-}
-
-async function loadAiMatchCategories(form) {
-  const select = form.querySelector("[data-ai-category-select]");
-  if (!select) return;
-
-  try {
-    const categories = await fetchCategories();
-    const options = categories.map((category) => {
-      return `<option value="${escapeHtml(category.categoryId)}">${escapeHtml(category.name)}</option>`;
-    });
-    setSafeHtml(select, `<option value="">전체</option>${options.join("")}`);
-  } catch {
-    setSafeHtml(select, `<option value="">전체</option>`);
-  }
-}
-
-function bindAiMatchTargetTabs(form) {
-  form.querySelectorAll("[data-ai-target]").forEach((button) => {
-    button.addEventListener("click", () => {
-      setAiMatchTarget(form, button.dataset.aiTarget);
-    });
-  });
-}
-
-function bindAiMatchForm(form) {
-  form.querySelector("[data-ai-match-ai-submit]")?.addEventListener("click", () => {
-    runAiMatchSearch(form);
-  });
-
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    runTextMatchSearch(form);
-  });
-}
-
-async function runTextMatchSearch(form) {
-  const query = String(form.elements.query?.value || "").trim();
-  if (!query) return;
-
-  const results = document.querySelector("[data-ai-match-results]");
-  const submitButton = form.querySelector("button[type='submit']");
-
-  if (submitButton) submitButton.disabled = true;
-  renderTextSearchLoading(results);
-
-  try {
-    const targetType = getSelectedAiTarget(form);
-    const posts = await fetchTextSearchPosts(targetType, query);
-    const filteredPosts = filterTextSearchPosts(posts, targetType, buildAiMatchCondition(form, targetType));
-    const postsWithFiles = await attachPostFiles(filteredPosts, targetType);
-    renderTextSearchResults(results, targetType, postsWithFiles);
-  } catch (error) {
-    renderTextSearchError(results, error);
-  } finally {
-    if (submitButton) submitButton.disabled = false;
-  }
-}
-
-async function runAiMatchSearch(form) {
-  const query = String(form.elements.query?.value || "").trim();
-  if (!query) return;
-
-  const results = document.querySelector("[data-ai-match-results]");
-  const aiButton = form.querySelector("[data-ai-match-ai-submit]");
-  const submitButton = form.querySelector("button[type='submit']");
-
-  if (aiButton) aiButton.disabled = true;
-  if (submitButton) submitButton.disabled = true;
-  renderAiMatchLoading(results);
-
-  let analysis = null;
-  try {
-    analysis = await analyzeAiMatchQuery(query);
-    applyAiMatchAnalysis(form, analysis);
-  } catch (error) {
-    renderAiMatchFallbackNotice(results, error);
-  }
-
-  try {
-    const payload = buildAiMatchPayload(form, query, analysis);
-    const response = await searchAiMatches(payload);
-    renderAiMatchResults(results, response, analysis);
-  } catch (error) {
-    renderAiMatchError(results, error);
-  } finally {
-    if (aiButton) aiButton.disabled = false;
-    if (submitButton) submitButton.disabled = false;
-  }
-}
-
-async function fetchTextSearchPosts(targetType, query) {
-  if (targetType === "REQUEST") {
-    return fetchRequests(query);
-  }
-  return fetchTalents(query);
-}
-
-function filterTextSearchPosts(posts, targetType, condition) {
-  return posts.filter((post) => {
-    if (!matchesTextCategory(post, condition.categoryId)) {
-      return false;
-    }
-    if (targetType === "REQUEST") {
-      return matchesTextRequestCondition(post, condition);
-    }
-    return matchesTextTalentCondition(post, condition);
-  });
-}
-
-function matchesTextCategory(post, categoryId) {
-  if (!categoryId) {
-    return true;
-  }
-  return String(post.categoryId || "") === String(categoryId);
-}
-
-function matchesTextTalentCondition(talent, condition) {
-  if (condition.maxPrice != null && Number(talent.price || 0) > Number(condition.maxPrice)) {
-    return false;
-  }
-
-  if (condition.maxEstimatedDuration == null) {
-    return true;
-  }
-  if (!condition.durationUnit) {
-    return true;
-  }
-
-  const candidateDays = durationToDays(talent.estimatedDuration, talent.durationUnit);
-  const maximumDays = durationToDays(condition.maxEstimatedDuration, condition.durationUnit);
-  return candidateDays <= maximumDays;
-}
-
-function matchesTextRequestCondition(request, condition) {
-  if (!overlapsTextBudget(request, condition)) {
-    return false;
-  }
-  return matchesTextDueDate(request.dueDate, condition);
-}
-
-function overlapsTextBudget(request, condition) {
-  const minBudget = condition.minBudget;
-  const maxBudget = condition.maxBudget;
-
-  if (minBudget == null && maxBudget == null) {
-    return true;
-  }
-
-  const requestMin = Number(request.budgetMin || 0);
-  const requestMax = Number(request.budgetMax || 0);
-  if (minBudget != null && requestMax < Number(minBudget)) {
-    return false;
-  }
-  if (maxBudget != null && requestMin > Number(maxBudget)) {
-    return false;
-  }
-  return true;
-}
-
-function matchesTextDueDate(dueDate, condition) {
-  if (!condition.dueDateFrom && !condition.dueDateTo) {
-    return true;
-  }
-  if (!dueDate) {
-    return false;
-  }
-  if (condition.dueDateFrom && dueDate < condition.dueDateFrom) {
-    return false;
-  }
-  if (condition.dueDateTo && dueDate > condition.dueDateTo) {
-    return false;
-  }
-  return true;
-}
-
-async function attachPostFiles(posts, targetType) {
-  return Promise.all(posts.map(async (post) => {
-    if (targetType === "REQUEST") {
-      return {
-        ...post,
-        files: await getRequestFiles(post.requestPostId).catch(() => []),
-      };
-    }
-
-    return {
-      ...post,
-      files: await getTalentFiles(post.talentPostId).catch(() => []),
-    };
-  }));
-}
-
-function applyAiMatchAnalysis(form, analysis) {
-  if (!analysis) return;
-
-  resetAiMatchConditions(form);
-  setAiMatchTarget(form, analysis.targetType);
-  setFormValue(form, "query", analysis.semanticQuery || analysis.originalQuery);
-
-  const condition = analysis.condition || {};
-  setFormValue(form, "categoryId", condition.categoryId);
-  setFormValue(form, "maxPrice", condition.maxPrice);
-  setFormValue(form, "maxEstimatedDuration", condition.maxEstimatedDuration);
-  setFormValue(form, "durationUnit", condition.durationUnit);
-  setFormValue(form, "minBudget", condition.minBudget);
-  setFormValue(form, "maxBudget", condition.maxBudget);
-  setFormValue(form, "dueDateFrom", condition.dueDateFrom);
-  setFormValue(form, "dueDateTo", condition.dueDateTo);
-}
-
-function resetAiMatchConditions(form) {
-  const conditionFieldNames = [
-    "categoryId",
-    "maxPrice",
-    "maxEstimatedDuration",
-    "durationUnit",
-    "minBudget",
-    "maxBudget",
-    "dueDateFrom",
-    "dueDateTo",
-  ];
-
-  for (const fieldName of conditionFieldNames) {
-    setFormValue(form, fieldName, "");
-  }
-}
-
-function buildAiMatchPayload(form, originalQuery, analysis) {
-  const selectedTarget = getSelectedAiTarget(form);
-  const semanticQuery = analysis?.semanticQuery || originalQuery;
-
-  return {
-    query: semanticQuery,
-    targetType: selectedTarget,
-    condition: buildAiMatchCondition(form, selectedTarget),
-    limit: 5,
-  };
-}
-
-function buildAiMatchCondition(form, targetType) {
-  const condition = {};
-  const categoryId = stringOrNull(form.elements.categoryId?.value);
-  if (categoryId) {
-    condition.categoryId = categoryId;
-  }
-
-  if (targetType === "TALENT") {
-    addPositiveNumber(condition, "maxPrice", form.elements.maxPrice?.value);
-    addPositiveInteger(condition, "maxEstimatedDuration", form.elements.maxEstimatedDuration?.value);
-    const durationUnit = stringOrNull(form.elements.durationUnit?.value);
-    if (durationUnit) {
-      condition.durationUnit = durationUnit;
-    }
-    return condition;
-  }
-
-  addPositiveNumber(condition, "minBudget", form.elements.minBudget?.value);
-  addPositiveNumber(condition, "maxBudget", form.elements.maxBudget?.value);
-  addString(condition, "dueDateFrom", form.elements.dueDateFrom?.value);
-  addString(condition, "dueDateTo", form.elements.dueDateTo?.value);
-  return condition;
-}
-
-function setAiMatchTarget(form, targetType) {
-  const resolvedTargetType = targetType === "REQUEST" ? "REQUEST" : "TALENT";
-
-  form.querySelectorAll("[data-ai-target]").forEach((button) => {
-    const active = button.dataset.aiTarget === resolvedTargetType;
-    button.classList.toggle("active", active);
-    button.setAttribute("aria-selected", String(active));
-  });
-
-  form.querySelectorAll("[data-ai-talent-filter]").forEach((element) => {
-    element.hidden = resolvedTargetType !== "TALENT";
-  });
-  form.querySelectorAll("[data-ai-request-filter]").forEach((element) => {
-    element.hidden = resolvedTargetType !== "REQUEST";
-  });
-}
-
-function getSelectedAiTarget(form) {
-  const activeButton = form.querySelector("[data-ai-target].active");
-  if (!activeButton) {
-    return "TALENT";
-  }
-  return activeButton.dataset.aiTarget || "TALENT";
-}
-
-function renderAiMatchLoading(container) {
-  if (!container) return;
-  setSafeHtml(container, `
-    <article class="ai-search-state is-loading">
-      <span>SEARCHING</span>
-      <h3>조건에 맞는 후보를 찾고 있습니다.</h3>
-      <p>검색 문장을 읽고 어울리는 게시글을 확인하는 중입니다.</p>
-      <div class="ai-search-progress" aria-hidden="true"><i></i></div>
-    </article>
-  `);
-}
-
-function renderTextSearchLoading(container) {
-  if (!container) return;
-  setSafeHtml(container, `
-    <article class="ai-search-state">
-      <span>TEXT SEARCH</span>
-      <h3>키워드로 게시글을 찾고 있습니다.</h3>
-      <p>AI 분석 없이 입력한 검색어와 선택한 필터만 사용합니다.</p>
-    </article>
-  `);
-}
-
-function renderAiMatchFallbackNotice(container, error) {
-  if (!container) return;
-  setSafeHtml(container, `
-    <article class="ai-search-state">
-      <span>ANALYSIS SKIPPED</span>
-      <h3>입력한 조건으로 바로 검색합니다.</h3>
-      <p>${escapeHtml(error.message)}</p>
-    </article>
-  `);
-}
-
-function renderTextSearchResults(container, targetType, posts) {
-  if (!container) return;
-
-  if (!posts.length) {
-    setSafeHtml(container, `
-      <article class="ai-search-state">
-        <span>EMPTY</span>
-        <h3>텍스트 검색 결과가 없습니다.</h3>
-        <p>검색어를 줄이거나 카테고리, 가격, 예산 조건을 넓혀보세요.</p>
-      </article>
-    `);
-    return;
-  }
-
-  const cards = posts.map((post) => {
-    if (targetType === "REQUEST") {
-      return renderRequestCard(post);
-    }
-    return renderTalentCard(post);
-  }).join("");
-
-  setSafeHtml(container, `
-    <div class="ai-result-header">
-      <div>
-        <span class="kicker">TEXT</span>
-        <h2>${escapeHtml(aiTargetLabel(targetType))} 텍스트 검색 결과</h2>
-        <p class="ai-result-summary">AI 분석 없이 키워드 검색 결과를 표시합니다.</p>
-      </div>
-      <strong>${posts.length}개</strong>
-    </div>
-    <div class="ai-result-grid">
-      ${cards}
-    </div>
-  `);
-}
-
-function renderAiMatchResults(container, response, analysis = null) {
-  if (!container) return;
-
-  const candidates = response?.candidates || [];
-  if (!candidates.length) {
-    setSafeHtml(container, `
-      <article class="ai-search-state">
-        <span>EMPTY</span>
-        <h3>조건에 맞는 결과가 없습니다.</h3>
-        <p>검색어를 조금 넓히거나 가격, 예산, 기간 조건을 낮춰보세요.</p>
-      </article>
-    `);
-    return;
-  }
-
-  const title = aiTargetLabel(response.targetType);
-  const analysisSummary = renderAiMatchAnalysisSummary(analysis);
-  const cards = candidates.map(renderAiMatchCandidate).join("");
-  setSafeHtml(container, `
-    <div class="ai-result-header">
-      <div>
-        <span class="kicker">${escapeHtml(response.targetType || "MATCH")}</span>
-        <h2>${escapeHtml(title)} 추천 결과</h2>
-        ${analysisSummary}
-      </div>
-      <strong>${candidates.length}개</strong>
-    </div>
-    <div class="ai-result-grid">
-      ${cards}
-    </div>
-  `);
-}
-
-function renderAiMatchCandidate(candidate) {
-  const targetId = candidate.targetId || "";
-  const isTalent = candidate.targetType === "TALENT";
-  const href = isTalent ? `#/talent/${targetId}` : `#/request/${targetId}`;
-  const amountLabel = isTalent ? formatOptionalMoney(candidate.price) : formatCandidateBudget(candidate);
-  const durationLabel = isTalent ? formatCandidateDuration(candidate) : formatCandidateDueDate(candidate);
-  const reason = candidate.recommendationReason || "";
-
-  return `
-    <article class="ai-result-card">
-      ${candidate.thumbnailUrl ? `
-        <a class="visual has-image" href="${escapeHtml(safeUrl(href))}" aria-label="${escapeHtml(candidate.title || "추천 결과")} 상세">
-          <img src="${escapeHtml(safeImageUrl(candidate.thumbnailUrl))}" alt="" />
-          <span>${escapeHtml(candidate.categoryName || aiTargetLabel(candidate.targetType))}</span>
-        </a>
-      ` : ""}
-      <div class="card-body">
-        <div class="meta-line">
-          <span>${escapeHtml(candidate.authorNickname || "작성자")}</span>
-          <strong>${Math.round(Number(candidate.matchScore || 0) * 100)}%</strong>
-        </div>
-        <h3><a href="${escapeHtml(safeUrl(href))}">${escapeHtml(candidate.title || "제목 없음")}</a></h3>
-        <p>${escapeHtml(markdownExcerpt(candidate.content))}</p>
-        <div class="chip-row">
-          <span>${escapeHtml(candidate.categoryName || "카테고리")}</span>
-          <span>${escapeHtml(amountLabel)}</span>
-          <span>${escapeHtml(durationLabel)}</span>
-        </div>
-        ${reason ? `<p class="ai-recommendation-reason">${escapeHtml(reason)}</p>` : ""}
-        <div class="card-action">
-          <strong>${Math.round(Number(candidate.semanticScore || 0) * 100)}% 유사</strong>
-          <a class="button quiet" href="${escapeHtml(safeUrl(href))}">상세보기</a>
-        </div>
-      </div>
-    </article>
-  `;
-}
-
-function renderAiMatchError(container, error) {
-  if (!container) return;
-  setSafeHtml(container, `
-    <article class="ai-search-state">
-      <span>ERROR</span>
-      <h3>AI 매칭 결과를 불러오지 못했습니다.</h3>
-      <p>${escapeHtml(error.message)}</p>
-    </article>
-  `);
-}
-
-function renderTextSearchError(container, error) {
-  if (!container) return;
-  setSafeHtml(container, `
-    <article class="ai-search-state">
-      <span>ERROR</span>
-      <h3>텍스트 검색 결과를 불러오지 못했습니다.</h3>
-      <p>${escapeHtml(error.message)}</p>
-    </article>
-  `);
-}
-
-function renderAiMatchAnalysisSummary(analysis) {
-  if (!analysis) {
-    return "";
-  }
-
-  const targetLabel = aiTargetLabel(analysis.targetType);
-  const conditionLabels = aiConditionLabels(analysis.condition || {});
-  const categoryLabel = analysis.categoryName || "전체 카테고리";
-  const details = [targetLabel, categoryLabel, ...conditionLabels].filter(Boolean);
-
-  return `<p class="ai-result-summary">${escapeHtml(details.join(" · "))}</p>`;
-}
-
-function aiTargetLabel(targetType) {
-  if (targetType === "REQUEST") {
-    return "요청글 찾기";
-  }
-  return "재능글 찾기";
-}
-
-function aiConditionLabels(condition) {
-  const labels = [];
-  if (condition.maxPrice != null) {
-    labels.push(`최대 ${formatMoney(Number(condition.maxPrice))}`);
-  }
-  if (condition.maxEstimatedDuration != null) {
-    labels.push(`최대 ${condition.maxEstimatedDuration}${durationUnitLabel(condition.durationUnit)}`);
-  }
-  if (condition.minBudget != null || condition.maxBudget != null) {
-    labels.push(`${formatMoney(Number(condition.minBudget || 0))} - ${formatMoney(Number(condition.maxBudget || 0))}`);
-  }
-  if (condition.dueDateFrom || condition.dueDateTo) {
-    labels.push(`${condition.dueDateFrom || "시작일 무관"} ~ ${condition.dueDateTo || "종료일 무관"}`);
-  }
-  return labels;
-}
-
-function formatCandidateBudget(candidate) {
-  return `${formatMoney(Number(candidate.budgetMin || 0))} - ${formatMoney(Number(candidate.budgetMax || 0))}`;
-}
-
-function formatCandidateDuration(candidate) {
-  if (!candidate.estimatedDuration) {
-    return "기간 협의";
-  }
-  return `${candidate.estimatedDuration}${durationUnitLabel(candidate.durationUnit)}`;
-}
-
-function formatCandidateDueDate(candidate) {
-  if (!candidate.dueDate) {
-    return "일정 협의";
-  }
-  return `마감 ${candidate.dueDate}`;
-}
-
-function currentQueryParam(name) {
-  const query = window.location.hash.split("?")[1] || "";
-  return new URLSearchParams(query).get(name) || "";
-}
-
-function addPositiveNumber(target, key, rawValue) {
-  const normalized = stringOrNull(rawValue);
-  if (!normalized) {
-    return;
-  }
-
-  const value = Number(normalized);
-  if (Number.isFinite(value) && value >= 0) {
-    target[key] = value;
-  }
-}
-
-function addPositiveInteger(target, key, rawValue) {
-  const normalized = stringOrNull(rawValue);
-  if (!normalized) {
-    return;
-  }
-
-  const value = Number(normalized);
-  if (Number.isInteger(value) && value > 0) {
-    target[key] = value;
-  }
-}
-
-function addString(target, key, rawValue) {
-  const value = stringOrNull(rawValue);
-  if (value) {
-    target[key] = value;
-  }
-}
-
-function stringOrNull(value) {
-  const normalized = String(value || "").trim();
-  if (!normalized) {
-    return null;
-  }
-  return normalized;
-}
-
-function durationToDays(duration, unit) {
-  const value = Number(duration || 0);
-  if (unit === "WEEK") {
-    return value * 7;
-  }
-  if (unit === "MONTH") {
-    return value * 30;
-  }
-  return value;
 }
 
 // 상세 페이지처럼 스켈레톤을 먼저 그린 뒤 데이터 로딩이 실패했을 때,
@@ -940,13 +351,39 @@ function bindRequestListPage() {
   if (!list) return;
 
   const searchForm = document.querySelector("[data-list-search]");
-  loadRequestList("", currentCategoryId());
+  const loadMoreButton = document.querySelector("[data-request-load-more]");
+  const categoryId = currentCategoryId();
+  let keyword = "";
+  let nextPage = 0;
+  let loading = false;
+
+  const loadPage = async (reset = false) => {
+    if (loading) return;
+    if (reset) nextPage = 0;
+
+    loading = true;
+    if (loadMoreButton) loadMoreButton.disabled = true;
+    try {
+      const page = await loadRequestList(keyword, categoryId, nextPage, reset);
+      nextPage = Number(page.page || 0) + 1;
+      if (loadMoreButton) loadMoreButton.hidden = Boolean(page.last);
+    } catch {
+      if (loadMoreButton) loadMoreButton.hidden = true;
+    } finally {
+      loading = false;
+      if (loadMoreButton) loadMoreButton.disabled = false;
+    }
+  };
+
+  loadPage(true);
 
   searchForm?.addEventListener("submit", (event) => {
     event.preventDefault();
-    const keyword = new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "";
-    loadRequestList(String(keyword), currentCategoryId());
+    keyword = String(new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "");
+    loadPage(true);
   });
+
+  loadMoreButton?.addEventListener("click", () => loadPage(false));
 }
 
 function bindRequestDetailPage() {
@@ -1104,13 +541,13 @@ async function loadRequestEditForm(form, requestPostId) {
   }
 }
 
-async function loadRequestList(keyword = "", categoryId = "") {
+async function loadRequestList(keyword = "", categoryId = "", pageNumber = 0, reset = true) {
   const list = document.querySelector("[data-request-list]");
-  if (!list) return;
+  if (!list) return { content: [], page: 0, last: true };
 
   try {
-    const requests = await fetchRequests(keyword);
-    const filteredRequests = filterByCategory(requests, categoryId);
+    const page = await fetchRequestPage({ keyword, page: pageNumber });
+    const filteredRequests = filterByCategory(page.content, categoryId);
     const requestsWithFiles = await Promise.all(
       filteredRequests.map(async (request) => ({
         ...request,
@@ -1118,11 +555,18 @@ async function loadRequestList(keyword = "", categoryId = "") {
       }))
     );
 
-    setSafeHtml(list, requestsWithFiles.length
-      ? requestsWithFiles.map(renderRequestCard).join("")
-      : `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 의뢰글이 없습니다.</h3><p>첫 의뢰글을 작성해 보세요.</p></div></article>`);
+    const cards = requestsWithFiles.map(renderRequestCard).join("");
+    if (reset) {
+      setSafeHtml(list, cards || `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 의뢰글이 없습니다.</h3><p>검색 조건을 조정하거나 첫 의뢰글을 작성해 보세요.</p></div></article>`);
+    } else if (cards) {
+      appendSafeHtml(list, "beforeend", cards);
+    }
+    return page;
   } catch (error) {
-    setSafeHtml(list, `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">ERROR</span><h3>의뢰글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`);
+    if (reset) {
+      setSafeHtml(list, `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">ERROR</span><h3>의뢰글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`);
+    }
+    throw error;
   }
 }
 
@@ -1274,13 +718,39 @@ function bindTalentListPage() {
   if (!list) return;
 
   const searchForm = document.querySelector("[data-list-search]");
-  loadTalentList("", currentCategoryId());
+  const loadMoreButton = document.querySelector("[data-talent-load-more]");
+  const categoryId = currentCategoryId();
+  let keyword = "";
+  let nextPage = 0;
+  let loading = false;
+
+  const loadPage = async (reset = false) => {
+    if (loading) return;
+    if (reset) nextPage = 0;
+
+    loading = true;
+    if (loadMoreButton) loadMoreButton.disabled = true;
+    try {
+      const page = await loadTalentList(keyword, categoryId, nextPage, reset);
+      nextPage = Number(page.page || 0) + 1;
+      if (loadMoreButton) loadMoreButton.hidden = Boolean(page.last);
+    } catch {
+      if (loadMoreButton) loadMoreButton.hidden = true;
+    } finally {
+      loading = false;
+      if (loadMoreButton) loadMoreButton.disabled = false;
+    }
+  };
+
+  loadPage(true);
 
   searchForm?.addEventListener("submit", (event) => {
     event.preventDefault();
-    const keyword = new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "";
-    loadTalentList(String(keyword), currentCategoryId());
+    keyword = String(new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "");
+    loadPage(true);
   });
+
+  loadMoreButton?.addEventListener("click", () => loadPage(false));
 }
 
 function bindTalentDetailPage() {
@@ -1408,13 +878,13 @@ function bindTalentCreatePage() {
   });
 }
 
-async function loadTalentList(keyword = "", categoryId = "") {
+async function loadTalentList(keyword = "", categoryId = "", pageNumber = 0, reset = true) {
   const list = document.querySelector("[data-list='talents']");
-  if (!list) return;
+  if (!list) return { content: [], page: 0, last: true };
 
   try {
-    const talents = await fetchTalents(keyword);
-    const filteredTalents = filterByCategory(talents, categoryId);
+    const page = await fetchTalentPage({ keyword, page: pageNumber });
+    const filteredTalents = filterByCategory(page.content, categoryId);
     const talentsWithFiles = await Promise.all(
       filteredTalents.map(async (talent) => ({
         ...talent,
@@ -1422,11 +892,18 @@ async function loadTalentList(keyword = "", categoryId = "") {
       }))
     );
 
-    setSafeHtml(list, talentsWithFiles.length
-      ? talentsWithFiles.map(renderTalentCard).join("")
-      : `<article class="talent-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 재능글이 없습니다.</h3><p>첫 재능글을 작성해 보세요.</p></div></article>`);
+    const cards = talentsWithFiles.map(renderTalentCard).join("");
+    if (reset) {
+      setSafeHtml(list, cards || `<article class="talent-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 재능글이 없습니다.</h3><p>검색 조건을 조정하거나 첫 재능글을 작성해 보세요.</p></div></article>`);
+    } else if (cards) {
+      appendSafeHtml(list, "beforeend", cards);
+    }
+    return page;
   } catch (error) {
-    setSafeHtml(list, `<article class="talent-card"><div class="card-body"><span class="kicker">ERROR</span><h3>재능글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`);
+    if (reset) {
+      setSafeHtml(list, `<article class="talent-card"><div class="card-body"><span class="kicker">ERROR</span><h3>재능글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`);
+    }
+    throw error;
   }
 }
 

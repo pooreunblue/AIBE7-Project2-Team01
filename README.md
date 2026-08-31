@@ -91,6 +91,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 신규 로컬 DB를 직접 구성할 때는 [초기 스키마](./docs/schema.sql)를 참고합니다. 기존 DB에는 테이블 삭제 없이 필요한 마이그레이션만 적용해야 합니다.
 
+기존 `vector_store.id`가 `UUID`로 생성된 환경은 Spring AI의 `{TARGET_TYPE}:{UUID}` Document ID를 저장할 수 없습니다. 이 경우 [VectorStore ID 마이그레이션](./docs/migrations/20260831_vector_store_id_to_text.sql)을 한 번 적용합니다.
+
 ### 2. 환경변수 설정
 
 ```bash

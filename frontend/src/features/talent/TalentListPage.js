@@ -27,7 +27,7 @@ export function TalentListPage() {
         </article>
       </div>
       <div class="center-action">
-        <button class="button secondary" type="button" disabled>Load More</button>
+        <button class="button secondary" type="button" data-talent-load-more hidden>더 보기</button>
       </div>
       <a class="floating-create-button" href="#/talent-new" aria-label="새 재능글 작성">
         <span aria-hidden="true">+</span>
