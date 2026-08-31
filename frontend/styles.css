@@ -220,6 +220,40 @@ a.button {
   text-align: center;
 }
 
+.error-page {
+  gap: 20px;
+}
+
+.error-code {
+  margin: 0;
+  font-size: clamp(72px, 16vw, 140px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--line);
+}
+
+.error-detail {
+  max-width: 520px;
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
 .page-title {
   display: grid;
   justify-items: center;
