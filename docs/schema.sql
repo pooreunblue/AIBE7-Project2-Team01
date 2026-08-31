@@ -156,7 +156,8 @@ CREATE TABLE chat_participants (
     chat_participant_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     chat_room_id         UUID NOT NULL REFERENCES chat_rooms (chat_room_id),
     user_id              UUID NOT NULL REFERENCES users (user_id),
-    joined_at            TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
+    joined_at            TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now(),
+    CONSTRAINT uk_chat_participant_room_user UNIQUE (chat_room_id, user_id)
 );
 
 -- =========================================================
@@ -174,8 +175,24 @@ CREATE TABLE trades (
     paid_at         TIMESTAMP(6) WITH TIME ZONE,
     completed_at    TIMESTAMP(6) WITH TIME ZONE,
     cancelled_at    TIMESTAMP(6) WITH TIME ZONE,
-    created_at      TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
+    created_at      TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now(),
+    CONSTRAINT ck_trade_single_post CHECK (
+        (request_post_id IS NOT NULL AND talent_post_id IS NULL)
+        OR (request_post_id IS NULL AND talent_post_id IS NOT NULL)
+    ),
+    CONSTRAINT ck_trade_positive_amount CHECK (amount > 0),
+    CONSTRAINT ck_trade_distinct_parties CHECK (payer_id <> payee_id)
 );
+
+-- 같은 채팅방에서는 PENDING 또는 PAID 거래를 동시에 하나만 유지한다.
+CREATE UNIQUE INDEX uk_trade_active_chat_room
+    ON trades (chat_room_id)
+    WHERE chat_room_id IS NOT NULL AND status IN ('PENDING', 'PAID');
+
+-- 1회성 요청글은 취소되지 않은 결제 거래를 하나만 가질 수 있다.
+CREATE UNIQUE INDEX uk_trade_paid_request_post
+    ON trades (request_post_id)
+    WHERE request_post_id IS NOT NULL AND status IN ('PAID', 'COMPLETED');
 
 -- =========================================================
 -- CHAT_MESSAGES
@@ -202,5 +219,6 @@ CREATE TABLE wallet_transactions (
     amount                 NUMERIC(19, 2) NOT NULL,
     balance_after          NUMERIC(19, 2) NOT NULL,
     description            VARCHAR(255),
-    created_at             TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now()
+    created_at             TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT now(),
+    CONSTRAINT uk_wallet_transaction_trade_type UNIQUE (trade_id, transaction_type)
 );
