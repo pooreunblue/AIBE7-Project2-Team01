@@ -4,7 +4,7 @@
 
 이 문서는 Google Gemini Embedding과 PostgreSQL pgvector를 이용한 벡터 검색 및 RAG 기능을 개발하기 전에 필요한 환경설정을 안내한다.
 
-현재 단계에서는 Spring AI 자동 구성만 사용하며 AI 매칭, RAG, 리뷰 분석 등의 비즈니스 로직은 포함하지 않는다.
+현재 프로젝트에는 AI 게시글 생성, Talent/Request 임베딩 lifecycle, Hybrid Matching과 LLM 추천 이유가 구현되어 있다. 이 문서는 해당 기능의 비즈니스 로직보다 실행에 필요한 모델·VectorStore 환경설정을 중심으로 설명한다.
 
 ## 현재 구성
 

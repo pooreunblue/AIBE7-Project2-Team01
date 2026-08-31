@@ -67,7 +67,7 @@
 
 | Method | URL | 인증 | 설명 |
 | --- | --- | --- | --- |
-| GET | `/talents` | 공개 | 재능글 전체 목록 조회 |
+| GET | `/talents?page=&size=&sort=` | 공개 | 재능글 페이지 목록 조회. 기본 size 20, `createdAt,DESC` |
 | GET | `/talents/{talentPostId}` | 공개 | 재능글 상세 조회 |
 | GET | `/talents/search?keyword=&page=&size=&sort=` | 공개 | 키워드 및 페이지 검색. 기본 size 20 |
 | POST | `/talents` | 필요 | 재능글 등록 |
@@ -93,7 +93,7 @@
 
 | Method | URL | 인증 | 설명 |
 | --- | --- | --- | --- |
-| GET | `/requests` | 공개 | 요청글 전체 목록 조회 |
+| GET | `/requests?page=&size=&sort=` | 공개 | 요청글 페이지 목록 조회. 기본 size 20, `createdAt,DESC` |
 | GET | `/requests/{requestPostId}` | 공개 | 요청글 상세 조회 |
 | GET | `/requests/search?keyword=&page=&size=&sort=` | 공개 | 키워드 및 페이지 검색. 기본 size 20 |
 | POST | `/requests` | 필요 | 요청글 등록 |

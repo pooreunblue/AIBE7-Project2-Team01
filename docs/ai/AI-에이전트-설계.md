@@ -1,9 +1,9 @@
-# AGENTS.md
+# AI 에이전트 개발 원칙
 
 > Philosophy:
 > Think first. Change little. Verify everything.
 
-This document defines the default engineering behavior for AI coding agents working in this repository.
+이 문서는 저장소에서 작업하는 AI 코딩 에이전트의 기본 개발 원칙을 정의한다.
 
 ---
 
