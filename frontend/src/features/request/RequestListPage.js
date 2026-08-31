@@ -27,7 +27,7 @@ export function RequestListPage() {
         </article>
       </div>
       <div class="center-action">
-        <button class="button secondary" type="button" disabled>Load More</button>
+        <button class="button secondary" type="button" data-request-load-more hidden>더 보기</button>
       </div>
       <a class="floating-create-button" href="#/request-new" aria-label="새 요청글 작성">
         <span aria-hidden="true">+</span>

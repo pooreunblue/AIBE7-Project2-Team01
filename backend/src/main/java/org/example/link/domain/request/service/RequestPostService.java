@@ -3,6 +3,7 @@ package org.example.link.domain.request.service;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
+import org.example.link.ai.embedding.event.EmbeddingEventPublisher;
 import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
@@ -20,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.AccessDeniedException;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +29,7 @@ public class RequestPostService {
     private final RequestPostRepository requestPostRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final EmbeddingEventPublisher embeddingEventPublisher;
 
     @Transactional
     public RequestPostEntity create(RequestPostRequestDto requestPostRequestDto, CustomUserDetails userDetails) {
@@ -36,11 +37,14 @@ public class RequestPostService {
         UserEntity user = getUser(userId);
         CategoryEntity category = getCategory(requestPostRequestDto);
         RequestPostEntity requestPostEntity = createRequestPost(user, category, requestPostRequestDto);
-        return requestPostRepository.save(requestPostEntity);
+        RequestPostEntity saved = requestPostRepository.save(requestPostEntity);
+        embeddingEventPublisher.saveRequest(saved);
+        return saved;
     }
 
-    public List<RequestPostEntity> readAll() {
-        return requestPostRepository.findAll();
+    @Transactional(readOnly = true)
+    public Page<RequestPostEntity> readAll(Pageable pageable) {
+        return requestPostRepository.findAll(pageable);
     }
 
     public RequestPostEntity readOne(UUID requestPostId) {
@@ -61,27 +65,31 @@ public class RequestPostService {
             RequestPostRequestDto requestPostRequestDto,
             CustomUserDetails userDetails) throws AccessDeniedException {
         UUID userId = getUserId(userDetails);
-        RequestPostEntity requestPostEntity = getRequestPost(requestPostId);
+        RequestPostEntity requestPostEntity = getRequestPostForUpdate(requestPostId);
         validateAuth(requestPostEntity, userId);
         CategoryEntity category = getCategory(requestPostRequestDto);
         updateRequestPost(requestPostRequestDto, requestPostEntity, category);
+        embeddingEventPublisher.replaceRequest(requestPostEntity);
         return requestPostEntity;
     }
 
     @Transactional
     public void delete(UUID requestPostId, CustomUserDetails userDetails) throws AccessDeniedException {
         UUID userId = getUserId(userDetails);
-        RequestPostEntity requestPostEntity = getRequestPost(requestPostId);
+        RequestPostEntity requestPostEntity = getRequestPostForUpdate(requestPostId);
         validateAuth(requestPostEntity, userId);
+        validateOpenStatus(requestPostEntity);
         requestPostRepository.delete(requestPostEntity);
+        embeddingEventPublisher.deleteRequest(requestPostId);
     }
 
     @Transactional
     public RequestPostEntity closeStatus(UUID requestPostId, CustomUserDetails userDetails) throws AccessDeniedException {
         UUID userId = getUserId(userDetails);
-        RequestPostEntity requestPostEntity = getRequestPost(requestPostId);
+        RequestPostEntity requestPostEntity = getRequestPostForUpdate(requestPostId);
         validateAuth(requestPostEntity, userId);
         requestPostEntity.closeStatus();
+        embeddingEventPublisher.deleteRequest(requestPostId);
         return requestPostEntity;
     }
 
@@ -116,6 +124,18 @@ public class RequestPostService {
         return requestPostRepository.findById(requestPostId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
     }
+
+    private RequestPostEntity getRequestPostForUpdate(UUID requestPostId) {
+        return requestPostRepository.findByIdForUpdate(requestPostId)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+    }
+
+    private void validateOpenStatus(RequestPostEntity requestPostEntity) {
+        if (requestPostEntity.getStatus() != RequestPostStatus.OPEN) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST_POST_STATUS);
+        }
+    }
+
     private void validateAuth(RequestPostEntity requestPostEntity, UUID userId) throws AccessDeniedException {
         if (!requestPostEntity.getUser().getId().equals(userId)) {
             throw new CustomException(ErrorCode.POST_ACCESS_DENIED);

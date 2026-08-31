@@ -1,3 +1,5 @@
+import { escapeHtml, safeUrl } from "../security/xss.js";
+
 export function formatMoney(value) {
   return `${value.toLocaleString("ko-KR")}원`;
 }
@@ -7,7 +9,8 @@ export function shell(content, route, { isLoggedIn = false } = {}) {
     ["home", "⌂", "Home"],
     ["chat", "□", "Chat"],
   ];
-  const headerTitle = getHeaderTitle(route);
+  const headerTitle = escapeHtml(getHeaderTitle(route));
+  const safeRoute = escapeHtml(route);
 
   return `
     <header class="site-header">
@@ -18,7 +21,7 @@ export function shell(content, route, { isLoggedIn = false } = {}) {
       </nav>
     </header>
     <main class="page-shell">
-      <section class="route-view" data-route="${route}">
+      <section class="route-view" data-route="${safeRoute}">
         ${content}
       </section>
     </main>
@@ -41,6 +44,8 @@ function getHeaderTitle(route) {
     portfolios: "Portfolio",
     "portfolio-new": getPortfolioWriteTitle(),
     checkout: "Payment",
+    "not-found": "Not Found",
+    error: "Error",
   };
 
   return titles[route] || "TalentPulse";
@@ -89,22 +94,25 @@ export function footer() {
 }
 
 export function button(label, href, variant = "primary") {
-  return `<a class="button ${variant}" href="${href}">${label}</a>`;
+  const allowedVariant = ["primary", "quiet"].includes(variant) ? variant : "primary";
+  return `<a class="button ${allowedVariant}" href="${escapeHtml(safeUrl(href))}">${escapeHtml(label)}</a>`;
 }
 
 export function categoryTabs(active = "All", href = "#/talents") {
+  const safeHref = escapeHtml(safeUrl(href));
   return `
-    <div class="tab-row" role="list" data-category-tabs data-category-active="${active}" data-category-href="${href}">
-      <a class="tab active" href="${href}">All</a>
+    <div class="tab-row" role="list" data-category-tabs data-category-active="${escapeHtml(active)}" data-category-href="${safeHref}">
+      <a class="tab active" href="${safeHref}">All</a>
     </div>
   `;
 }
 
 export function listToolbar(label, activeCategory = "All", href = "#/talents") {
+  const safeLabel = escapeHtml(label);
   return `
     <div class="list-toolbar">
       <form class="list-search" data-list-search>
-        <input name="keyword" type="search" placeholder="${label} 검색" aria-label="${label} 검색" />
+        <input name="keyword" type="search" placeholder="${safeLabel} 검색" aria-label="${safeLabel} 검색" />
         <button type="submit">Search</button>
       </form>
       ${categoryTabs(activeCategory, href)}
@@ -155,7 +163,7 @@ export function requestCard(request) {
 export function formField(label, control) {
   return `
     <label class="field">
-      <span>${label}</span>
+      <span>${escapeHtml(label)}</span>
       ${control}
     </label>
   `;
@@ -164,9 +172,9 @@ export function formField(label, control) {
 export function pageTitle(kicker, title, copy = "") {
   return `
     <div class="page-title">
-      <span class="kicker">${kicker}</span>
-      <h1>${title}</h1>
-      ${copy ? `<p>${copy}</p>` : ""}
+      <span class="kicker">${escapeHtml(kicker)}</span>
+      <h1>${escapeHtml(title)}</h1>
+      ${copy ? `<p>${escapeHtml(copy)}</p>` : ""}
     </div>
   `;
 }

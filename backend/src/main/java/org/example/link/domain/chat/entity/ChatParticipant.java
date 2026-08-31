@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,7 +26,13 @@ import java.time.Instant;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "chat_participants")
+@Table(
+        name = "chat_participants",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_chat_participant_room_user",
+                columnNames = {"chat_room_id", "user_id"}
+        )
+)
 public class ChatParticipant {
 
     @Id

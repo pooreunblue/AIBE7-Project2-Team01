@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.link.common.exception.CustomException;
+import org.example.link.common.exception.ErrorCode;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -75,17 +77,28 @@ public class TradeEntity {
     }
 
     public void paid() {
+        requireStatus(TradeStatus.PENDING);
         this.status = TradeStatus.PAID;
         this.paidAt = Instant.now();
     }
 
     public void complete() {
+        requireStatus(TradeStatus.PAID);
         this.status = TradeStatus.COMPLETED;
         this.completedAt = Instant.now();
     }
 
     public void cancel() {
+        if (this.status != TradeStatus.PENDING && this.status != TradeStatus.PAID) {
+            throw new CustomException(ErrorCode.INVALID_TRADE_STATUS);
+        }
         this.status = TradeStatus.CANCELLED;
         this.cancelledAt = Instant.now();
+    }
+
+    private void requireStatus(TradeStatus expectedStatus) {
+        if (this.status != expectedStatus) {
+            throw new CustomException(ErrorCode.INVALID_TRADE_STATUS);
+        }
     }
 }

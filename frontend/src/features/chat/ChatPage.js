@@ -11,6 +11,12 @@ import { fetchRequest } from "../request/requestApi.js";
 import { fetchTalent } from "../talent/talentApi.js";
 import { createTrade, fetchMyTrades, payTrade } from "../trade/tradeApi.js";
 import { fetchWallet } from "../wallet/walletApi.js";
+import {
+  appendSafeHtml,
+  escapeHtml,
+  safeImageUrl,
+  setSafeHtml,
+} from "../../shared/security/xss.js";
 
 let activeClient = null;
 
@@ -60,17 +66,17 @@ async function loadRoomList(listEl, roomId, panelEl) {
   try {
     rooms = await fetchMyChatRooms();
   } catch (error) {
-    listEl.innerHTML = `<p>채팅방 목록을 불러오지 못했습니다: ${escapeHtml(error.message)}</p>`;
+    setSafeHtml(listEl, `<p>채팅방 목록을 불러오지 못했습니다: ${escapeHtml(error.message)}</p>`);
     return;
   }
 
-  listEl.innerHTML = renderRoomList(rooms, roomId);
+  setSafeHtml(listEl, renderRoomList(rooms, roomId));
 
   if (!roomId) return;
 
   const room = rooms.find((item) => item.chatRoomId === roomId);
   if (!room) {
-    panelEl.innerHTML = `<p>채팅방을 찾을 수 없거나 접근 권한이 없습니다.</p>`;
+    setSafeHtml(panelEl, `<p>채팅방을 찾을 수 없거나 접근 권한이 없습니다.</p>`);
     return;
   }
 
@@ -127,7 +133,7 @@ async function openRoom(panelEl, room) {
   );
   const roomContext = { ...room, hasActiveTrade: Boolean(activeTrade) };
 
-  panelEl.innerHTML = panelTemplate(room, { canRequestTrade, canSetRequestAmount });
+  setSafeHtml(panelEl, panelTemplate(room, { canRequestTrade, canSetRequestAmount }));
   const streamEl = panelEl.querySelector("[data-message-stream]");
   const formEl = panelEl.querySelector("[data-compose-form]");
 
@@ -152,11 +158,11 @@ async function openRoom(panelEl, room) {
       if (isTradePaid(message)) {
         updateTradeCardStatus(panelEl, message.trade, "결제 완료");
       }
-      streamEl.insertAdjacentHTML("beforeend", renderBubble(message, currentUserId, roomContext));
+      appendSafeHtml(streamEl, "beforeend", renderBubble(message, currentUserId, roomContext));
       streamEl.scrollTop = streamEl.scrollHeight;
     },
     onError: () => {
-      streamEl.insertAdjacentHTML("beforeend", `<p>채팅 연결에 문제가 발생했습니다.</p>`);
+      appendSafeHtml(streamEl, "beforeend", `<p>채팅 연결에 문제가 발생했습니다.</p>`);
     },
   });
 
@@ -272,12 +278,12 @@ async function loadHistory(streamEl, room, currentUserId, initialHistory = null)
   try {
     const history = initialHistory || await fetchChatMessages(room.chatRoomId);
     const ascending = [...history].reverse();
-    streamEl.innerHTML = ascending.length
+    setSafeHtml(streamEl, ascending.length
       ? ascending.map((message) => renderBubble(message, currentUserId, room)).join("")
-      : `<p>아직 메시지가 없습니다. 첫 메시지를 보내보세요.</p>`;
+      : `<p>아직 메시지가 없습니다. 첫 메시지를 보내보세요.</p>`);
     streamEl.scrollTop = streamEl.scrollHeight;
   } catch (error) {
-    streamEl.innerHTML = `<p>메시지 이력을 불러오지 못했습니다: ${escapeHtml(error.message)}</p>`;
+    setSafeHtml(streamEl, `<p>메시지 이력을 불러오지 못했습니다: ${escapeHtml(error.message)}</p>`);
   }
 }
 
@@ -326,9 +332,13 @@ function renderBubble(message, currentUserId, room) {
   }
 
   if (message.messageType === "IMAGE") {
-    const src = escapeHtml(message.content);
-    return `<a class="bubble bubble-image ${mineClass}" href="${src}" target="_blank" rel="noopener">
-      <img src="${src}" alt="첨부 이미지" loading="lazy" />
+    const src = safeImageUrl(message.content);
+    if (!src) {
+      return `<p class="bubble ${mineClass}">차단된 이미지 주소입니다.</p>`;
+    }
+    const escapedSrc = escapeHtml(src);
+    return `<a class="bubble bubble-image ${mineClass}" href="${escapedSrc}" target="_blank" rel="noopener noreferrer">
+      <img src="${escapedSrc}" alt="첨부 이미지" loading="lazy" />
     </a>`;
   }
 
@@ -573,7 +583,7 @@ async function openTradePayModal(panelEl, trade) {
 
 function showChatModal(panelEl, content) {
   closeChatModal(panelEl);
-  panelEl.insertAdjacentHTML("beforeend", `
+  appendSafeHtml(panelEl, "beforeend", `
     <div class="modal-backdrop chat-modal-backdrop" data-chat-modal>
       <div class="charge-modal chat-trade-modal" role="dialog" aria-modal="true">
         ${content}
@@ -603,7 +613,8 @@ function showRequestAmountAction(panelEl) {
   const actionsEl = panelEl.querySelector(".chat-panel-actions");
   if (!actionsEl || actionsEl.querySelector("[data-request-amount-open]")) return;
 
-  actionsEl.insertAdjacentHTML(
+  appendSafeHtml(
+    actionsEl,
     "afterbegin",
     `<button type="button" class="button primary" data-request-amount-open>금액 설정</button>`
   );
@@ -627,8 +638,9 @@ function isTradePaid(message) {
 function updateTradeCardStatus(panelEl, trade, label) {
   if (!trade?.tradeId) return;
 
-  panelEl.querySelectorAll(`[data-trade-card="${trade.tradeId}"] [data-trade-card-status]`).forEach((statusEl) => {
-    statusEl.innerHTML = `<small>${escapeHtml(label)}</small>`;
+  const tradeId = CSS.escape(String(trade.tradeId));
+  panelEl.querySelectorAll(`[data-trade-card="${tradeId}"] [data-trade-card-status]`).forEach((statusEl) => {
+    setSafeHtml(statusEl, `<small>${escapeHtml(label)}</small>`);
   });
 }
 
@@ -655,13 +667,7 @@ function renderChatAvatar(room) {
   const initial = (room.otherUserNickname || "?").charAt(0).toUpperCase();
   return `
     <div class="avatar chat-avatar">
-      ${room.otherUserProfileImageUrl ? `<img src="${escapeHtml(room.otherUserProfileImageUrl)}" alt="" />` : escapeHtml(initial)}
+      ${room.otherUserProfileImageUrl ? `<img src="${escapeHtml(safeImageUrl(room.otherUserProfileImageUrl))}" alt="" />` : escapeHtml(initial)}
     </div>
   `;
-}
-
-function escapeHtml(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (char) => (
-    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]
-  ));
 }

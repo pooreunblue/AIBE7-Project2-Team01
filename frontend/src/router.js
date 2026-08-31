@@ -1,6 +1,7 @@
 import { LoginPage } from "./features/auth/LoginPage.js";
 import { SignupPage } from "./features/auth/SignupPage.js";
 import { ChatPage } from "./features/chat/ChatPage.js";
+import { ErrorPage, NotFoundPage } from "./features/error/ErrorPage.js";
 import { HomePage } from "./features/home/HomePage.js";
 import { CheckoutPage } from "./features/payment/CheckoutPage.js";
 import { PortfolioCreatePage } from "./features/portfolio/PortfolioCreatePage.js";
@@ -28,6 +29,8 @@ const routes = {
   portfolios: PortfolioPage,
   "portfolio-new": PortfolioCreatePage,
   checkout: CheckoutPage,
+  "not-found": NotFoundPage,
+  error: () => ErrorPage(500),
 };
 
 export function parseRoute() {
@@ -52,6 +55,9 @@ export function resolvePage(segments) {
     return { route: "chat", content: ChatPage(id) };
   }
 
-  const page = routes[route] || routes.home;
-  return { route: routes[route] ? route : "home", content: page() };
+  const page = routes[route];
+  if (!page) {
+    return { route: "not-found", content: NotFoundPage() };
+  }
+  return { route, content: page() };
 }

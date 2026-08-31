@@ -25,7 +25,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -46,11 +45,13 @@ public class TalentPostController {
 
     @GetMapping
     @Operation(summary = "재능글 목록 조회")
-    public ApiResponse<List<TalentPostResponseDto>> readAll() {
-        List<TalentPostEntity> talentPostEntities = talentPostService.readAll();
-        return ApiResponse.ok(talentPostEntities.stream()
-                .map(TalentPostResponseDto::toDto)
-                .toList());
+    public ApiResponse<Page<TalentPostResponseDto>> readAll(
+            @ParameterObject
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        Page<TalentPostEntity> talentPostEntities = talentPostService.readAll(pageable);
+        return ApiResponse.ok(talentPostEntities.map(TalentPostResponseDto::toDto));
     }
 
     @GetMapping("/{talentPostId}")

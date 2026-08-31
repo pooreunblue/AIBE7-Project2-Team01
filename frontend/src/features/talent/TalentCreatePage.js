@@ -3,7 +3,7 @@ export function TalentCreatePage() {
     <section class="portfolio-write-section talent-write-section">
       <form class="portfolio-write-form" data-talent-form>
         <div class="portfolio-editor-pane">
-          <input class="portfolio-title-input" name="title" type="text" maxlength="100" required placeholder="재능글 제목을 입력하세요" aria-label="재능글 제목" data-portfolio-title-input />
+          <input class="portfolio-title-input" name="postTitle" type="text" maxlength="100" required placeholder="재능글 제목을 입력하세요" aria-label="재능글 제목" data-portfolio-title-input />
           <div class="portfolio-title-rule" aria-hidden="true"></div>
           <div class="portfolio-write-toolbar talent-write-toolbar">
             <button class="button quiet" type="button" data-talent-settings-open>상세정보 수정</button>
@@ -11,6 +11,7 @@ export function TalentCreatePage() {
             <input name="markdownImage" type="file" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" data-markdown-image-input />
             <button class="button quiet" type="button" data-talent-thumbnail-trigger>대표 이미지 추가</button>
             <input name="thumbnailImage" type="file" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" data-talent-thumbnail-input />
+            <button class="button quiet" type="button" data-talent-ai-generate>AI로 글 다듬기</button>
             <button class="button quiet" type="button" data-talent-portfolio-open>포트폴리오 추가</button>
             <input name="portfolioId" type="hidden" data-talent-portfolio-value />
           </div>

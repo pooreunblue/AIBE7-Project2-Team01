@@ -3,6 +3,7 @@ package org.example.link.domain.talent.service;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
+import org.example.link.ai.embedding.event.EmbeddingEventPublisher;
 import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
@@ -24,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.AccessDeniedException;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +34,7 @@ public class TalentPostService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final PortfolioRepository portfolioRepository;
+    private final EmbeddingEventPublisher embeddingEventPublisher;
 
     @Transactional
     public TalentPostEntity create(TalentPostRequestDto talentPostRequestDto, CustomUserDetails userDetails) {
@@ -42,11 +43,14 @@ public class TalentPostService {
         CategoryEntity category = getCategory(talentPostRequestDto);
         PortfolioEntity portfolio = getPortfolio(talentPostRequestDto);
         TalentPostEntity talentPostEntity = createTalentPost(talentPostRequestDto, user, category, portfolio);
-        return talentPostRepository.save(talentPostEntity);
+        TalentPostEntity saved = talentPostRepository.save(talentPostEntity);
+        embeddingEventPublisher.saveTalent(saved);
+        return saved;
     }
 
-    public List<TalentPostEntity> readAll() {
-        return talentPostRepository.findAll();
+    @Transactional(readOnly = true)
+    public Page<TalentPostEntity> readAll(Pageable pageable) {
+        return talentPostRepository.findAll(pageable);
     }
 
     public TalentPostEntity readOne(UUID talentPostId) {
@@ -72,6 +76,7 @@ public class TalentPostService {
         CategoryEntity category = getCategory(talentPostRequestDto);
         PortfolioEntity portfolio = getPortfolio(talentPostRequestDto);
         updateTalentPost(talentPostRequestDto, talentPostEntity, category, portfolio);
+        embeddingEventPublisher.replaceTalent(talentPostEntity);
         return talentPostEntity;
     }
 
@@ -81,6 +86,7 @@ public class TalentPostService {
         TalentPostEntity talentPostEntity = getTalentPostEntity(talentPostId);
         validateAuth(talentPostEntity, userId);
         talentPostRepository.delete(talentPostEntity);
+        embeddingEventPublisher.deleteTalent(talentPostId);
     }
 
     @Transactional
@@ -89,6 +95,7 @@ public class TalentPostService {
         TalentPostEntity talentPostEntity = getTalentPostEntity(talentPostId);
         validateAuth(talentPostEntity, userId);
         talentPostEntity.inactiveStatus();
+        embeddingEventPublisher.deleteTalent(talentPostId);
         return talentPostEntity;
     }
 

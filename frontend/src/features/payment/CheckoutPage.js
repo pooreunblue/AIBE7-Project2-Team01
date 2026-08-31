@@ -5,6 +5,7 @@ import { fetchRequest } from "../request/requestApi.js";
 import { fetchTalent } from "../talent/talentApi.js";
 import { fetchWallet } from "../wallet/walletApi.js";
 import { fetchMyTrades, payTrade } from "../trade/tradeApi.js";
+import { escapeHtml, setSafeHtml } from "../../shared/security/xss.js";
 
 // 채팅방에서 확정된 거래를 조회하고 결제하는 화면. 이 페이지에서는 금액을 만들거나 수정하지 않는다.
 export function CheckoutPage() {
@@ -47,13 +48,13 @@ export async function initCheckoutPage() {
     const rooms = await fetchMyChatRooms();
     room = rooms.find((item) => item.chatRoomId === chatRoomId);
   } catch (error) {
-    summaryEl.innerHTML = `<p>채팅방 정보를 불러오지 못했습니다: ${escapeHtml(error.message)}</p>`;
+    setSafeHtml(summaryEl, `<p>채팅방 정보를 불러오지 못했습니다: ${escapeHtml(error.message)}</p>`);
     return;
   }
 
   if (!room) {
-    summaryEl.innerHTML = `<p>채팅방을 찾을 수 없거나 접근 권한이 없습니다.</p>`;
-    panelEl.innerHTML = "";
+    setSafeHtml(summaryEl, `<p>채팅방을 찾을 수 없거나 접근 권한이 없습니다.</p>`);
+    panelEl.replaceChildren();
     return;
   }
 
@@ -65,11 +66,11 @@ export async function initCheckoutPage() {
       findActiveTrade(chatRoomId),
     ]);
   } catch (error) {
-    summaryEl.innerHTML = `<p>거래 정보를 불러오지 못했습니다: ${escapeHtml(error.message)}</p>`;
+    setSafeHtml(summaryEl, `<p>거래 정보를 불러오지 못했습니다: ${escapeHtml(error.message)}</p>`);
     return;
   }
 
-  summaryEl.innerHTML = renderRoomSummary(room, post);
+  setSafeHtml(summaryEl, renderRoomSummary(room, post));
 
   const isPayer = currentUserId != null && existingTrade != null &&
     String(existingTrade.payerId) === String(currentUserId);
@@ -78,7 +79,7 @@ export async function initCheckoutPage() {
     try {
       wallet = await fetchWallet();
     } catch (error) {
-      panelEl.innerHTML = `<p>잔액을 불러오지 못했습니다: ${escapeHtml(error.message)}</p>`;
+      setSafeHtml(panelEl, `<p>잔액을 불러오지 못했습니다: ${escapeHtml(error.message)}</p>`);
       return;
     }
   }
@@ -118,7 +119,7 @@ function renderRoomSummary(room, post) {
 
 function renderPanel(panelEl, { room, wallet, existingTrade, isPayer, currentUserId, post }) {
   if (existingTrade) {
-    panelEl.innerHTML = renderTradePanel(existingTrade, wallet, isPayer);
+    setSafeHtml(panelEl, renderTradePanel(existingTrade, wallet, isPayer));
     if (existingTrade.status === "PENDING" && isPayer) {
       bindPayButton(panelEl, existingTrade.tradeId);
     }
@@ -134,11 +135,11 @@ function renderPanel(panelEl, { room, wallet, existingTrade, isPayer, currentUse
       ? "채팅에서 판매 금액을 설정하고 거래 요청을 보내 주세요."
       : "판매자가 거래 금액을 확정할 때까지 기다려 주세요.");
 
-  panelEl.innerHTML = `
+  setSafeHtml(panelEl, `
     <span>Payment Details</span>
     <p>${guidance}</p>
     <a class="button primary" href="#/chat/${room.chatRoomId}">채팅으로 이동</a>
-  `;
+  `);
 }
 
 function renderTradePanel(trade, wallet, isPayer) {
@@ -174,16 +175,10 @@ function bindPayButton(panelEl, tradeId) {
     payButton.disabled = true;
     try {
       await payTrade(tradeId);
-      panelEl.innerHTML = `<p>결제가 완료되었습니다.</p>`;
+      setSafeHtml(panelEl, `<p>결제가 완료되었습니다.</p>`);
     } catch (error) {
       if (messageEl) messageEl.textContent = error.message;
       payButton.disabled = false;
     }
   });
-}
-
-function escapeHtml(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (char) => (
-    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]
-  ));
 }

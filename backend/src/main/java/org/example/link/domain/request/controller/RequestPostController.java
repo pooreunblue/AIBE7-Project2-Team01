@@ -22,7 +22,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -44,11 +43,13 @@ public class RequestPostController {
 
     @GetMapping
     @Operation(summary = "의뢰글 목록 조회")
-    public ApiResponse<List<RequestPostResponseDto>> readAll() {
-        List<RequestPostEntity> requestPostEntities = requestPostService.readAll();
-        return ApiResponse.ok(requestPostEntities.stream()
-                .map(RequestPostResponseDto::toDto)
-                .toList());
+    public ApiResponse<Page<RequestPostResponseDto>> readAll(
+            @ParameterObject
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        Page<RequestPostEntity> requestPostEntities = requestPostService.readAll(pageable);
+        return ApiResponse.ok(requestPostEntities.map(RequestPostResponseDto::toDto));
     }
 
     @GetMapping("/{requestPostId}")
