@@ -1091,6 +1091,119 @@ dd {
   color: #356859;
 }
 
+.ai-match-page {
+  gap: 18px;
+}
+
+.ai-match-panel {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.ai-match-target-tabs {
+  display: inline-flex;
+  justify-self: center;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #f8fafc;
+}
+
+.ai-match-target-tabs button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 16px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.ai-match-target-tabs button.active {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(8, 102, 216, 0.18);
+}
+
+.ai-match-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ai-match-filters label {
+  display: grid;
+  gap: 7px;
+}
+
+.ai-match-filters span {
+  color: #344054;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.ai-match-filters input,
+.ai-match-filters select {
+  min-width: 0;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0 12px;
+  background: #fff;
+}
+
+.ai-match-results {
+  display: grid;
+  gap: 16px;
+}
+
+.ai-result-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ai-result-header h2 {
+  margin: 4px 0 0;
+  font-size: 22px;
+}
+
+.ai-result-header strong {
+  color: var(--blue);
+}
+
+.ai-result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.ai-result-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.ai-recommendation-reason {
+  margin: 0;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: #eef9f3;
+  color: #356859;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
 .search-results-layout aside {
   display: grid;
   gap: 14px;
@@ -2612,6 +2725,8 @@ body.modal-open {
   .talent-grid,
   .talent-grid.two-col,
   .request-grid,
+  .ai-match-filters,
+  .ai-result-grid,
   .portfolio-grid,
   .portfolio-manage-layout,
   .detail-layout,

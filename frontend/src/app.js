@@ -37,6 +37,7 @@ import {
   updateRequest,
   uploadRequestFile,
 } from "./features/request/requestApi.js";
+import { analyzeAiMatchQuery, searchAiMatches } from "./features/search/matchingApi.js";
 import {
   createTalent,
   deleteTalent,
@@ -93,6 +94,7 @@ function bindPageEvents() {
   bindRequestListPage();
   bindRequestDetailPage();
   bindRequestCreatePage();
+  bindAiMatchPage();
   initChatPage();
   initCheckoutPage();
   bindErrorPage();
@@ -101,10 +103,355 @@ function bindPageEvents() {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       if (form.matches("[data-search-form]")) {
-        window.location.hash = "/ai-search";
+        const formData = new FormData(form);
+        const query = String(formData.get("query") || "").trim();
+        if (query) {
+          window.location.hash = `/ai-search?query=${encodeURIComponent(query)}`;
+        } else {
+          window.location.hash = "/ai-search";
+        }
       }
     });
   });
+}
+
+function bindAiMatchPage() {
+  const page = document.querySelector("[data-ai-match-page]");
+  if (!page) return;
+
+  const form = page.querySelector("[data-ai-match-form]");
+  if (!form) return;
+
+  const initialQuery = currentQueryParam("query");
+  if (initialQuery) {
+    setFormValue(form, "query", initialQuery);
+  }
+
+  const categoriesReady = loadAiMatchCategories(form);
+  bindAiMatchTargetTabs(form);
+  bindAiMatchForm(form);
+
+  if (initialQuery) {
+    categoriesReady.finally(() => runAiMatchSearch(form));
+  }
+}
+
+async function loadAiMatchCategories(form) {
+  const select = form.querySelector("[data-ai-category-select]");
+  if (!select) return;
+
+  try {
+    const categories = await fetchCategories();
+    const options = categories.map((category) => {
+      return `<option value="${escapeHtml(category.categoryId)}">${escapeHtml(category.name)}</option>`;
+    });
+    setSafeHtml(select, `<option value="">전체</option>${options.join("")}`);
+  } catch {
+    setSafeHtml(select, `<option value="">전체</option>`);
+  }
+}
+
+function bindAiMatchTargetTabs(form) {
+  form.querySelectorAll("[data-ai-target]").forEach((button) => {
+    button.addEventListener("click", () => {
+      setAiMatchTarget(form, button.dataset.aiTarget);
+    });
+  });
+}
+
+function bindAiMatchForm(form) {
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    runAiMatchSearch(form);
+  });
+}
+
+async function runAiMatchSearch(form) {
+  const query = String(form.elements.query?.value || "").trim();
+  if (!query) return;
+
+  const results = document.querySelector("[data-ai-match-results]");
+  const insight = document.querySelector("[data-ai-match-insight] span");
+  const submitButton = form.querySelector("button[type='submit']");
+
+  if (submitButton) submitButton.disabled = true;
+  if (insight) insight.textContent = "검색 문장을 분석하고 있습니다.";
+  renderAiMatchLoading(results);
+
+  let analysis = null;
+  try {
+    analysis = await analyzeAiMatchQuery(query);
+    applyAiMatchAnalysis(form, analysis);
+    updateAiMatchInsight(analysis);
+  } catch (error) {
+    if (insight) insight.textContent = `분석 실패: ${error.message}. 입력한 조건으로 검색합니다.`;
+  }
+
+  try {
+    const payload = buildAiMatchPayload(form, query, analysis);
+    const response = await searchAiMatches(payload);
+    renderAiMatchResults(results, response);
+  } catch (error) {
+    renderAiMatchError(results, error);
+  } finally {
+    if (submitButton) submitButton.disabled = false;
+  }
+}
+
+function applyAiMatchAnalysis(form, analysis) {
+  if (!analysis) return;
+
+  setAiMatchTarget(form, analysis.targetType);
+  setFormValue(form, "query", analysis.semanticQuery || analysis.originalQuery);
+
+  const condition = analysis.condition || {};
+  setFormValue(form, "categoryId", condition.categoryId);
+  setFormValue(form, "maxPrice", condition.maxPrice);
+  setFormValue(form, "maxEstimatedDuration", condition.maxEstimatedDuration);
+  setFormValue(form, "durationUnit", condition.durationUnit);
+  setFormValue(form, "minBudget", condition.minBudget);
+  setFormValue(form, "maxBudget", condition.maxBudget);
+  setFormValue(form, "dueDateFrom", condition.dueDateFrom);
+  setFormValue(form, "dueDateTo", condition.dueDateTo);
+}
+
+function updateAiMatchInsight(analysis) {
+  const insight = document.querySelector("[data-ai-match-insight] span");
+  if (!insight || !analysis) return;
+
+  const targetLabel = aiTargetLabel(analysis.targetType);
+  const conditionLabels = aiConditionLabels(analysis.condition || {});
+  const categoryLabel = analysis.categoryName || "전체 카테고리";
+  const details = [targetLabel, categoryLabel, ...conditionLabels].filter(Boolean);
+  insight.textContent = `분석 결과: ${details.join(" · ")}`;
+}
+
+function buildAiMatchPayload(form, originalQuery, analysis) {
+  const selectedTarget = getSelectedAiTarget(form);
+  const semanticQuery = analysis?.semanticQuery || originalQuery;
+
+  return {
+    query: semanticQuery,
+    targetType: selectedTarget,
+    condition: buildAiMatchCondition(form, selectedTarget),
+    limit: 5,
+  };
+}
+
+function buildAiMatchCondition(form, targetType) {
+  const condition = {};
+  const categoryId = stringOrNull(form.elements.categoryId?.value);
+  if (categoryId) {
+    condition.categoryId = categoryId;
+  }
+
+  if (targetType === "TALENT") {
+    addPositiveNumber(condition, "maxPrice", form.elements.maxPrice?.value);
+    addPositiveInteger(condition, "maxEstimatedDuration", form.elements.maxEstimatedDuration?.value);
+    const durationUnit = stringOrNull(form.elements.durationUnit?.value);
+    if (durationUnit) {
+      condition.durationUnit = durationUnit;
+    }
+    return condition;
+  }
+
+  addPositiveNumber(condition, "minBudget", form.elements.minBudget?.value);
+  addPositiveNumber(condition, "maxBudget", form.elements.maxBudget?.value);
+  addString(condition, "dueDateFrom", form.elements.dueDateFrom?.value);
+  addString(condition, "dueDateTo", form.elements.dueDateTo?.value);
+  return condition;
+}
+
+function setAiMatchTarget(form, targetType) {
+  const resolvedTargetType = targetType === "REQUEST" ? "REQUEST" : "TALENT";
+
+  form.querySelectorAll("[data-ai-target]").forEach((button) => {
+    const active = button.dataset.aiTarget === resolvedTargetType;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+
+  form.querySelectorAll("[data-ai-talent-filter]").forEach((element) => {
+    element.hidden = resolvedTargetType !== "TALENT";
+  });
+  form.querySelectorAll("[data-ai-request-filter]").forEach((element) => {
+    element.hidden = resolvedTargetType !== "REQUEST";
+  });
+}
+
+function getSelectedAiTarget(form) {
+  const activeButton = form.querySelector("[data-ai-target].active");
+  if (!activeButton) {
+    return "TALENT";
+  }
+  return activeButton.dataset.aiTarget || "TALENT";
+}
+
+function renderAiMatchLoading(container) {
+  if (!container) return;
+  setSafeHtml(container, `
+    <article class="empty-state">
+      <span>SEARCHING</span>
+      <h3>조건에 맞는 후보를 찾고 있습니다.</h3>
+      <p>의미 검색 결과를 가져온 뒤 원본 데이터 기준으로 조건을 확인합니다.</p>
+    </article>
+  `);
+}
+
+function renderAiMatchResults(container, response) {
+  if (!container) return;
+
+  const candidates = response?.candidates || [];
+  if (!candidates.length) {
+    setSafeHtml(container, `
+      <article class="empty-state">
+        <span>EMPTY</span>
+        <h3>조건에 맞는 결과가 없습니다.</h3>
+        <p>검색어를 조금 넓히거나 가격, 예산, 기간 조건을 낮춰보세요.</p>
+      </article>
+    `);
+    return;
+  }
+
+  const title = aiTargetLabel(response.targetType);
+  const cards = candidates.map(renderAiMatchCandidate).join("");
+  setSafeHtml(container, `
+    <div class="ai-result-header">
+      <div>
+        <span class="kicker">${escapeHtml(response.targetType || "MATCH")}</span>
+        <h2>${escapeHtml(title)} 추천 결과</h2>
+      </div>
+      <strong>${candidates.length}개</strong>
+    </div>
+    <div class="ai-result-grid">
+      ${cards}
+    </div>
+  `);
+}
+
+function renderAiMatchCandidate(candidate) {
+  const targetId = candidate.targetId || "";
+  const isTalent = candidate.targetType === "TALENT";
+  const href = isTalent ? `#/talent/${targetId}` : `#/request/${targetId}`;
+  const amountLabel = isTalent ? formatOptionalMoney(candidate.price) : formatCandidateBudget(candidate);
+  const durationLabel = isTalent ? formatCandidateDuration(candidate) : formatCandidateDueDate(candidate);
+  const reason = candidate.recommendationReason || "";
+
+  return `
+    <article class="ai-result-card">
+      ${candidate.thumbnailUrl ? `
+        <a class="visual has-image" href="${escapeHtml(safeUrl(href))}" aria-label="${escapeHtml(candidate.title || "추천 결과")} 상세">
+          <img src="${escapeHtml(safeImageUrl(candidate.thumbnailUrl))}" alt="" />
+          <span>${escapeHtml(candidate.categoryName || aiTargetLabel(candidate.targetType))}</span>
+        </a>
+      ` : ""}
+      <div class="card-body">
+        <div class="meta-line">
+          <span>${escapeHtml(candidate.authorNickname || "작성자")}</span>
+          <strong>${Math.round(Number(candidate.matchScore || 0) * 100)}%</strong>
+        </div>
+        <h3><a href="${escapeHtml(safeUrl(href))}">${escapeHtml(candidate.title || "제목 없음")}</a></h3>
+        <p>${escapeHtml(markdownExcerpt(candidate.content))}</p>
+        <div class="chip-row">
+          <span>${escapeHtml(candidate.categoryName || "카테고리")}</span>
+          <span>${escapeHtml(amountLabel)}</span>
+          <span>${escapeHtml(durationLabel)}</span>
+        </div>
+        ${reason ? `<p class="ai-recommendation-reason">${escapeHtml(reason)}</p>` : ""}
+        <div class="card-action">
+          <strong>${Math.round(Number(candidate.semanticScore || 0) * 100)}% 유사</strong>
+          <a class="button quiet" href="${escapeHtml(safeUrl(href))}">상세보기</a>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function renderAiMatchError(container, error) {
+  if (!container) return;
+  setSafeHtml(container, `
+    <article class="empty-state">
+      <span>ERROR</span>
+      <h3>AI 매칭 결과를 불러오지 못했습니다.</h3>
+      <p>${escapeHtml(error.message)}</p>
+    </article>
+  `);
+}
+
+function aiTargetLabel(targetType) {
+  if (targetType === "REQUEST") {
+    return "요청글 찾기";
+  }
+  return "재능글 찾기";
+}
+
+function aiConditionLabels(condition) {
+  const labels = [];
+  if (condition.maxPrice != null) {
+    labels.push(`최대 ${formatMoney(Number(condition.maxPrice))}`);
+  }
+  if (condition.maxEstimatedDuration != null) {
+    labels.push(`최대 ${condition.maxEstimatedDuration}${durationUnitLabel(condition.durationUnit)}`);
+  }
+  if (condition.minBudget != null || condition.maxBudget != null) {
+    labels.push(`${formatMoney(Number(condition.minBudget || 0))} - ${formatMoney(Number(condition.maxBudget || 0))}`);
+  }
+  if (condition.dueDateFrom || condition.dueDateTo) {
+    labels.push(`${condition.dueDateFrom || "시작일 무관"} ~ ${condition.dueDateTo || "종료일 무관"}`);
+  }
+  return labels;
+}
+
+function formatCandidateBudget(candidate) {
+  return `${formatMoney(Number(candidate.budgetMin || 0))} - ${formatMoney(Number(candidate.budgetMax || 0))}`;
+}
+
+function formatCandidateDuration(candidate) {
+  if (!candidate.estimatedDuration) {
+    return "기간 협의";
+  }
+  return `${candidate.estimatedDuration}${durationUnitLabel(candidate.durationUnit)}`;
+}
+
+function formatCandidateDueDate(candidate) {
+  if (!candidate.dueDate) {
+    return "일정 협의";
+  }
+  return `마감 ${candidate.dueDate}`;
+}
+
+function currentQueryParam(name) {
+  const query = window.location.hash.split("?")[1] || "";
+  return new URLSearchParams(query).get(name) || "";
+}
+
+function addPositiveNumber(target, key, rawValue) {
+  const value = Number(rawValue);
+  if (Number.isFinite(value) && value >= 0) {
+    target[key] = value;
+  }
+}
+
+function addPositiveInteger(target, key, rawValue) {
+  const value = Number(rawValue);
+  if (Number.isInteger(value) && value > 0) {
+    target[key] = value;
+  }
+}
+
+function addString(target, key, rawValue) {
+  const value = stringOrNull(rawValue);
+  if (value) {
+    target[key] = value;
+  }
+}
+
+function stringOrNull(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized) {
+    return null;
+  }
+  return normalized;
 }
 
 // 상세 페이지처럼 스켈레톤을 먼저 그린 뒤 데이터 로딩이 실패했을 때,
