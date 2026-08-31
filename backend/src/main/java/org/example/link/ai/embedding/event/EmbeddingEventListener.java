@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-/** 원본 데이터 커밋이 성공한 경우에만 VectorStore 작업을 비동기로 실행한다. */
+/** 원본 데이터 커밋이 성공한 경우에만 벡터 저장소 작업을 비동기로 실행한다. */
 @Component
 @RequiredArgsConstructor
 public class EmbeddingEventListener {

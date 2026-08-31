@@ -1,13 +1,13 @@
--- Existing PostgreSQL databases: trade/wallet duplicate-prevention constraints.
--- Run duplicate checks first. Resolve any returned rows before applying constraints.
+-- 기존 PostgreSQL DB에 거래·지갑 중복 방지 제약을 적용한다.
+-- 제약을 추가하기 전에 중복 확인 쿼리를 실행하고, 조회된 데이터가 있다면 먼저 정리한다.
 
--- Duplicate participants in one chat room.
+-- 같은 채팅방에 동일 사용자가 중복 참여한 데이터 확인.
 SELECT chat_room_id, user_id, COUNT(*)
 FROM chat_participants
 GROUP BY chat_room_id, user_id
 HAVING COUNT(*) > 1;
 
--- Multiple active trades in one chat room.
+-- 같은 채팅방에 진행 중인 거래가 여러 건인 데이터 확인.
 SELECT chat_room_id, COUNT(*)
 FROM trades
 WHERE chat_room_id IS NOT NULL
@@ -15,7 +15,7 @@ WHERE chat_room_id IS NOT NULL
 GROUP BY chat_room_id
 HAVING COUNT(*) > 1;
 
--- Multiple paid or completed trades for one-time request posts.
+-- 1회성 요청글에 결제 또는 완료 거래가 여러 건인 데이터 확인.
 SELECT request_post_id, COUNT(*)
 FROM trades
 WHERE request_post_id IS NOT NULL
@@ -23,14 +23,14 @@ WHERE request_post_id IS NOT NULL
 GROUP BY request_post_id
 HAVING COUNT(*) > 1;
 
--- Duplicate wallet transaction types for one trade.
+-- 동일 거래에 같은 유형의 지갑 거래내역이 여러 건인 데이터 확인.
 SELECT trade_id, transaction_type, COUNT(*)
 FROM wallet_transactions
 WHERE trade_id IS NOT NULL
 GROUP BY trade_id, transaction_type
 HAVING COUNT(*) > 1;
 
--- Stop here and clean up data when any duplicate-check query returns rows.
+-- 위 확인 쿼리에서 결과가 나오면 여기서 중단하고 중복 데이터를 먼저 정리한다.
 
 BEGIN;
 

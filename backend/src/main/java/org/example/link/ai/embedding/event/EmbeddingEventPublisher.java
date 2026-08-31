@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-/** 도메인 서비스가 VectorStore 구현을 몰라도 되도록 임베딩 이벤트만 발행한다. */
+/** 도메인 서비스가 벡터 저장소 구현을 몰라도 되도록 임베딩 이벤트만 발행한다. */
 @Component
 @RequiredArgsConstructor
 public class EmbeddingEventPublisher {
