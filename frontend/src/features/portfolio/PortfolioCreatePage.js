@@ -3,7 +3,7 @@ export function PortfolioCreatePage() {
     <section class="portfolio-write-section">
       <form class="portfolio-write-form" data-portfolio-form>
         <div class="portfolio-editor-pane">
-          <input class="portfolio-title-input" name="title" type="text" maxlength="100" required placeholder="제목을 입력하세요" aria-label="포트폴리오 제목" data-portfolio-title-input />
+          <input class="portfolio-title-input" name="postTitle" type="text" maxlength="100" required placeholder="제목을 입력하세요" aria-label="포트폴리오 제목" data-portfolio-title-input />
           <div class="portfolio-title-rule" aria-hidden="true"></div>
           <div class="portfolio-write-toolbar">
             <button class="button quiet" type="button" data-markdown-image-trigger>이미지 삽입</button>

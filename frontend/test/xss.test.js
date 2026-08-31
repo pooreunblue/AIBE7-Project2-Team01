@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { JSDOM } from "jsdom";
+import { PortfolioCreatePage } from "../src/features/portfolio/PortfolioCreatePage.js";
+import { RequestCreatePage } from "../src/features/request/RequestCreatePage.js";
+import { TalentCreatePage } from "../src/features/talent/TalentCreatePage.js";
 
 const dom = new JSDOM("<!doctype html><html><body></body></html>", {
   url: "http://localhost:3000/",
@@ -66,4 +69,15 @@ test("safe DOM helpers sanitize replacement and appended HTML", () => {
   assert.equal(target.querySelectorAll("script").length, 0);
   assert.equal(target.querySelector("img").hasAttribute("onerror"), false);
   assert.equal(target.textContent.trim(), "firstsecond");
+});
+
+test("sanitized create forms preserve the non-clobbering title field", () => {
+  for (const renderPage of [RequestCreatePage, TalentCreatePage, PortfolioCreatePage]) {
+    const target = document.createElement("div");
+    setSafeHtml(target, renderPage());
+
+    const titleInput = target.querySelector("[data-portfolio-title-input]");
+    assert.equal(titleInput?.name, "postTitle");
+    assert.equal(new dom.window.FormData(titleInput.form).has("postTitle"), true);
+  }
 });

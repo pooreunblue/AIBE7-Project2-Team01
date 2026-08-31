@@ -378,10 +378,12 @@ function bindRequestCreatePage() {
         budgetMax: Number(formData.get("budgetMax")),
         dueDate: formData.get("dueDate") || null,
       }, thumbnailFile);
-      form.elements.title.value = generated.title || "";
-      form.elements.content.value = generated.content || "";
-      form.elements.title.dispatchEvent(new Event("input", { bubbles: true }));
-      form.elements.content.dispatchEvent(new Event("input", { bubbles: true }));
+      const titleInput = form.querySelector("[data-portfolio-title-input]");
+      const contentInput = form.querySelector("[data-portfolio-markdown-input]");
+      titleInput.value = generated.title || "";
+      contentInput.value = generated.content || "";
+      titleInput.dispatchEvent(new Event("input", { bubbles: true }));
+      contentInput.dispatchEvent(new Event("input", { bubbles: true }));
       if (message) message.textContent = "AI 작성 결과를 확인하고 수정해 주세요.";
     } catch (error) {
       if (message) message.textContent = error.message;
@@ -433,8 +435,8 @@ function bindRequestCreatePage() {
 
 async function loadRequestEditForm(form, requestPostId) {
   const submitButton = form.querySelector("button[type='submit']");
-  const titleInput = form.elements.title;
-  const contentInput = form.elements.content;
+  const titleInput = form.querySelector("[data-portfolio-title-input]");
+  const contentInput = form.querySelector("[data-portfolio-markdown-input]");
   const message = form.querySelector("[data-request-create-message]");
 
   if (submitButton) submitButton.textContent = "요청글 수정";
@@ -569,7 +571,7 @@ function buildRequestPayload(form) {
   if (!validateRequestSettings(form)) return null;
   const formData = new FormData(form);
   return {
-    title: formData.get("title"),
+    title: formData.get("postTitle"),
     content: formData.get("content"),
     categoryId: formData.get("categoryId"),
     budgetMin: Number(formData.get("budgetMin")),
@@ -708,10 +710,12 @@ function bindTalentCreatePage() {
         durationUnit: formData.get("durationUnit"),
         portfolioId: formData.get("portfolioId") || null,
       }, thumbnailFile);
-      form.elements.title.value = generated.title || "";
-      form.elements.content.value = generated.content || "";
-      form.elements.title.dispatchEvent(new Event("input", { bubbles: true }));
-      form.elements.content.dispatchEvent(new Event("input", { bubbles: true }));
+      const titleInput = form.querySelector("[data-portfolio-title-input]");
+      const contentInput = form.querySelector("[data-portfolio-markdown-input]");
+      titleInput.value = generated.title || "";
+      contentInput.value = generated.content || "";
+      titleInput.dispatchEvent(new Event("input", { bubbles: true }));
+      contentInput.dispatchEvent(new Event("input", { bubbles: true }));
       if (message) message.textContent = "AI 작성 결과를 확인하고 수정해 주세요.";
     } catch (error) {
       if (message) message.textContent = error.message;
@@ -1082,8 +1086,8 @@ async function loadTalentEditForm(form, talentPostId) {
       getTalentFiles(talentPostId),
     ]);
 
-    const titleInput = form.querySelector('input[name="title"]');
-    const contentInput = form.querySelector('textarea[name="content"]');
+    const titleInput = form.querySelector("[data-portfolio-title-input]");
+    const contentInput = form.querySelector("[data-portfolio-markdown-input]");
     if (titleInput) {
       titleInput.value = talent.title || "";
       titleInput.dispatchEvent(new Event("input", { bubbles: true }));
@@ -1173,7 +1177,7 @@ function buildTalentPayload(form) {
   if (!validateTalentSettings(form)) return null;
   const formData = new FormData(form);
   return {
-    title: formData.get("title"),
+    title: formData.get("postTitle"),
     content: formData.get("content"),
     categoryId: formData.get("categoryId"),
     price: optionalNumber(formData.get("price")),
@@ -1562,7 +1566,7 @@ function bindPortfolioForm() {
   if (!form) return;
 
   const portfolioId = getPortfolioEditId();
-  const titleInput = form.querySelector('input[name="title"]');
+  const titleInput = form.querySelector("[data-portfolio-title-input]");
   const descriptionInput = form.querySelector('textarea[name="description"]');
   const fileInput = form.querySelector('input[name="portfolioFiles"]');
   const fileName = form.querySelector("[data-portfolio-file-name]");
@@ -1616,7 +1620,7 @@ function bindPortfolioForm() {
     try {
       if (message) message.textContent = "";
       const payload = {
-        title: formData.get("title"),
+        title: formData.get("postTitle"),
         description: formData.get("description"),
       };
       const portfolio = portfolioId
