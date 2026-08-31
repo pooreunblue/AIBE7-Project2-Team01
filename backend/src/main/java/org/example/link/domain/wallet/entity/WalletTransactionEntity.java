@@ -14,7 +14,13 @@ import java.time.Instant;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "wallet_transactions")
+@Table(
+        name = "wallet_transactions",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_wallet_transaction_trade_type",
+                columnNames = {"trade_id", "transaction_type"}
+        )
+)
 public class WalletTransactionEntity {
 
     @Id

@@ -3,7 +3,7 @@ package org.example.link.domain.talent.service;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
-import org.example.link.ai.embedding.service.EmbeddingService;
+import org.example.link.ai.embedding.event.EmbeddingEventPublisher;
 import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
@@ -35,7 +35,7 @@ public class TalentPostService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final PortfolioRepository portfolioRepository;
-    private final EmbeddingService embeddingService;
+    private final EmbeddingEventPublisher embeddingEventPublisher;
 
     @Transactional
     public TalentPostEntity create(TalentPostRequestDto talentPostRequestDto, CustomUserDetails userDetails) {
@@ -45,7 +45,7 @@ public class TalentPostService {
         PortfolioEntity portfolio = getPortfolio(talentPostRequestDto);
         TalentPostEntity talentPostEntity = createTalentPost(talentPostRequestDto, user, category, portfolio);
         TalentPostEntity saved = talentPostRepository.save(talentPostEntity);
-        embeddingService.upsertTalent(saved);
+        embeddingEventPublisher.saveTalent(saved);
         return saved;
     }
 
@@ -76,7 +76,7 @@ public class TalentPostService {
         CategoryEntity category = getCategory(talentPostRequestDto);
         PortfolioEntity portfolio = getPortfolio(talentPostRequestDto);
         updateTalentPost(talentPostRequestDto, talentPostEntity, category, portfolio);
-        embeddingService.replaceTalent(talentPostEntity);
+        embeddingEventPublisher.replaceTalent(talentPostEntity);
         return talentPostEntity;
     }
 
@@ -86,7 +86,7 @@ public class TalentPostService {
         TalentPostEntity talentPostEntity = getTalentPostEntity(talentPostId);
         validateAuth(talentPostEntity, userId);
         talentPostRepository.delete(talentPostEntity);
-        embeddingService.deleteTalent(talentPostId);
+        embeddingEventPublisher.deleteTalent(talentPostId);
     }
 
     @Transactional
@@ -95,7 +95,7 @@ public class TalentPostService {
         TalentPostEntity talentPostEntity = getTalentPostEntity(talentPostId);
         validateAuth(talentPostEntity, userId);
         talentPostEntity.inactiveStatus();
-        embeddingService.deleteTalent(talentPostId);
+        embeddingEventPublisher.deleteTalent(talentPostId);
         return talentPostEntity;
     }
 

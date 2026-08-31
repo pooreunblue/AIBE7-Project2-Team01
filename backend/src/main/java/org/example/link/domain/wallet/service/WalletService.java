@@ -36,7 +36,7 @@ public class WalletService {
             UUID userId,
             BigDecimal amount
     ) {
-        WalletEntity wallet = getWalletEntity(userId);
+        WalletEntity wallet = getWalletEntityForUpdate(userId);
         wallet.charge(amount);
         walletTransactionRepository.save(
                 WalletTransactionEntity.createCharge(
@@ -55,7 +55,7 @@ public class WalletService {
             BigDecimal amount,
             TradeEntity trade
     ) {
-        WalletEntity wallet = getWalletEntity(userId);
+        WalletEntity wallet = getWalletEntityForUpdate(userId);
         wallet.withdraw(amount);
         walletTransactionRepository.save(
                 WalletTransactionEntity.createWithdraw(
@@ -74,7 +74,7 @@ public class WalletService {
             BigDecimal amount,
             TradeEntity trade
     ) {
-        WalletEntity wallet = getWalletEntity(userId);
+        WalletEntity wallet = getWalletEntityForUpdate(userId);
         wallet.deposit(amount);
         walletTransactionRepository.save(
                 WalletTransactionEntity.createDeposit(
@@ -93,7 +93,7 @@ public class WalletService {
             BigDecimal amount,
             TradeEntity trade
     ) {
-        WalletEntity wallet = getWalletEntity(userId);
+        WalletEntity wallet = getWalletEntityForUpdate(userId);
 
         wallet.refund(amount);
 
@@ -109,6 +109,13 @@ public class WalletService {
 
     public WalletEntity getWalletEntity(UUID userId) {
         return walletRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new CustomException(ErrorCode.WALLET_NOT_FOUND)
+                );
+    }
+
+    private WalletEntity getWalletEntityForUpdate(UUID userId) {
+        return walletRepository.findByUserIdForUpdate(userId)
                 .orElseThrow(() ->
                         new CustomException(ErrorCode.WALLET_NOT_FOUND)
                 );

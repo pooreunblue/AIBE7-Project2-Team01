@@ -3,9 +3,7 @@ package org.example.link.ai.embedding.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.link.ai.embedding.enums.EmbeddingTargetType;
-import org.example.link.domain.category.entity.CategoryEntity;
-import org.example.link.domain.request.entity.RequestPostEntity;
-import org.example.link.domain.talent.entity.TalentPostEntity;
+import org.example.link.ai.embedding.event.EmbeddingDocumentSnapshot;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
@@ -21,77 +19,50 @@ public class EmbeddingService {
 
     private final VectorStore vectorStore;
 
-    public void upsertTalent(TalentPostEntity post) {
-        save(buildTalentDocument(post));
+    public void save(EmbeddingDocumentSnapshot snapshot) {
+        saveDocument(buildDocument(snapshot));
     }
 
-    public void upsertRequest(RequestPostEntity post) {
-        save(buildRequestDocument(post));
+    public void replace(EmbeddingDocumentSnapshot snapshot) {
+        replaceDocument(buildDocument(snapshot));
     }
 
-    public void replaceTalent(TalentPostEntity post) {
-        replace(buildTalentDocument(post));
+    public void delete(EmbeddingTargetType targetType, java.util.UUID targetId) {
+        deleteDocument(documentId(targetType, targetId));
     }
 
-    public void replaceRequest(RequestPostEntity post) {
-        replace(buildRequestDocument(post));
-    }
-
-    public void deleteTalent(java.util.UUID postId) {
-        delete(documentId(EmbeddingTargetType.TALENT, postId));
-    }
-
-    public void deleteRequest(java.util.UUID postId) {
-        delete(documentId(EmbeddingTargetType.REQUEST, postId));
-    }
-
-    private Document buildTalentDocument(TalentPostEntity post) {
+    private Document buildDocument(EmbeddingDocumentSnapshot snapshot) {
         Map<String, Object> metadata = metadata(
-                EmbeddingTargetType.TALENT,
-                post.getId(),
-                post.getUser().getId(),
-                post.getCategory(),
-                post.getStatus().name()
+                snapshot.targetType(),
+                snapshot.targetId(),
+                snapshot.userId(),
+                snapshot.categoryId(),
+                snapshot.status()
         );
-        String text = "[TYPE] 재능 제공\n"
-                + "[TITLE] " + post.getTitle() + "\n"
-                + "[CATEGORY] " + post.getCategory().getName() + "\n"
-                + "[DESCRIPTION] " + normalize(post.getContent());
-        return new Document(documentId(EmbeddingTargetType.TALENT, post.getId()), text, metadata);
-    }
-
-    private Document buildRequestDocument(RequestPostEntity post) {
-        Map<String, Object> metadata = metadata(
-                EmbeddingTargetType.REQUEST,
-                post.getId(),
-                post.getUser().getId(),
-                post.getCategory(),
-                post.getStatus().name()
-        );
-        String text = "[TYPE] 재능 요청\n"
-                + "[TITLE] " + post.getTitle() + "\n"
-                + "[CATEGORY] " + post.getCategory().getName() + "\n"
-                + "[DESCRIPTION] " + normalize(post.getContent());
-        return new Document(documentId(EmbeddingTargetType.REQUEST, post.getId()), text, metadata);
+        String text = "[TYPE] " + typeLabel(snapshot.targetType()) + "\n"
+                + "[TITLE] " + snapshot.title() + "\n"
+                + "[CATEGORY] " + snapshot.categoryName() + "\n"
+                + "[DESCRIPTION] " + normalize(snapshot.content());
+        return new Document(documentId(snapshot.targetType(), snapshot.targetId()), text, metadata);
     }
 
     private Map<String, Object> metadata(
             EmbeddingTargetType targetType,
             java.util.UUID targetId,
             java.util.UUID userId,
-            CategoryEntity category,
+            java.util.UUID categoryId,
             String status
     ) {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("targetType", targetType.name());
         metadata.put("targetId", targetId.toString());
         metadata.put("userId", userId.toString());
-        metadata.put("categoryId", category.getId().toString());
+        metadata.put("categoryId", categoryId.toString());
         metadata.put("status", status);
         return metadata;
     }
 
-    private void save(Document document) {
+    private void saveDocument(Document document) {
         try {
             vectorStore.add(List.of(document));
         } catch (Exception exception) {
@@ -99,7 +70,7 @@ public class EmbeddingService {
         }
     }
 
-    private void replace(Document document) {
+    private void replaceDocument(Document document) {
         try {
             vectorStore.delete(document.getId());
             vectorStore.add(List.of(document));
@@ -108,7 +79,7 @@ public class EmbeddingService {
         }
     }
 
-    private void delete(String documentId) {
+    private void deleteDocument(String documentId) {
         try {
             vectorStore.delete(documentId);
         } catch (Exception exception) {
@@ -118,6 +89,14 @@ public class EmbeddingService {
 
     private String documentId(EmbeddingTargetType targetType, java.util.UUID targetId) {
         return targetType.name() + ":" + targetId;
+    }
+
+    private String typeLabel(EmbeddingTargetType targetType) {
+        return switch (targetType) {
+            case TALENT -> "재능 제공";
+            case REQUEST -> "재능 요청";
+            case PORTFOLIO -> "포트폴리오";
+        };
     }
 
     private String normalize(String text) {
