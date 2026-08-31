@@ -3,7 +3,7 @@ package org.example.link.domain.request.service;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
-import org.example.link.ai.embedding.service.EmbeddingService;
+import org.example.link.ai.embedding.event.EmbeddingEventPublisher;
 import org.example.link.auth.security.CustomUserDetails;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
@@ -30,7 +30,7 @@ public class RequestPostService {
     private final RequestPostRepository requestPostRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
-    private final EmbeddingService embeddingService;
+    private final EmbeddingEventPublisher embeddingEventPublisher;
 
     @Transactional
     public RequestPostEntity create(RequestPostRequestDto requestPostRequestDto, CustomUserDetails userDetails) {
@@ -39,7 +39,7 @@ public class RequestPostService {
         CategoryEntity category = getCategory(requestPostRequestDto);
         RequestPostEntity requestPostEntity = createRequestPost(user, category, requestPostRequestDto);
         RequestPostEntity saved = requestPostRepository.save(requestPostEntity);
-        embeddingService.upsertRequest(saved);
+        embeddingEventPublisher.saveRequest(saved);
         return saved;
     }
 
@@ -69,7 +69,7 @@ public class RequestPostService {
         validateAuth(requestPostEntity, userId);
         CategoryEntity category = getCategory(requestPostRequestDto);
         updateRequestPost(requestPostRequestDto, requestPostEntity, category);
-        embeddingService.replaceRequest(requestPostEntity);
+        embeddingEventPublisher.replaceRequest(requestPostEntity);
         return requestPostEntity;
     }
 
@@ -80,7 +80,7 @@ public class RequestPostService {
         validateAuth(requestPostEntity, userId);
         validateOpenStatus(requestPostEntity);
         requestPostRepository.delete(requestPostEntity);
-        embeddingService.deleteRequest(requestPostId);
+        embeddingEventPublisher.deleteRequest(requestPostId);
     }
 
     @Transactional
@@ -89,7 +89,7 @@ public class RequestPostService {
         RequestPostEntity requestPostEntity = getRequestPostForUpdate(requestPostId);
         validateAuth(requestPostEntity, userId);
         requestPostEntity.closeStatus();
-        embeddingService.deleteRequest(requestPostId);
+        embeddingEventPublisher.deleteRequest(requestPostId);
         return requestPostEntity;
     }
 

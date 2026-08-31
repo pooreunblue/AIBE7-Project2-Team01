@@ -3,6 +3,7 @@ package org.example.link.domain.trade.service;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
+import org.example.link.ai.embedding.event.EmbeddingEventPublisher;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
 import org.example.link.domain.chat.entity.ChatParticipant;
@@ -46,6 +47,7 @@ public class TradeService {
     private final UserRepository userRepository;
     private final ChatMessagePublisher chatMessagePublisher;
     private final WalletService walletService;
+    private final EmbeddingEventPublisher embeddingEventPublisher;
 
     private static final String TRADE_REQUEST_MESSAGE = "거래를 요청했습니다.";
     private static final String TRADE_PAID_MESSAGE = "결제가 완료되었습니다.";
@@ -225,6 +227,7 @@ public class TradeService {
         }
         RequestPostEntity requestPost = getRequestPostForUpdate(trade.getRequestPostId());
         requestPost.startTrade();
+        embeddingEventPublisher.deleteRequest(trade.getRequestPostId());
     }
 
     private void completeRequestTradeIfPresent(TradeEntity trade) {
@@ -241,6 +244,7 @@ public class TradeService {
         }
         RequestPostEntity requestPost = getRequestPostForUpdate(trade.getRequestPostId());
         requestPost.reopenAfterTradeCancellation();
+        embeddingEventPublisher.saveRequest(requestPost);
     }
 
     private RequestPostEntity getRequestPostForUpdate(UUID requestPostId) {

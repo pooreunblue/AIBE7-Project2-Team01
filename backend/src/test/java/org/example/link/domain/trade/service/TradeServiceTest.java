@@ -1,5 +1,6 @@
 package org.example.link.domain.trade.service;
 
+import org.example.link.ai.embedding.event.EmbeddingEventPublisher;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
 import org.example.link.domain.chat.entity.ChatRoom;
@@ -51,6 +52,8 @@ class TradeServiceTest {
     private ChatMessagePublisher chatMessagePublisher;
     @Mock
     private WalletService walletService;
+    @Mock
+    private EmbeddingEventPublisher embeddingEventPublisher;
 
     private TradeService tradeService;
 
@@ -64,7 +67,8 @@ class TradeServiceTest {
                 talentPostRepository,
                 userRepository,
                 chatMessagePublisher,
-                walletService
+                walletService,
+                embeddingEventPublisher
         );
     }
 
@@ -87,6 +91,7 @@ class TradeServiceTest {
         assertThat(trade.getStatus()).isEqualTo(TradeStatus.PAID);
         assertThat(requestPost.getStatus()).isEqualTo(RequestPostStatus.IN_PROGRESS);
         verify(walletService).withdraw(payerId, trade.getAmount(), trade);
+        verify(embeddingEventPublisher).deleteRequest(requestPostId);
     }
 
     @Test
@@ -125,6 +130,7 @@ class TradeServiceTest {
         assertThat(trade.getStatus()).isEqualTo(TradeStatus.CANCELLED);
         assertThat(requestPost.getStatus()).isEqualTo(RequestPostStatus.OPEN);
         verify(walletService).refund(payerId, trade.getAmount(), trade);
+        verify(embeddingEventPublisher).saveRequest(requestPost);
     }
 
     @Test
