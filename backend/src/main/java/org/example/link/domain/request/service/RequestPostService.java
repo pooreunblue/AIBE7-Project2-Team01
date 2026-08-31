@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.AccessDeniedException;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -43,8 +42,9 @@ public class RequestPostService {
         return saved;
     }
 
-    public List<RequestPostEntity> readAll() {
-        return requestPostRepository.findAll();
+    @Transactional(readOnly = true)
+    public Page<RequestPostEntity> readAll(Pageable pageable) {
+        return requestPostRepository.findAll(pageable);
     }
 
     public RequestPostEntity readOne(UUID requestPostId) {
