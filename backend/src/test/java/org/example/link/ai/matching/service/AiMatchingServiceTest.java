@@ -1,18 +1,21 @@
 package org.example.link.ai.matching.service;
 
 import org.example.link.ai.embedding.enums.EmbeddingTargetType;
-import org.example.link.ai.matching.dto.AiMatchRequest;
 import org.example.link.ai.matching.dto.AiMatchResponse;
 import org.example.link.ai.matching.dto.MatchCondition;
+import org.example.link.ai.matching.dto.SearchAiMatchRequest;
 import org.example.link.ai.matching.service.candidate.MatchCandidateFactory;
 import org.example.link.ai.matching.service.condition.MatchConditionValidator;
 import org.example.link.ai.matching.service.filter.MatchCandidateFilter;
 import org.example.link.ai.matching.service.ranking.MatchRankingService;
+import org.example.link.ai.matching.service.recommendation.RecommendationReasonService;
 import org.example.link.ai.matching.service.search.VectorSearchService;
 import org.example.link.domain.request.entity.RequestPostEntity;
+import org.example.link.domain.request.repository.RequestPostFileRepository;
 import org.example.link.domain.request.repository.RequestPostRepository;
 import org.example.link.domain.request.util.RequestPostStatus;
 import org.example.link.domain.talent.entity.TalentPostEntity;
+import org.example.link.domain.talent.repository.TalentPostFileRepository;
 import org.example.link.domain.talent.repository.TalentPostRepository;
 import org.example.link.domain.talent.util.TalentPostStatus;
 import org.junit.jupiter.api.Test;
@@ -23,6 +26,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,6 +36,9 @@ class AiMatchingServiceTest {
     private final VectorSearchService vectorSearchService = mock(VectorSearchService.class);
     private final TalentPostRepository talentPostRepository = mock(TalentPostRepository.class);
     private final RequestPostRepository requestPostRepository = mock(RequestPostRepository.class);
+    private final TalentPostFileRepository talentPostFileRepository = mock(TalentPostFileRepository.class);
+    private final RequestPostFileRepository requestPostFileRepository = mock(RequestPostFileRepository.class);
+    private final RecommendationReasonService recommendationReasonService = recommendationReasonService();
     private final AiMatchingService aiMatchingService = new AiMatchingService(
             vectorSearchService,
             new MatchConditionValidator(),
@@ -38,8 +46,18 @@ class AiMatchingServiceTest {
             new MatchRankingService(),
             new MatchCandidateFactory(),
             talentPostRepository,
-            requestPostRepository
+            requestPostRepository,
+            talentPostFileRepository,
+            requestPostFileRepository,
+            recommendationReasonService
     );
+
+    private RecommendationReasonService recommendationReasonService() {
+        RecommendationReasonService service = mock(RecommendationReasonService.class);
+        when(service.addRecommendationReasons(anyString(), anyList()))
+                .thenAnswer(invocation -> invocation.getArgument(1));
+        return service;
+    }
 
     @Test
     void excludesInactiveTalentUsingSqlSourceOfTruth() {
@@ -51,7 +69,7 @@ class AiMatchingServiceTest {
                 .thenReturn(List.of(new VectorSearchService.VectorMatch(targetId, 0.98)));
         when(talentPostRepository.findByIdIn(anyCollection())).thenReturn(List.of(inactiveTalent));
 
-        AiMatchResponse response = aiMatchingService.match(new AiMatchRequest(
+        AiMatchResponse response = aiMatchingService.match(new SearchAiMatchRequest(
                 "백엔드 개발",
                 EmbeddingTargetType.TALENT,
                 MatchCondition.empty(),
@@ -82,7 +100,7 @@ class AiMatchingServiceTest {
                 LocalDate.now(),
                 LocalDate.now().plusMonths(1)
         );
-        AiMatchResponse response = aiMatchingService.match(new AiMatchRequest(
+        AiMatchResponse response = aiMatchingService.match(new SearchAiMatchRequest(
                 "API 개발 요청",
                 EmbeddingTargetType.REQUEST,
                 condition,

@@ -9,7 +9,6 @@ export function MyPage() {
         <a href="#/requests">판매/구매 관리</a>
         <a href="#/chat">메시지 내역</a>
         <a href="#/talents">포트폴리오 관리</a>
-        <a href="#/mypage">리뷰 목록</a>
       </aside>
       <div class="dashboard-main">
         <div class="profile-summary" data-my-page-summary>

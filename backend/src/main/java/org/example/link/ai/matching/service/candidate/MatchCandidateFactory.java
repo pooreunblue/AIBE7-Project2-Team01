@@ -12,6 +12,7 @@ public class MatchCandidateFactory {
     /** 재능 판매글을 후보 응답으로 변환한다. REQUEST 전용 값은 null로 둔다. */
     public MatchCandidate createTalent(
             TalentPostEntity talent,
+            String thumbnailUrl,
             double semanticScore,
             MatchRankingService.MatchScore score
     ) {
@@ -25,6 +26,7 @@ public class MatchCandidateFactory {
                 talent.getCategory().getName(),
                 talent.getTitle(),
                 talent.getContent(),
+                thumbnailUrl,
                 talent.getPrice(),
                 talent.getEstimatedDuration(),
                 talent.getDurationUnit(),
@@ -33,7 +35,6 @@ public class MatchCandidateFactory {
                 null,
                 semanticScore,
                 score.amountScore(),
-                null,
                 score.matchScore(),
                 null
         );
@@ -42,6 +43,7 @@ public class MatchCandidateFactory {
     /** 재능 요청글을 후보 응답으로 변환한다. TALENT 전용 값은 null로 둔다. */
     public MatchCandidate createRequest(
             RequestPostEntity request,
+            String thumbnailUrl,
             double semanticScore,
             MatchRankingService.MatchScore score
     ) {
@@ -55,6 +57,7 @@ public class MatchCandidateFactory {
                 request.getCategory().getName(),
                 request.getTitle(),
                 request.getContent(),
+                thumbnailUrl,
                 null,
                 null,
                 null,
@@ -63,7 +66,6 @@ public class MatchCandidateFactory {
                 request.getDueDate(),
                 semanticScore,
                 score.amountScore(),
-                null,
                 score.matchScore(),
                 null
         );

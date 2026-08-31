@@ -20,6 +20,7 @@ public record MatchCandidate(
         String categoryName,
         String title,
         String content,
+        String thumbnailUrl,
         Long price,
         Integer estimatedDuration,
         DurationUnit durationUnit,
@@ -28,8 +29,31 @@ public record MatchCandidate(
         LocalDate dueDate,
         double semanticScore,
         Double amountScore,
-        Double reputationScore,
         double matchScore,
         String recommendationReason
 ) {
+    public MatchCandidate withRecommendationReason(String reason) {
+        return new MatchCandidate(
+                targetType,
+                targetId,
+                userId,
+                authorNickname,
+                authorProfileImageUrl,
+                categoryId,
+                categoryName,
+                title,
+                content,
+                thumbnailUrl,
+                price,
+                estimatedDuration,
+                durationUnit,
+                budgetMin,
+                budgetMax,
+                dueDate,
+                semanticScore,
+                amountScore,
+                matchScore,
+                reason
+        );
+    }
 }

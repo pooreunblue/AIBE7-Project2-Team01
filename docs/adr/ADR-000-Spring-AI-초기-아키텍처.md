@@ -1,13 +1,15 @@
-# ADR-0001: Spring AI 기반 검색·매칭 아키텍처 도입
+# ADR-000: Spring AI 기반 검색·매칭 초기 아키텍처
 
-- 상태: Accepted
+> 이 초기 설계의 Matching 상세 결정은 [ADR-002](./ADR-002-하이브리드-AI-매칭-아키텍처.md), Review/Reputation 계획은 [ADR-003](./ADR-003-리뷰-평판-MVP-제외.md)으로 대체됐다.
+
+- 상태: 대체됨 (Superseded)
 - 결정일: 2026-08-28
-- 대상: AI 게시글 생성, Embedding, Matching/RAG, Review/Reputation
+- 대상: AI 게시글 생성, Embedding, Matching/RAG의 초기 설계 기록
 - 관련 문서:
-  - [AI 기능 개발 가이드](../ai/ai-development-guide.md)
-  - [A-B Embedding 연동 계약](../ai/a-b-embedding-contract.md)
-  - [B Matching 연동 계약](../ai/matching-integration-contract.md)
-  - [Spring AI 개발 환경 설정 가이드](../ai/spring-ai-setup-guide.md)
+  - [AI 기능 개발 가이드](../ai/AI-기능-개발-가이드.md)
+  - [A-B Embedding 연동 계약](../ai/A-B-임베딩-연동-계약.md)
+  - [B Matching 연동 계약](../ai/B-매칭-연동-계약.md)
+  - [Spring AI 개발 환경 설정 가이드](../ai/Spring-AI-환경설정-가이드.md)
 
 ## 1. 배경
 
@@ -31,7 +33,7 @@ AI 기능은 다음 세 영역을 병렬 개발한다.
 
 Spring AI 2.0.1을 AI 모델과 VectorStore의 공통 추상화로 사용한다.
 
-- ChatModel: Google GenAI `gemini-2.5-flash`
+- ChatModel: Google GenAI `gemini-3.1-flash-lite`
 - EmbeddingModel: Google GenAI `gemini-embedding-001`
 - Embedding 차원: 1536
 - VectorStore: Spring AI PgVectorStore

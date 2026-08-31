@@ -2,20 +2,25 @@ package org.example.link.ai.matching.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.link.ai.embedding.enums.EmbeddingTargetType;
-import org.example.link.ai.matching.dto.AiMatchRequest;
 import org.example.link.ai.matching.dto.AiMatchResponse;
 import org.example.link.ai.matching.dto.MatchCondition;
+import org.example.link.ai.matching.dto.SearchAiMatchRequest;
 import org.example.link.ai.matching.service.candidate.MatchCandidate;
 import org.example.link.ai.matching.service.candidate.MatchCandidateFactory;
 import org.example.link.ai.matching.service.condition.MatchConditionValidator;
 import org.example.link.ai.matching.service.filter.MatchCandidateFilter;
 import org.example.link.ai.matching.service.ranking.MatchRankingService;
+import org.example.link.ai.matching.service.recommendation.RecommendationReasonService;
 import org.example.link.ai.matching.service.search.VectorSearchService;
 import org.example.link.common.exception.CustomException;
 import org.example.link.common.exception.ErrorCode;
 import org.example.link.domain.request.entity.RequestPostEntity;
+import org.example.link.domain.request.entity.RequestPostFileEntity;
+import org.example.link.domain.request.repository.RequestPostFileRepository;
 import org.example.link.domain.request.repository.RequestPostRepository;
 import org.example.link.domain.talent.entity.TalentPostEntity;
+import org.example.link.domain.talent.entity.TalentPostFileEntity;
+import org.example.link.domain.talent.repository.TalentPostFileRepository;
 import org.example.link.domain.talent.repository.TalentPostRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,12 +47,15 @@ public class AiMatchingService {
     private final MatchCandidateFactory candidateFactory;
     private final TalentPostRepository talentPostRepository;
     private final RequestPostRepository requestPostRepository;
+    private final TalentPostFileRepository talentPostFileRepository;
+    private final RequestPostFileRepository requestPostFileRepository;
+    private final RecommendationReasonService recommendationReasonService;
 
     /**
      * 매칭 처리 순서:
      * 조건 검증 -> 벡터 후보 검색 -> SQL 원본 조회/필터 -> 점수 계산 -> 상위 결과 반환
      */
-    public AiMatchResponse match(AiMatchRequest request) {
+    public AiMatchResponse match(SearchAiMatchRequest request) {
         MatchCondition condition = request.resolvedCondition();
         conditionValidator.validate(request.targetType(), condition);
 
@@ -62,8 +70,12 @@ public class AiMatchingService {
                 condition
         );
         List<MatchCandidate> rankedCandidates = rankAndLimit(candidates, request.resolvedLimit());
+        List<MatchCandidate> candidatesWithReasons = recommendationReasonService.addRecommendationReasons(
+                request.query(),
+                rankedCandidates
+        );
 
-        return new AiMatchResponse(request.query(), request.targetType(), rankedCandidates);
+        return new AiMatchResponse(request.query(), request.targetType(), candidatesWithReasons);
     }
 
     private List<MatchCandidate> findCandidates(
@@ -90,6 +102,7 @@ public class AiMatchingService {
 
         // 후보를 한 건씩 조회하지 않고 UUID 목록으로 한 번에 조회한다.
         Map<UUID, TalentPostEntity> talentsById = loadTalentsById(vectorMatches);
+        Map<UUID, String> thumbnailUrlsById = loadTalentThumbnailUrls(vectorMatches);
         List<MatchCandidate> candidates = new ArrayList<>();
 
         for (VectorSearchService.VectorMatch vectorMatch : vectorMatches) {
@@ -111,6 +124,7 @@ public class AiMatchingService {
             );
             candidates.add(candidateFactory.createTalent(
                     talent,
+                    thumbnailUrlsById.get(talent.getId()),
                     vectorMatch.semanticScore(),
                     score
             ));
@@ -128,6 +142,7 @@ public class AiMatchingService {
 
         // 후보를 한 건씩 조회하지 않고 UUID 목록으로 한 번에 조회한다.
         Map<UUID, RequestPostEntity> requestsById = loadRequestsById(vectorMatches);
+        Map<UUID, String> thumbnailUrlsById = loadRequestThumbnailUrls(vectorMatches);
         List<MatchCandidate> candidates = new ArrayList<>();
 
         for (VectorSearchService.VectorMatch vectorMatch : vectorMatches) {
@@ -151,6 +166,7 @@ public class AiMatchingService {
             );
             candidates.add(candidateFactory.createRequest(
                     request,
+                    thumbnailUrlsById.get(request.getId()),
                     vectorMatch.semanticScore(),
                     score
             ));
@@ -190,6 +206,34 @@ public class AiMatchingService {
             targetIds.add(vectorMatch.targetId());
         }
         return targetIds;
+    }
+
+    private Map<UUID, String> loadTalentThumbnailUrls(
+            List<VectorSearchService.VectorMatch> vectorMatches
+    ) {
+        List<UUID> targetIds = extractTargetIds(vectorMatches);
+        List<TalentPostFileEntity> thumbnails =
+                talentPostFileRepository.findAllByTalentPostIdInAndThumbnailTrue(targetIds);
+        Map<UUID, String> thumbnailUrlsById = new HashMap<>();
+
+        for (TalentPostFileEntity thumbnail : thumbnails) {
+            thumbnailUrlsById.put(thumbnail.getTalentPost().getId(), thumbnail.getFileUrl());
+        }
+        return thumbnailUrlsById;
+    }
+
+    private Map<UUID, String> loadRequestThumbnailUrls(
+            List<VectorSearchService.VectorMatch> vectorMatches
+    ) {
+        List<UUID> targetIds = extractTargetIds(vectorMatches);
+        List<RequestPostFileEntity> thumbnails =
+                requestPostFileRepository.findAllByRequestPostIdInAndThumbnailTrue(targetIds);
+        Map<UUID, String> thumbnailUrlsById = new HashMap<>();
+
+        for (RequestPostFileEntity thumbnail : thumbnails) {
+            thumbnailUrlsById.put(thumbnail.getRequestPost().getId(), thumbnail.getFileUrl());
+        }
+        return thumbnailUrlsById;
     }
 
     private List<MatchCandidate> rankAndLimit(List<MatchCandidate> candidates, int limit) {
