@@ -1091,6 +1091,197 @@ dd {
   color: #356859;
 }
 
+.ai-search-page {
+  gap: 22px;
+}
+
+.ai-match-form {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.ai-target-control {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(420px, 100%);
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #f4f7fb;
+}
+
+.ai-target-control label {
+  cursor: pointer;
+}
+
+.ai-target-control input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.ai-target-control span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  border-radius: 5px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.ai-target-control input:checked + span {
+  background: #fff;
+  color: var(--blue);
+  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.08);
+}
+
+.ai-target-control input:focus-visible + span {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.ai-query-box {
+  width: 100%;
+  box-shadow: none;
+}
+
+.ai-condition-bar {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(0, 2fr);
+  gap: 14px;
+  align-items: end;
+}
+
+.ai-target-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ai-target-fields[data-ai-target-fields="REQUEST"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ai-target-fields[hidden] {
+  display: none;
+}
+
+.ai-search-status {
+  margin: 0;
+  color: var(--muted);
+}
+
+.ai-match-results,
+.ai-result-list {
+  display: grid;
+  gap: 16px;
+}
+
+.ai-result-heading,
+.ai-result-meta,
+.ai-result-footer,
+.ai-result-footer > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ai-result-heading h2,
+.ai-result-card h3 {
+  margin: 0;
+}
+
+.ai-result-heading > span,
+.ai-result-meta strong {
+  color: var(--blue);
+  font-weight: 800;
+}
+
+.ai-result-card {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.ai-result-card.text-only {
+  grid-template-columns: 1fr;
+}
+
+.ai-result-thumbnail {
+  min-height: 220px;
+  background: #eef2f8;
+}
+
+.ai-result-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ai-result-body {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+
+.ai-result-body > p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.ai-result-meta {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.ai-recommendation-reason {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--blue);
+  background: #f5f8ff;
+  color: #344054;
+}
+
+.ai-recommendation-reason strong {
+  color: var(--blue);
+  font-size: 12px;
+}
+
+.ai-result-footer {
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+
+.ai-result-footer > div {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ai-result-empty {
+  display: grid;
+  gap: 6px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--muted);
+}
+
 .search-results-layout aside {
   display: grid;
   gap: 14px;
@@ -2625,6 +2816,16 @@ body.modal-open {
     position: static;
   }
 
+  .ai-condition-bar,
+  .ai-result-card {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-result-thumbnail {
+    min-height: 190px;
+    max-height: 280px;
+  }
+
   .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2650,6 +2851,16 @@ body.modal-open {
   .list-search {
     grid-template-columns: 1fr;
     border-radius: var(--radius);
+  }
+
+  .ai-target-fields,
+  .ai-target-fields[data-ai-target-fields="REQUEST"] {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-result-footer {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .section-head,

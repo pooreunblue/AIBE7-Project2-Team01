@@ -39,4 +39,5 @@
 
 - 신규 DB는 [schema.sql](./schema.sql)을 기준으로 구성한다.
 - 기존 DB의 거래 정합성 제약은 [20260831_trade_integrity_constraints.sql](./migrations/20260831_trade_integrity_constraints.sql)을 적용한다.
+- 기존 `vector_store.id`가 UUID인 DB는 [20260831_vector_store_id_to_text.sql](./migrations/20260831_vector_store_id_to_text.sql)을 적용한다.
 - pgvector 사용 전 `CREATE EXTENSION IF NOT EXISTS vector;` 실행 권한을 확인한다.

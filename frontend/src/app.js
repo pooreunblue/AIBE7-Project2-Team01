@@ -15,6 +15,7 @@ import { fetchCategories } from "./features/category/categoryApi.js";
 import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
 import { startChat } from "./features/chat/startChat.js";
 import { initCheckoutPage } from "./features/payment/CheckoutPage.js";
+import { initAiSearchPage } from "./features/search/AiSearchPage.js";
 import {
   createPortfolio,
   deletePortfolio,
@@ -30,7 +31,7 @@ import {
 import {
   createRequest,
   fetchRequest,
-  fetchRequests,
+  fetchRequestPage,
   generateRequestPost,
   getRequestFiles,
   setRequestThumbnail,
@@ -41,7 +42,7 @@ import {
   createTalent,
   deleteTalent,
   fetchTalent,
-  fetchTalents,
+  fetchTalentPage,
   generateTalentPost,
   getTalentFiles,
   inactiveTalent,
@@ -93,6 +94,7 @@ function bindPageEvents() {
   bindRequestListPage();
   bindRequestDetailPage();
   bindRequestCreatePage();
+  initAiSearchPage();
   initChatPage();
   initCheckoutPage();
   bindErrorPage();
@@ -101,7 +103,11 @@ function bindPageEvents() {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       if (form.matches("[data-search-form]")) {
-        window.location.hash = "/ai-search";
+        const query = String(new FormData(form).get("query") || "").trim();
+        const params = new URLSearchParams();
+        if (query) params.set("query", query);
+        const suffix = params.toString() ? `?${params}` : "";
+        window.location.hash = `/ai-search${suffix}`;
       }
     });
   });
@@ -335,13 +341,39 @@ function bindRequestListPage() {
   if (!list) return;
 
   const searchForm = document.querySelector("[data-list-search]");
-  loadRequestList("", currentCategoryId());
+  const loadMoreButton = document.querySelector("[data-request-load-more]");
+  const categoryId = currentCategoryId();
+  let keyword = "";
+  let nextPage = 0;
+  let loading = false;
+
+  const loadPage = async (reset = false) => {
+    if (loading) return;
+    if (reset) nextPage = 0;
+
+    loading = true;
+    if (loadMoreButton) loadMoreButton.disabled = true;
+    try {
+      const page = await loadRequestList(keyword, categoryId, nextPage, reset);
+      nextPage = Number(page.page || 0) + 1;
+      if (loadMoreButton) loadMoreButton.hidden = Boolean(page.last);
+    } catch {
+      if (loadMoreButton) loadMoreButton.hidden = true;
+    } finally {
+      loading = false;
+      if (loadMoreButton) loadMoreButton.disabled = false;
+    }
+  };
+
+  loadPage(true);
 
   searchForm?.addEventListener("submit", (event) => {
     event.preventDefault();
-    const keyword = new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "";
-    loadRequestList(String(keyword), currentCategoryId());
+    keyword = String(new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "");
+    loadPage(true);
   });
+
+  loadMoreButton?.addEventListener("click", () => loadPage(false));
 }
 
 function bindRequestDetailPage() {
@@ -499,13 +531,13 @@ async function loadRequestEditForm(form, requestPostId) {
   }
 }
 
-async function loadRequestList(keyword = "", categoryId = "") {
+async function loadRequestList(keyword = "", categoryId = "", pageNumber = 0, reset = true) {
   const list = document.querySelector("[data-request-list]");
-  if (!list) return;
+  if (!list) return { content: [], page: 0, last: true };
 
   try {
-    const requests = await fetchRequests(keyword);
-    const filteredRequests = filterByCategory(requests, categoryId);
+    const page = await fetchRequestPage({ keyword, page: pageNumber });
+    const filteredRequests = filterByCategory(page.content, categoryId);
     const requestsWithFiles = await Promise.all(
       filteredRequests.map(async (request) => ({
         ...request,
@@ -513,11 +545,18 @@ async function loadRequestList(keyword = "", categoryId = "") {
       }))
     );
 
-    setSafeHtml(list, requestsWithFiles.length
-      ? requestsWithFiles.map(renderRequestCard).join("")
-      : `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 의뢰글이 없습니다.</h3><p>첫 의뢰글을 작성해 보세요.</p></div></article>`);
+    const cards = requestsWithFiles.map(renderRequestCard).join("");
+    if (reset) {
+      setSafeHtml(list, cards || `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 의뢰글이 없습니다.</h3><p>검색 조건을 조정하거나 첫 의뢰글을 작성해 보세요.</p></div></article>`);
+    } else if (cards) {
+      appendSafeHtml(list, "beforeend", cards);
+    }
+    return page;
   } catch (error) {
-    setSafeHtml(list, `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">ERROR</span><h3>의뢰글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`);
+    if (reset) {
+      setSafeHtml(list, `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">ERROR</span><h3>의뢰글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`);
+    }
+    throw error;
   }
 }
 
@@ -669,13 +708,39 @@ function bindTalentListPage() {
   if (!list) return;
 
   const searchForm = document.querySelector("[data-list-search]");
-  loadTalentList("", currentCategoryId());
+  const loadMoreButton = document.querySelector("[data-talent-load-more]");
+  const categoryId = currentCategoryId();
+  let keyword = "";
+  let nextPage = 0;
+  let loading = false;
+
+  const loadPage = async (reset = false) => {
+    if (loading) return;
+    if (reset) nextPage = 0;
+
+    loading = true;
+    if (loadMoreButton) loadMoreButton.disabled = true;
+    try {
+      const page = await loadTalentList(keyword, categoryId, nextPage, reset);
+      nextPage = Number(page.page || 0) + 1;
+      if (loadMoreButton) loadMoreButton.hidden = Boolean(page.last);
+    } catch {
+      if (loadMoreButton) loadMoreButton.hidden = true;
+    } finally {
+      loading = false;
+      if (loadMoreButton) loadMoreButton.disabled = false;
+    }
+  };
+
+  loadPage(true);
 
   searchForm?.addEventListener("submit", (event) => {
     event.preventDefault();
-    const keyword = new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "";
-    loadTalentList(String(keyword), currentCategoryId());
+    keyword = String(new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "");
+    loadPage(true);
   });
+
+  loadMoreButton?.addEventListener("click", () => loadPage(false));
 }
 
 function bindTalentDetailPage() {
@@ -803,13 +868,13 @@ function bindTalentCreatePage() {
   });
 }
 
-async function loadTalentList(keyword = "", categoryId = "") {
+async function loadTalentList(keyword = "", categoryId = "", pageNumber = 0, reset = true) {
   const list = document.querySelector("[data-list='talents']");
-  if (!list) return;
+  if (!list) return { content: [], page: 0, last: true };
 
   try {
-    const talents = await fetchTalents(keyword);
-    const filteredTalents = filterByCategory(talents, categoryId);
+    const page = await fetchTalentPage({ keyword, page: pageNumber });
+    const filteredTalents = filterByCategory(page.content, categoryId);
     const talentsWithFiles = await Promise.all(
       filteredTalents.map(async (talent) => ({
         ...talent,
@@ -817,11 +882,18 @@ async function loadTalentList(keyword = "", categoryId = "") {
       }))
     );
 
-    setSafeHtml(list, talentsWithFiles.length
-      ? talentsWithFiles.map(renderTalentCard).join("")
-      : `<article class="talent-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 재능글이 없습니다.</h3><p>첫 재능글을 작성해 보세요.</p></div></article>`);
+    const cards = talentsWithFiles.map(renderTalentCard).join("");
+    if (reset) {
+      setSafeHtml(list, cards || `<article class="talent-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 재능글이 없습니다.</h3><p>검색 조건을 조정하거나 첫 재능글을 작성해 보세요.</p></div></article>`);
+    } else if (cards) {
+      appendSafeHtml(list, "beforeend", cards);
+    }
+    return page;
   } catch (error) {
-    setSafeHtml(list, `<article class="talent-card"><div class="card-body"><span class="kicker">ERROR</span><h3>재능글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`);
+    if (reset) {
+      setSafeHtml(list, `<article class="talent-card"><div class="card-body"><span class="kicker">ERROR</span><h3>재능글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`);
+    }
+    throw error;
   }
 }
 
