@@ -1,4 +1,5 @@
 import { formField } from "../../shared/ui/index.js";
+import { buildApiUrl } from "../../config/runtime.js";
 
 export function LoginPage() {
   return `
@@ -11,7 +12,7 @@ export function LoginPage() {
         <button class="button primary" type="submit">Sign In</button>
         <p class="form-message" data-form-message aria-live="polite"></p>
         <div class="auth-options">
-          <a href="http://localhost:8080/oauth2/authorization/google">구글로 시작하기</a>
+          <a href="${buildApiUrl("/oauth2/authorization/google")}">구글로 시작하기</a>
         </div>
         <span class="inline-note">Do not have an account? <a href="#/signup">Sign up</a></span>
       </form>

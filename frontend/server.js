@@ -11,10 +11,13 @@ const app = express();
 const port = Number(process.env.PORT || 3000);
 const apiTarget = new URL(process.env.API_TARGET || "http://localhost:8080");
 const webSocketTarget = `${apiTarget.protocol === "https:" ? "wss:" : "ws:"}//${apiTarget.host}`;
+const publicApiBaseUrl = process.env.PUBLIC_API_BASE_URL || "/api";
+const publicWebSocketBaseUrl = process.env.PUBLIC_WS_BASE_URL || publicApiBaseUrl;
 
 app.disable("x-powered-by");
 app.use(setSecurityHeaders);
 app.use("/api", proxyToSpring);
+app.get("/runtime-config.js", runtimeConfig);
 app.use(express.static(__dirname));
 
 app.get("*", (req, res) => {
@@ -43,6 +46,14 @@ function setSecurityHeaders(req, res, next) {
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   next();
+}
+
+function runtimeConfig(req, res) {
+  res.type("application/javascript");
+  res.send([
+    `window.__API_BASE_URL__ = ${JSON.stringify(publicApiBaseUrl)};`,
+    `window.__WS_BASE_URL__ = ${JSON.stringify(publicWebSocketBaseUrl)};`,
+  ].join("\n"));
 }
 
 function proxyToSpring(req, res) {
