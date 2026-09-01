@@ -1,4 +1,5 @@
-const API_BASE_URL = window.__API_BASE_URL__ || "/api";
+import { buildApiUrl } from "../config/runtime.js";
+
 const CSRF_COOKIE_NAME = "XSRF-TOKEN";
 const CSRF_HEADER_NAME = "X-XSRF-TOKEN";
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS", "TRACE"]);
@@ -35,7 +36,7 @@ function buildUrl(path) {
     return path;
   }
 
-  return `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  return buildApiUrl(path);
 }
 
 async function buildOptions(options) {
@@ -144,5 +145,5 @@ async function parseResponse(response) {
 }
 
 function redirectToLogin() {
-  window.location.href = "login.html";
+  window.location.hash = "/login";
 }

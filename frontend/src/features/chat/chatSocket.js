@@ -1,4 +1,4 @@
-const WS_BASE_URL = window.__WS_BASE_URL__ || "http://localhost:8080";
+import { WS_BASE_URL } from "../../config/runtime.js";
 
 /**
  * 채팅방 하나에 STOMP로 연결하고 구독까지 해줌.
