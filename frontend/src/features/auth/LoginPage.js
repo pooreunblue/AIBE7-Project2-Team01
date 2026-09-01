@@ -4,7 +4,7 @@ export function LoginPage() {
   return `
     <section class="auth-page">
       <form class="auth-card" data-login-form>
-        <h1>TalentPulse</h1>
+        <h1>Knotty</h1>
         <p>Welcome back. Please sign in to continue.</p>
         ${formField("Email Address", `<input name="email" type="email" autocomplete="email" required />`)}
         ${formField("Password", `<input name="password" type="password" autocomplete="current-password" required />`)}

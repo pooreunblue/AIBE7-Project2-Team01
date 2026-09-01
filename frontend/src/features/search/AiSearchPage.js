@@ -103,11 +103,15 @@ export function initAiSearchPage() {
   bindSearchActions(form);
 
   const initialQuery = form.elements.query.value.trim();
+  const results = getResults();
   if (initialQuery) {
     categoriesReady.finally(() => {
       runAiSearch(form);
     });
+    return;
   }
+
+  renderInitialState(results);
 }
 
 function bindSearchActions(form) {
@@ -334,6 +338,17 @@ function renderLoading(container, label, message) {
       <div class="ai-search-progress" aria-hidden="true"><i></i></div>
     </article>
   `);
+}
+
+function renderInitialState(container) {
+  setSafeHtml(
+    container,
+    renderSearchState(
+      "AI SEARCH",
+      "찾고 싶은 재능이나 요청을 입력해보세요.",
+      "예산, 기간, 카테고리 같은 조건을 문장으로 적으면 AI가 알맞은 검색 조건과 후보를 함께 찾아줍니다."
+    )
+  );
 }
 
 function renderError(container, title, error) {
