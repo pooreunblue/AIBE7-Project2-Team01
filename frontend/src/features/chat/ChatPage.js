@@ -139,10 +139,25 @@ async function openRoom(panelEl, room) {
     hasActiveTrade: tradeFlow.hasActiveTrade,
     openAmountRequestMessageId: tradeFlow.openAmountRequestMessageId,
   };
+  const tradeButtonLabel = room.talentPostId ? "판매 금액 설정" : "금액 설정 요청";
 
   setSafeHtml(panelEl, panelTemplate(room, { canRequestTrade, canSetRequestAmount }));
   const streamEl = panelEl.querySelector("[data-message-stream]");
   const formEl = panelEl.querySelector("[data-compose-form]");
+
+  // 거래가 취소되면 글 주인이 다시 거래를 요청할 수 있도록 헤더 버튼을 복구한다.
+  function restoreTradeRequestButton() {
+    if (!isPostOwner || roomContext.hasActiveTrade) return;
+    const actionsEl = panelEl.querySelector(".chat-panel-actions");
+    if (!actionsEl) return;
+    if (actionsEl.querySelector("[data-trade-request-open], [data-request-amount-open]")) return;
+
+    appendSafeHtml(
+      actionsEl,
+      "afterbegin",
+      `<button type="button" class="button primary" data-trade-request-open>${escapeHtml(tradeButtonLabel)}</button>`
+    );
+  }
 
   loadHistory(streamEl, roomContext, currentUserId, history);
 
@@ -172,7 +187,9 @@ async function openRoom(panelEl, room) {
       }
       if (isTradeCancelled(message)) {
         roomContext.hasActiveTrade = false;
+        roomContext.openAmountRequestMessageId = null;
         updateTradeCardStatus(panelEl, message.trade, "취소된 거래");
+        restoreTradeRequestButton();
       }
       appendSafeHtml(streamEl, "beforeend", renderBubble(message, currentUserId, roomContext));
       streamEl.scrollTop = streamEl.scrollHeight;
@@ -216,15 +233,17 @@ async function openRoom(panelEl, room) {
   const leaveButtonEl = panelEl.querySelector("[data-leave-room]");
   leaveButtonEl?.addEventListener("click", () => handleLeaveRoom(room.chatRoomId, panelEl));
 
-  panelEl.querySelector("[data-trade-request-open]")?.addEventListener("click", () => {
-    if (room.talentPostId) {
-      openTalentTradeRequestModal(panelEl, { room, talentPost });
+  panelEl.addEventListener("click", (event) => {
+    const tradeRequestButtonEl = event.target.closest("[data-trade-request-open]");
+    if (tradeRequestButtonEl) {
+      if (room.talentPostId) {
+        openTalentTradeRequestModal(panelEl, { room, talentPost });
+        return;
+      }
+      sendRequestTradeAmountCard(panelEl, room);
       return;
     }
-    sendRequestTradeAmountCard(panelEl, room);
-  });
 
-  panelEl.addEventListener("click", (event) => {
     const buttonEl = event.target.closest("[data-trade-pay-open]");
     if (buttonEl) {
       const trade = {
@@ -239,7 +258,11 @@ async function openRoom(panelEl, room) {
 
     const cancelButtonEl = event.target.closest("[data-trade-cancel]");
     if (cancelButtonEl) {
-      cancelTradeRequest(panelEl, cancelButtonEl);
+      cancelTradeRequest(panelEl, cancelButtonEl, () => {
+        roomContext.hasActiveTrade = false;
+        roomContext.openAmountRequestMessageId = null;
+        restoreTradeRequestButton();
+      });
       return;
     }
 
@@ -662,7 +685,7 @@ async function openTradePayModal(panelEl, trade) {
   });
 }
 
-async function cancelTradeRequest(panelEl, buttonEl) {
+async function cancelTradeRequest(panelEl, buttonEl, onCancelled) {
   const tradeId = buttonEl.dataset.tradeCancel;
   if (!tradeId) return;
 
@@ -671,6 +694,7 @@ async function cancelTradeRequest(panelEl, buttonEl) {
     const cancelledTrade = await cancelTrade(tradeId);
     updateTradeCardStatus(panelEl, cancelledTrade, "취소된 거래");
     showChatNotice(panelEl, "거래가 취소되었습니다.");
+    onCancelled?.(cancelledTrade);
   } catch (error) {
     buttonEl.disabled = false;
     showChatNotice(panelEl, `거래 취소 실패: ${error.message}`, "error");
