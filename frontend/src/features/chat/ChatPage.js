@@ -9,7 +9,7 @@ import {
 import { connectChatRoom, sendChatMessage } from "./chatSocket.js";
 import { fetchRequest } from "../request/requestApi.js";
 import { fetchTalent } from "../talent/talentApi.js";
-import { createTrade, fetchMyTrades, payTrade } from "../trade/tradeApi.js";
+import { cancelTrade, createTrade, fetchMyTrades, payTrade } from "../trade/tradeApi.js";
 import { fetchWallet } from "../wallet/walletApi.js";
 import {
   appendSafeHtml,
@@ -120,14 +120,19 @@ async function openRoom(panelEl, room) {
   const post = requestPost || talentPost;
   const isPostOwner = currentUserId != null && post != null &&
     String(post.userId) === String(currentUserId);
+  const postAvailableForTrade = isPostAvailableForTrade(post, room);
   const canRequestTrade = Boolean(
     post &&
     !activeTrade &&
     !hasOpenAmountRequest &&
-    isPostOwner
+    isPostOwner &&
+    postAvailableForTrade
   );
   const canSetRequestAmount = Boolean(
-    requestPost && hasOpenAmountRequest && !isPostOwner
+    requestPost &&
+    hasOpenAmountRequest &&
+    !isPostOwner &&
+    postAvailableForTrade
   );
   const roomContext = {
     ...room,
@@ -162,7 +167,12 @@ async function openRoom(panelEl, room) {
         updateTradeCardStatus(panelEl, message.trade, "결제 완료");
       }
       if (isTradeCompleted(message)) {
+        roomContext.hasActiveTrade = false;
         updateTradeCardStatus(panelEl, message.trade, "거래 완료");
+      }
+      if (isTradeCancelled(message)) {
+        roomContext.hasActiveTrade = false;
+        updateTradeCardStatus(panelEl, message.trade, "취소된 거래");
       }
       appendSafeHtml(streamEl, "beforeend", renderBubble(message, currentUserId, roomContext));
       streamEl.scrollTop = streamEl.scrollHeight;
@@ -224,6 +234,12 @@ async function openRoom(panelEl, room) {
         payerId: buttonEl.dataset.tradePayerId,
       };
       openTradePayModal(panelEl, trade);
+      return;
+    }
+
+    const cancelButtonEl = event.target.closest("[data-trade-cancel]");
+    if (cancelButtonEl) {
+      cancelTradeRequest(panelEl, cancelButtonEl);
       return;
     }
 
@@ -343,6 +359,10 @@ function renderBubble(message, currentUserId, room) {
     return renderTradeCompletedBubble(message, mineClass);
   }
 
+  if (isTradeCancelled(message)) {
+    return renderTradeCancelledBubble(message, mineClass);
+  }
+
   if (message.messageType === "IMAGE") {
     const src = safeImageUrl(message.content);
     if (!src) {
@@ -384,13 +404,22 @@ function renderTradeRequestBubble(message, currentUserId, mineClass) {
   const trade = message.trade;
   const isPayer = currentUserId != null && String(trade.payerId) === String(currentUserId);
   const isPending = trade.status === "PENDING";
+  const canCancel = trade.status === "PENDING" || trade.status === "PAID";
 
   return `
     <article class="bubble trade-bubble ${mineClass}" data-trade-card="${escapeHtml(trade.tradeId)}">
       <span>거래 요청</span>
       <strong>${formatTradeAmount(trade.amount)}</strong>
       <p>${trade.postType === "REQUEST" ? "요청글 거래가 생성되었습니다." : "재능글 거래가 생성되었습니다."}</p>
-      <div data-trade-card-status>${isPending && isPayer ? `
+      <div data-trade-card-status>${renderTradeCardActions(trade, { isPending, isPayer, canCancel })}</div>
+    </article>
+  `;
+}
+
+function renderTradeCardActions(trade, { isPending, isPayer, canCancel }) {
+  const buttons = [];
+  if (isPending && isPayer) {
+    buttons.push(`
           <button
             type="button"
             class="button primary"
@@ -399,10 +428,21 @@ function renderTradeRequestBubble(message, currentUserId, mineClass) {
             data-trade-status="${escapeHtml(trade.status)}"
             data-trade-payer-id="${escapeHtml(trade.payerId)}"
           >거래 진행</button>
-        ` : `<small>${tradeStatusLabel(trade.status, isPayer)}</small>`}
-      </div>
-    </article>
-  `;
+        `);
+  }
+  if (canCancel) {
+    buttons.push(`
+          <button
+            type="button"
+            class="button quiet"
+            data-trade-cancel="${escapeHtml(trade.tradeId)}"
+          >거래 취소</button>
+        `);
+  }
+  if (buttons.length > 0) {
+    return `<div class="trade-card-actions">${buttons.join("")}</div>`;
+  }
+  return `<small>${tradeStatusLabel(trade.status, isPayer)}</small>`;
 }
 
 function renderTradePaidBubble(message, mineClass) {
@@ -421,6 +461,16 @@ function renderTradeCompletedBubble(message, mineClass) {
       <span>거래 완료</span>
       <strong>${formatTradeAmount(message.trade?.amount)}</strong>
       <p>거래 완료되었습니다.</p>
+    </article>
+  `;
+}
+
+function renderTradeCancelledBubble(message, mineClass) {
+  return `
+    <article class="bubble trade-bubble trade-paid-bubble ${mineClass}">
+      <span>거래 취소</span>
+      <strong>${formatTradeAmount(message.trade?.amount)}</strong>
+      <p>거래가 취소되었습니다.</p>
     </article>
   `;
 }
@@ -599,15 +649,31 @@ async function openTradePayModal(panelEl, trade) {
   payButton.addEventListener("click", async () => {
     payButton.disabled = true;
     try {
-      await payTrade(trade.tradeId);
+      const paidTrade = await payTrade(trade.tradeId);
       closeChatModal(panelEl);
-      updateTradeCardStatus(panelEl, trade, "결제 완료");
-      showChatNotice(panelEl, "결제가 완료되었습니다. 채팅에 안내 메시지가 추가됩니다.");
+      const statusLabel = paidTrade?.status === "COMPLETED" ? "거래 완료" : "결제 완료";
+      updateTradeCardStatus(panelEl, paidTrade || trade, statusLabel);
+      showChatNotice(panelEl, "결제가 완료되어 거래 완료 안내가 채팅에 추가됩니다.");
     } catch (error) {
       messageEl.textContent = error.message;
       payButton.disabled = false;
     }
   });
+}
+
+async function cancelTradeRequest(panelEl, buttonEl) {
+  const tradeId = buttonEl.dataset.tradeCancel;
+  if (!tradeId) return;
+
+  buttonEl.disabled = true;
+  try {
+    const cancelledTrade = await cancelTrade(tradeId);
+    updateTradeCardStatus(panelEl, cancelledTrade, "취소된 거래");
+    showChatNotice(panelEl, "거래가 취소되었습니다.");
+  } catch (error) {
+    buttonEl.disabled = false;
+    showChatNotice(panelEl, `거래 취소 실패: ${error.message}`, "error");
+  }
 }
 
 function showChatModal(panelEl, content) {
@@ -696,6 +762,13 @@ function isTradeCompleted(message) {
   );
 }
 
+function isTradeCancelled(message) {
+  return Boolean(message?.trade) && (
+    message.actionType === "TRADE_CANCELLED" ||
+    (message.messageType === "SYSTEM" && message.content === "거래가 취소되었습니다.")
+  );
+}
+
 function resolveTradeFlow(history, activeTrade) {
   const messages = Array.isArray(history) ? history : [];
   const latestTradeFlowMessage = messages.find((message) =>
@@ -715,6 +788,13 @@ function resolveTradeFlow(history, activeTrade) {
 function isActiveTradeRequest(message) {
   if (!message?.trade) return false;
   return message.trade.status === "PENDING" || message.trade.status === "PAID";
+}
+
+function isPostAvailableForTrade(post, room) {
+  if (!post) return false;
+  if (room.requestPostId) return post.status === "OPEN";
+  if (room.talentPostId) return post.status === "ACTIVE";
+  return false;
 }
 
 function getMessageId(message) {

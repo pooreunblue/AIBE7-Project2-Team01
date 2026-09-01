@@ -19,9 +19,14 @@ export async function fetchMyTrades({ page = 0, size = 20 } = {}) {
   return unwrapApiResponse(response);
 }
 
-// 지갑에서 차감하고 거래를 PAID로 전환
+// 지갑에서 차감하고 거래를 완료 상태로 전환
 export async function payTrade(tradeId) {
   const response = await apiRequest(`/trades/${tradeId}/pay`, { method: "POST" });
+  return unwrapApiResponse(response);
+}
+
+export async function cancelTrade(tradeId) {
+  const response = await apiRequest(`/trades/${tradeId}/cancel`, { method: "PATCH" });
   return unwrapApiResponse(response);
 }
 

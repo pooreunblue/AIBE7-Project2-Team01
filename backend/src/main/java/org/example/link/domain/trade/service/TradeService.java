@@ -52,6 +52,7 @@ public class TradeService {
     private static final String TRADE_REQUEST_MESSAGE = "거래를 요청했습니다.";
     private static final String TRADE_PAID_MESSAGE = "결제가 완료되었습니다.";
     private static final String TRADE_COMPLETED_MESSAGE = "거래 완료되었습니다.";
+    private static final String TRADE_CANCELLED_MESSAGE = "거래가 취소되었습니다.";
 
     @Transactional
     public TradeResponse createTrade(UUID userId, UUID chatRoomId, TradeCreateRequest request) {
@@ -116,6 +117,7 @@ public class TradeService {
             if (!userId.equals(payeeId)) {
                 throw new CustomException(ErrorCode.TRADE_CREATE_ACCESS_DENIED);
             }
+            startRequestTrade(post);
             return new TradeParties(ownerId, payeeId);
         }
 
@@ -154,7 +156,6 @@ public class TradeService {
             throw new CustomException(ErrorCode.INVALID_TRADE_STATUS);
         }
 
-        startRequestTradeIfPresent(trade);
         walletService.withdraw(trade.getPayerId(), trade.getAmount(), trade);
         trade.paid();
 
@@ -163,6 +164,8 @@ public class TradeService {
         UserEntity payer = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         chatMessagePublisher.publishTradePaid(chatRoom, payer, TRADE_PAID_MESSAGE, trade);
+
+        completePaidTrade(userId, trade);
 
         return TradeResponse.from(trade);
     }
@@ -177,11 +180,7 @@ public class TradeService {
             throw new CustomException(ErrorCode.INVALID_TRADE_STATUS);
         }
 
-        completeRequestTradeIfPresent(trade);
-        walletService.deposit(trade.getPayeeId(), trade.getAmount(), trade);
-        trade.complete();
-
-        publishTradeCompletedMessage(userId, trade);
+        completePaidTrade(userId, trade);
 
         return TradeResponse.from(trade);
     }
@@ -193,11 +192,15 @@ public class TradeService {
             throw new CustomException(ErrorCode.INVALID_TRADE_STATUS);
         }
 
+        if (trade.getStatus() == TradeStatus.PENDING) {
+            reopenRequestTradeIfPresent(trade);
+        }
         if (trade.getStatus() == TradeStatus.PAID) {
             reopenRequestTradeIfPresent(trade);
             walletService.refund(trade.getPayerId(), trade.getAmount(), trade);
         }
         trade.cancel();
+        publishTradeCancelledMessage(userId, trade);
         return TradeResponse.from(trade);
     }
 
@@ -238,13 +241,29 @@ public class TradeService {
         );
     }
 
-    private void startRequestTradeIfPresent(TradeEntity trade) {
-        if (trade.getRequestPostId() == null) {
-            return;
-        }
-        RequestPostEntity requestPost = getRequestPostForUpdate(trade.getRequestPostId());
+    private void publishTradeCancelledMessage(UUID userId, TradeEntity trade) {
+        chatRoomRepository.findById(trade.getChatRoomId()).ifPresent(chatRoom ->
+                userRepository.findById(userId).ifPresent(canceller ->
+                        chatMessagePublisher.publishTradeCancelled(
+                                chatRoom,
+                                canceller,
+                                TRADE_CANCELLED_MESSAGE,
+                                trade
+                        )
+                )
+        );
+    }
+
+    private void completePaidTrade(UUID userId, TradeEntity trade) {
+        completeRequestTradeIfPresent(trade);
+        walletService.deposit(trade.getPayeeId(), trade.getAmount(), trade);
+        trade.complete();
+        publishTradeCompletedMessage(userId, trade);
+    }
+
+    private void startRequestTrade(RequestPostEntity requestPost) {
         requestPost.startTrade();
-        embeddingEventPublisher.deleteRequest(trade.getRequestPostId());
+        embeddingEventPublisher.deleteRequest(requestPost.getId());
     }
 
     private void completeRequestTradeIfPresent(TradeEntity trade) {

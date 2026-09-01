@@ -1834,6 +1834,12 @@ dd {
   margin-top: 4px;
 }
 
+.trade-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .trade-bubble.me .button.primary {
   background: #fff;
   color: var(--blue);

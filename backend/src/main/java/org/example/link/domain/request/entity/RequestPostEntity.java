@@ -88,7 +88,7 @@ public class RequestPostEntity extends BaseEntity {
         this.status = RequestPostStatus.CLOSED;
     }
 
-    /** 결제가 완료된 요청글을 다른 거래가 선택하지 못하도록 진행 중 상태로 바꾼다. */
+    /** 거래 요청이 생성된 요청글을 다른 거래가 선택하지 못하도록 진행 중 상태로 바꾼다. */
     public void startTrade() {
         requireStatus(RequestPostStatus.OPEN);
         this.status = RequestPostStatus.IN_PROGRESS;
@@ -100,7 +100,7 @@ public class RequestPostEntity extends BaseEntity {
         this.status = RequestPostStatus.CLOSED;
     }
 
-    /** 결제된 거래가 취소됐을 때 요청글을 다시 거래 가능한 상태로 되돌린다. */
+    /** 결제 전 거래 요청이 취소됐거나 결제된 거래가 취소됐을 때 요청글을 다시 거래 가능한 상태로 되돌린다. */
     public void reopenAfterTradeCancellation() {
         requireStatus(RequestPostStatus.IN_PROGRESS);
         this.status = RequestPostStatus.OPEN;

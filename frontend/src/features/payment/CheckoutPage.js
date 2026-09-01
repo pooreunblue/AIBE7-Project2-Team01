@@ -175,7 +175,7 @@ function bindPayButton(panelEl, tradeId) {
     payButton.disabled = true;
     try {
       await payTrade(tradeId);
-      setSafeHtml(panelEl, `<p>결제가 완료되었습니다.</p>`);
+      setSafeHtml(panelEl, `<p>결제가 완료되어 거래가 완료되었습니다.</p>`);
     } catch (error) {
       if (messageEl) messageEl.textContent = error.message;
       payButton.disabled = false;
