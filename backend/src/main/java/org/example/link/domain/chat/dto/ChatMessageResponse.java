@@ -22,6 +22,7 @@ public record ChatMessageResponse(
 ) {
     private static final String TRADE_AMOUNT_REQUEST_CONTENT = "거래 금액 설정을 요청했습니다.";
     private static final String TRADE_PAID_CONTENT = "결제가 완료되었습니다.";
+    private static final String TRADE_COMPLETED_CONTENT = "거래 완료되었습니다.";
 
     // 거래 요청 카드 렌더링용. TRADE_REQUEST 메시지가 아니면 null.
     public record TradeInfo(
@@ -68,6 +69,9 @@ public record ChatMessageResponse(
         }
         if (TRADE_PAID_CONTENT.equals(message.getContent()) && message.getTrade() != null) {
             return "TRADE_PAID";
+        }
+        if (TRADE_COMPLETED_CONTENT.equals(message.getContent()) && message.getTrade() != null) {
+            return "TRADE_COMPLETED";
         }
         return null;
     }
