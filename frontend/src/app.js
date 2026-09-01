@@ -74,20 +74,40 @@ let renderSequence = 0;
 
 const isHandlingOAuthSuccess = handleOAuthSuccess();
 
+// 로그인해야만 의미가 있는 라우트. 비로그인 상태로 진입하면 API가 401을 뱉으며
+// login.html 전체 리로드로 튕겨 빈 화면이 보이므로, 여기서 미리 로그인 페이지로 보낸다.
+const AUTH_REQUIRED_ROUTES = new Set([
+  "chat",
+  "mypage",
+  "my-trades",
+  "portfolios",
+  "portfolio-new",
+  "checkout",
+  "talent-new",
+  "request-new",
+]);
+
 async function render() {
   const sequence = ++renderSequence;
   teardownChatPage();
 
+  const segments = parseRoute();
   let route = "error";
   let content = ErrorPage(500);
   try {
-    ({ route, content } = resolvePage(parseRoute()));
+    ({ route, content } = resolvePage(segments));
   } catch (error) {
     content = ErrorPage(500, error?.message || "");
   }
 
   const currentUser = await getCurrentUser({ optional: true });
   if (sequence !== renderSequence) return;
+
+  if (!currentUser && AUTH_REQUIRED_ROUTES.has(segments[0])) {
+    window.location.hash = "/login";
+    return;
+  }
+
   setSafeHtml(app, shell(content, route, {
     isLoggedIn: Boolean(currentUser),
     canGoBack: canNavigateBack(route),
