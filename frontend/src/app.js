@@ -36,7 +36,9 @@ import {
   uploadPortfolioFile,
 } from "./features/portfolio/portfolioApi.js";
 import {
+  closeRequest,
   createRequest,
+  deleteRequest,
   fetchRequest,
   fetchRequestPage,
   generateRequestPost,
@@ -971,7 +973,7 @@ async function loadRequestDetail(requestPostId) {
       getRequestFiles(requestPostId).catch(() => []),
     ]);
     renderRequestDetail(request, files);
-    bindRequestChatButton(request);
+    bindRequestDetailActions(request);
   } catch (error) {
     showRouteError(error);
   }
@@ -1457,6 +1459,13 @@ async function bindTalentDetailActions(talent) {
   }
 
   actions.querySelector("[data-talent-inactive]")?.addEventListener("click", async (event) => {
+    const confirmed = await openConfirmModal({
+      title: "재능글 비활성화",
+      message: "이 재능글을 비활성화하시겠습니까? 목록과 검색에서 노출되지 않을 수 있습니다.",
+      confirmLabel: "비활성화",
+    });
+    if (!confirmed) return;
+
     const button = event.currentTarget;
     button.disabled = true;
     try {
@@ -1469,7 +1478,14 @@ async function bindTalentDetailActions(talent) {
   });
 
   actions.querySelector("[data-talent-delete]")?.addEventListener("click", async (event) => {
-    if (!confirm("재능글을 삭제하시겠습니까?")) return;
+    const confirmed = await openConfirmModal({
+      title: "재능글 삭제",
+      message: "이 재능글을 삭제하시겠습니까? 삭제된 글은 복구할 수 없습니다.",
+      confirmLabel: "삭제",
+      danger: true,
+    });
+    if (!confirmed) return;
+
     const button = event.currentTarget;
     button.disabled = true;
     try {
@@ -2010,31 +2026,119 @@ function renderRequestAuthor(request) {
   setSafeHtml(box, renderAuthorProfileLink(request, "요청자 프로필 보기"));
 }
 
-async function bindRequestChatButton(request) {
+async function bindRequestDetailActions(request) {
+  const actions = document.querySelector("[data-request-actions]");
   const button = document.querySelector("[data-request-chat]");
-  if (!button) return;
+  if (!actions || !button) return;
 
   const currentUserId = await getCurrentUserId({ optional: true });
   const isOwner = currentUserId != null && String(request.userId) === String(currentUserId);
 
-  button.disabled = false;
-  button.textContent = isOwner ? "수정하기" : "요청자와 채팅";
-  button.addEventListener("click", async () => {
-    button.disabled = true;
-    if (isOwner) {
-      window.location.hash = `/request-new?id=${request.requestPostId}`;
-      return;
-    }
+  if (isOwner) {
+    button.remove();
+    appendSafeHtml(actions, "beforeend", `
+      <button class="button quiet" type="button" data-request-close="${escapeHtml(request.requestPostId)}">비활성화</button>
+      <a class="button quiet" href="#/request-new?id=${escapeHtml(request.requestPostId)}">수정하기</a>
+      <button class="button quiet danger" type="button" data-request-delete="${escapeHtml(request.requestPostId)}">삭제</button>
+    `);
+  } else {
+    button.disabled = false;
+    button.addEventListener("click", async () => {
+      button.disabled = true;
 
+      try {
+        await startChat({
+          requestPostId: request.requestPostId,
+          otherUserId: request.userId,
+        });
+      } catch (error) {
+        alert(error.message);
+        button.disabled = false;
+      }
+    });
+  }
+
+  actions.querySelector("[data-request-close]")?.addEventListener("click", async (event) => {
+    const confirmed = await openConfirmModal({
+      title: "요청글 비활성화",
+      message: "이 요청글을 비활성화하시겠습니까? 더 이상 거래 요청을 받지 않게 됩니다.",
+      confirmLabel: "비활성화",
+    });
+    if (!confirmed) return;
+
+    const closeButton = event.currentTarget;
+    closeButton.disabled = true;
     try {
-      await startChat({
-        requestPostId: request.requestPostId,
-        otherUserId: request.userId,
-      });
+      await closeRequest(closeButton.dataset.requestClose);
+      await loadRequestDetail(closeButton.dataset.requestClose);
     } catch (error) {
       alert(error.message);
-      button.disabled = false;
+      closeButton.disabled = false;
     }
+  });
+
+  actions.querySelector("[data-request-delete]")?.addEventListener("click", async (event) => {
+    const confirmed = await openConfirmModal({
+      title: "요청글 삭제",
+      message: "이 요청글을 삭제하시겠습니까? 삭제된 글은 복구할 수 없습니다.",
+      confirmLabel: "삭제",
+      danger: true,
+    });
+    if (!confirmed) return;
+
+    const deleteButton = event.currentTarget;
+    deleteButton.disabled = true;
+    try {
+      await deleteRequest(deleteButton.dataset.requestDelete);
+      window.location.hash = "/requests";
+    } catch (error) {
+      alert(error.message);
+      deleteButton.disabled = false;
+    }
+  });
+}
+
+function openConfirmModal({ title, message, confirmLabel = "확인", danger = false }) {
+  return new Promise((resolve) => {
+    document.querySelector("[data-confirm-modal]")?.remove();
+    appendSafeHtml(document.body, "beforeend", `
+      <div class="modal-backdrop confirm-modal-backdrop" data-confirm-modal>
+        <div class="charge-modal confirm-modal" role="dialog" aria-modal="true" aria-label="${escapeHtml(title)}">
+          <div class="modal-head">
+            <div>
+              <span class="kicker">Confirm</span>
+              <h2>${escapeHtml(title)}</h2>
+            </div>
+            <button class="modal-close" type="button" data-confirm-cancel aria-label="팝업 닫기">x</button>
+          </div>
+          <p>${escapeHtml(message)}</p>
+          <div class="form-actions">
+            <button class="button quiet" type="button" data-confirm-cancel>취소</button>
+            <button class="button ${danger ? "danger" : "primary"}" type="button" data-confirm-submit>${escapeHtml(confirmLabel)}</button>
+          </div>
+        </div>
+      </div>
+    `);
+
+    const modal = document.querySelector("[data-confirm-modal]");
+    document.body.classList.add("modal-open");
+
+    const close = (result) => {
+      modal?.remove();
+      document.body.classList.toggle("modal-open", Boolean(document.querySelector(".modal-backdrop:not([hidden])")));
+      resolve(result);
+    };
+
+    modal?.addEventListener("click", (event) => {
+      if (event.target === modal || event.target.closest("[data-confirm-cancel]")) {
+        close(false);
+      }
+      if (event.target.closest("[data-confirm-submit]")) {
+        close(true);
+      }
+    });
+
+    modal?.querySelector("[data-confirm-submit]")?.focus();
   });
 }
 

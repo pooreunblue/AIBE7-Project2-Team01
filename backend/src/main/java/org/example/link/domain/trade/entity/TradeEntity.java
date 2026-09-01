@@ -89,9 +89,7 @@ public class TradeEntity {
     }
 
     public void cancel() {
-        if (this.status != TradeStatus.PENDING && this.status != TradeStatus.PAID) {
-            throw new CustomException(ErrorCode.INVALID_TRADE_STATUS);
-        }
+        requireStatus(TradeStatus.PENDING);
         this.status = TradeStatus.CANCELLED;
         this.cancelledAt = Instant.now();
     }
