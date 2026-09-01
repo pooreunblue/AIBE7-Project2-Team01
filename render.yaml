@@ -5,6 +5,7 @@ services:
     runtime: docker
     region: singapore
     plan: free
+    autoDeployTrigger: commit
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     envVars:
@@ -63,6 +64,7 @@ services:
     region: singapore
     plan: free
     rootDir: frontend
+    autoDeployTrigger: commit
     buildCommand: npm install
     startCommand: npm start
     envVars:
