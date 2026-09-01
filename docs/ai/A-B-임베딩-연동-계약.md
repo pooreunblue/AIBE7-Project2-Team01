@@ -49,7 +49,7 @@ REQUEST:6ba7b810-9dad-11d1-80b4-00c04fd430c8
 
 ### 구현 선행조건
 
-현재 Spring AI PgVectorStore의 기본 ID 타입은 UUID다. 위 합성 문자열 ID를 사용하려면 실제 데이터 적재 전에 다음 설정과 DB 스키마를 `TEXT` ID 기준으로 맞춰야 한다.
+현재 프로젝트는 합성 문자열 ID를 사용하므로 Spring AI PgVectorStore ID 타입을 `TEXT` 기준으로 맞춘다.
 
 ```yaml
 spring:
@@ -59,7 +59,7 @@ spring:
         id-type: TEXT
 ```
 
-이 설정은 현재 코드에 아직 반영되지 않았다. 기존 `vector_store.id`가 UUID라면 설정만 변경하지 말고 팀 DB 상태를 확인한 뒤 빈 테이블 재생성 또는 마이그레이션을 진행한다.
+이 설정은 현재 `application-ai.yaml`에 반영되어 있다. 기존 `vector_store.id`가 UUID인 DB라면 설정만 변경하지 말고 팀 DB 상태를 확인한 뒤 `docs/migrations/20260831_vector_store_id_to_text.sql`을 적용하거나 빈 테이블을 재생성한다.
 
 ## 4. Metadata 계약
 

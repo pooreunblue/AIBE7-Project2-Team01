@@ -13,7 +13,7 @@
 
 ## 1. 배경
 
-프로젝트는 Talent, Request 게시글을 자연어로 검색하고, 검색 의도와 조건에 맞는 후보를 추천하는 기능이 필요하다. 이후 AI 게시글 생성, Review 분석, 사용자 Reputation을 추천 결과에 반영할 예정이다.
+프로젝트는 Talent, Request 게시글을 자연어로 검색하고, 검색 의도와 조건에 맞는 후보를 추천하는 기능이 필요하다. 초기에는 Review 분석과 사용자 Reputation을 추천 결과에 반영할 예정이었으나, MVP에서는 ADR-003에 따라 제외했다.
 
 현재 백엔드는 Spring Boot 4.0.7, Java 17, PostgreSQL, Spring Data JPA를 사용한다. AI 초기 환경에는 Spring AI 2.0.1, Google GenAI Gemini, PostgreSQL pgvector가 설정되어 있다.
 
@@ -23,7 +23,7 @@ AI 기능은 다음 세 영역을 병렬 개발한다.
 | --- | --- | --- |
 | A | Generation / Embedding | AI 게시글 생성, Document 생성, VectorStore lifecycle |
 | B | Matching / RAG | Vector Search, 원본 검증, Filtering, Ranking, 추천 응답 |
-| C | Review / Reputation | Review CRUD·분석, 사용자 Reputation 제공 |
+| C | Review / Reputation | 초기 계획상 Review CRUD·분석, 사용자 Reputation 제공. MVP에서는 제외 |
 
 공통 데이터 계약과 책임 경계를 미리 정하지 않으면 Document metadata 불일치, 중복 저장 계층, 원본 DB와 VectorStore 간 정합성 문제, 담당자 간 코드 충돌이 발생할 수 있다.
 
@@ -96,7 +96,6 @@ Matching은 Vector Search만으로 결정하지 않고 다음 순서를 사용�
 → Talent 또는 Request 원본 Entity 일괄 조회
 → 상태·카테고리·금액·기간·마감일 검증
 → 서버 MatchScore 계산
-→ Reputation 반영
 → TOP 3~5 선정
 → LLM 추천 이유 생성
 ```
@@ -105,7 +104,7 @@ VectorStore metadata는 후보 검색용 복제 정보이며 source of truth가 
 
 ### 2.6 Ranking과 LLM 책임
 
-Ranking은 Java 서버 코드에서 계산한다. 초기 점수는 semantic similarity를 중심으로 시작하고, 명시적인 금액 선호가 있을 때 amount fit을 추가한다. Reputation은 C의 계약이 완료된 후 반영한다.
+Ranking은 Java 서버 코드에서 계산한다. 초기 점수는 semantic similarity를 중심으로 시작하고, 명시적인 금액 선호가 있을 때 amount fit을 추가한다. Reputation은 MVP에서 제외한다.
 
 상태, 명시적 category, 가격 상한, 예산 범위, 필수 기간, 마감 여부는 점수가 아니라 탈락 조건으로 처리한다.
 
@@ -144,13 +143,11 @@ AI API 또는 VectorStore 장애가 원본 Talent, Request, Portfolio CRUD를 �
 - `Document.getScore()` 기반 semantic score 추출
 - `findAllById` 기반 원본 Entity 일괄 조회
 - 필수 조건 Filtering, MatchScore, TOP 후보 선정
-- C Reputation 및 LLM 추천 이유 연동
+- LLM Query 분석 및 추천 이유 연동
 
 ### C
 
-- Review CRUD와 작성 가능 조건 검증
-- 리뷰 분석과 사용자 Reputation 계산
-- B가 Review Repository에 직접 의존하지 않도록 Service/DTO 계약 제공
+초기 계획상 Review CRUD와 사용자 Reputation을 담당할 예정이었으나 MVP에서는 제외한다. 재도입 시 B가 Review Repository에 직접 의존하지 않도록 Service/DTO 계약을 다시 작성한다.
 
 ## 4. 고려한 대안
 
@@ -198,15 +195,14 @@ AI API 또는 VectorStore 장애가 원본 Talent, Request, Portfolio CRUD를 �
 
 ## 6. 구현 제약과 후속 작업
 
-- [ ] 합성 ID 사용 전에 PgVectorStore `id-type: TEXT`와 실제 테이블 스키마를 일치시킨다.
-- [ ] A/B metadata key와 값 타입을 통합 테스트로 고정한다.
-- [ ] A가 Talent Document lifecycle을 먼저 완성한다.
-- [ ] B가 TALENT 검색과 `Document.getScore()` 추출을 검증한다.
-- [ ] Request로 확장하기 전에 TALENT vertical slice를 완성한다.
-- [ ] C가 Reputation 응답과 점수 범위를 확정한다.
+- [x] PgVectorStore `id-type: TEXT`와 실제 테이블 스키마를 일치시킨다.
+- [x] A/B metadata key와 값 타입을 문서로 고정한다.
+- [x] A가 Talent/Request Document lifecycle을 완성한다.
+- [x] B가 TALENT/REQUEST 검색과 `Document.getScore()` 추출을 검증한다.
+- [x] LLM Query 분석과 추천 이유를 연동한다.
+- [x] C Reputation은 MVP에서 제외한다.
 - [ ] 임베딩 실패 대상 재처리 방법을 마련한다.
 - [ ] 실제 검색 데이터로 topK, threshold, 점수 가중치를 조정한다.
-- [ ] 자연어 조건 분석과 추천 이유는 구조화 Matching API가 안정된 후 추가한다.
 
 ## 7. 변경 기준
 

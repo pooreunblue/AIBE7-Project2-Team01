@@ -1,4 +1,4 @@
-# TalentPulse 문서 안내
+# Knotty 문서 안내
 
 ## 핵심 명세
 
@@ -9,6 +9,7 @@
 | [API 명세서](./api.md) | REST, WebSocket, 인증·CSRF와 AI 요청 계약 |
 | [ERD](./erd.md) | 도메인 관계, 상태, 제약과 VectorStore |
 | [초기 스키마](./schema.sql) | PostgreSQL 신규 DB 생성 기준 |
+| [Render 배포 점검 가이드](./deployment-render.md) | 운영 환경변수, DB 사전 작업과 배포 후 확인 절차 |
 
 ## AI
 

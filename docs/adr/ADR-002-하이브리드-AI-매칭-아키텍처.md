@@ -3,7 +3,7 @@
 - 상태: 승인됨 (Accepted)
 - 결정일: 2026-08-29
 - 적용 범위: Talent/Request 자연어 검색, 후보 필터링, Ranking 및 추천 이유 연동
-- 구현 상태: Backend Matching, 썸네일 응답과 LLM 추천 이유 생성 완료. Frontend 연동 예정
+- 구현 상태: Backend Matching, 썸네일 응답, LLM 조건 분석·추천 이유 생성, Frontend AI 검색 화면 연동 완료. 운영 배포의 공개 호출은 별도 재검증 필요
 
 ## 배경
 
@@ -118,10 +118,10 @@ LLM은 최종 순위를 직접 결정하지 않는다.
 
 LLM이 담당할 수 있는 기능은 다음으로 제한한다.
 
-- 자연어 Query에서 semantic query와 검증 가능한 구조화 조건 추출
+- 자연어 Query에서 semantic query, `targetType`과 검증 가능한 구조화 조건 추출
 - 서버가 선정한 최종 후보에 대한 추천 이유 생성
 
-LLM이 임의 SQL, 내부 UUID, VectorStore filter 또는 최종 Ranking을 생성하지 않도록 한다. 초기 MVP에서는 구조화된 조건을 API 요청으로 직접 받고, 기본 매칭 흐름이 안정된 후 자연어 조건 분석을 추가한다.
+LLM이 임의 SQL, 내부 UUID, VectorStore filter 또는 최종 Ranking을 생성하지 않도록 한다. 프론트는 `/ai/matches/analyze` 결과로 조건 입력을 채운 뒤 `/ai/matches`로 서버 Ranking 결과를 조회한다.
 
 이 구조는 검색 결과를 원본 데이터로 보강해 답변하는 RAG 성격을 가지지만, 범용 문서 질의응답 RAG에 전체 흐름을 위임하지 않는다. 매칭 서비스가 검색, 원본 검증 및 Ranking 순서를 명시적으로 제어한다.
 
@@ -136,6 +136,7 @@ LLM이 임의 SQL, 내부 UUID, VectorStore filter 또는 최종 Ranking을 생�
 | `MatchCandidateFilter` | 원본 데이터 기준 필수 조건 검사 |
 | `MatchRankingService` | MatchScore 계산과 정렬 |
 | `MatchConditionValidator` | targetType별 요청 조건 검증 |
+| `AiMatchQueryAnalysisService` | 자연어 Query를 검색 대상과 정형 조건으로 분석하고 실패 시 규칙 기반 결과 반환 |
 | `RecommendationReasonService` | 최종 후보의 추천 이유를 한 번의 LLM 호출로 생성하고 실패 시 기존 결과 유지 |
 B는 Embedding 저장 코드를 수정하지 않는다.
 
@@ -207,6 +208,7 @@ B는 Embedding 저장 코드를 수정하지 않는다.
 - Vector 검색: `backend/src/main/java/org/example/link/ai/matching/service/search/VectorSearchService.java`
 - 후보 생성·검증: `backend/src/main/java/org/example/link/ai/matching/service/candidate/`, `service/filter/`, `service/condition/`
 - Ranking: `backend/src/main/java/org/example/link/ai/matching/service/ranking/MatchRankingService.java`
+- Query 분석: `backend/src/main/java/org/example/link/ai/matching/service/analysis/AiMatchQueryAnalysisService.java`
 - 추천 이유: `backend/src/main/java/org/example/link/ai/matching/service/recommendation/RecommendationReasonService.java`
 - 테스트: `backend/src/test/java/org/example/link/ai/matching/`
 

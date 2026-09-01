@@ -2,7 +2,7 @@
 
 ## 1. 기준
 
-- 기준일: 2026년 8월 31일
+- 기준일: 2026년 9월 1일
 - DBMS: PostgreSQL
 - PK: 도메인 테이블 UUID
 - VectorStore: Spring AI PgVectorStore, `id-type: TEXT`, dimension 1536
@@ -241,3 +241,9 @@ erDiagram
 | `(trade_id, transaction_type)` UNIQUE | 중복 결제·정산·환불 내역 방지 |
 
 애플리케이션에서는 거래, 요청글, 채팅방과 지갑 변경 경로에 `PESSIMISTIC_WRITE`를 적용해 경쟁 요청을 순차 처리한다.
+
+## 6. 운영 DB 주의사항
+
+- 신규 DB는 `docs/schema.sql`을 기준으로 생성한다.
+- 기존 DB에서 UUID 이전 또는 `vector_store.id` 타입 변경을 이미 적용했다면 같은 마이그레이션을 반복 적용하지 않는다.
+- `vector_store`는 검색 캐시 성격의 테이블이며 원본 게시글 데이터가 아니다. 모델, 차원 또는 Document text 규칙이 바뀌면 재임베딩이 필요하다.
