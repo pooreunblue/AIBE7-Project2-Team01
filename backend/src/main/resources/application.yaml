@@ -28,6 +28,9 @@ spring:
     activate:
       on-profile: prod
 
+  main:
+    lazy-initialization: true
+
   servlet:
     multipart:
       max-file-size: 10MB
