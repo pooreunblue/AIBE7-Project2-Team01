@@ -403,8 +403,9 @@ function renderTradeAmountRequestBubble(message, currentUserId, mineClass, room)
 function renderTradeRequestBubble(message, currentUserId, mineClass) {
   const trade = message.trade;
   const isPayer = currentUserId != null && String(trade.payerId) === String(currentUserId);
+  const isRequester = currentUserId != null && String(trade.payeeId) === String(currentUserId);
   const isPending = trade.status === "PENDING";
-  const canCancel = trade.status === "PENDING" || trade.status === "PAID";
+  const canCancel = isPending && isRequester;
 
   return `
     <article class="bubble trade-bubble ${mineClass}" data-trade-card="${escapeHtml(trade.tradeId)}">

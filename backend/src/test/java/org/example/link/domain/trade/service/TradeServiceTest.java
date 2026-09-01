@@ -1,6 +1,8 @@
 package org.example.link.domain.trade.service;
 
 import org.example.link.ai.embedding.event.EmbeddingEventPublisher;
+import org.example.link.common.exception.CustomException;
+import org.example.link.common.exception.ErrorCode;
 import org.example.link.domain.chat.entity.ChatParticipant;
 import org.example.link.domain.chat.entity.ChatRoom;
 import org.example.link.domain.chat.repository.ChatParticipantRepository;
@@ -30,6 +32,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -149,23 +152,22 @@ class TradeServiceTest {
     }
 
     @Test
-    void cancelsPaidRequestTradeAndReopensRequestPost() {
+    void rejectsCancellingPaidRequestTrade() {
         UUID tradeId = UUID.randomUUID();
         UUID requestPostId = UUID.randomUUID();
         UUID payerId = UUID.randomUUID();
         TradeEntity trade = requestTrade(UUID.randomUUID(), requestPostId, payerId);
         trade.paid();
-        RequestPostEntity requestPost = requestPost(RequestPostStatus.IN_PROGRESS);
 
         when(tradeRepository.findByIdForUpdate(tradeId)).thenReturn(Optional.of(trade));
-        when(requestPostRepository.findByIdForUpdate(requestPostId)).thenReturn(Optional.of(requestPost));
 
-        tradeService.cancel(payerId, tradeId);
+        assertThatThrownBy(() -> tradeService.cancel(trade.getPayeeId(), tradeId))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_TRADE_STATUS);
 
-        assertThat(trade.getStatus()).isEqualTo(TradeStatus.CANCELLED);
-        assertThat(requestPost.getStatus()).isEqualTo(RequestPostStatus.OPEN);
-        verify(walletService).refund(payerId, trade.getAmount(), trade);
-        verify(embeddingEventPublisher).saveRequest(requestPost);
+        assertThat(trade.getStatus()).isEqualTo(TradeStatus.PAID);
+        verifyNoInteractions(walletService);
     }
 
     @Test
@@ -184,6 +186,24 @@ class TradeServiceTest {
         assertThat(trade.getStatus()).isEqualTo(TradeStatus.CANCELLED);
         assertThat(requestPost.getStatus()).isEqualTo(RequestPostStatus.OPEN);
         verify(embeddingEventPublisher).saveRequest(requestPost);
+        verifyNoInteractions(walletService);
+    }
+
+    @Test
+    void rejectsCancellingByPayerBecauseOnlyRequesterCanCancel() {
+        UUID tradeId = UUID.randomUUID();
+        UUID requestPostId = UUID.randomUUID();
+        UUID payerId = UUID.randomUUID();
+        TradeEntity trade = requestTrade(UUID.randomUUID(), requestPostId, payerId);
+
+        when(tradeRepository.findByIdForUpdate(tradeId)).thenReturn(Optional.of(trade));
+
+        assertThatThrownBy(() -> tradeService.cancel(payerId, tradeId))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.TRADE_ACCESS_DENIED);
+
+        assertThat(trade.getStatus()).isEqualTo(TradeStatus.PENDING);
         verifyNoInteractions(walletService);
     }
 
