@@ -51,6 +51,7 @@ public class TradeService {
 
     private static final String TRADE_REQUEST_MESSAGE = "거래를 요청했습니다.";
     private static final String TRADE_PAID_MESSAGE = "결제가 완료되었습니다.";
+    private static final String TRADE_COMPLETED_MESSAGE = "거래 완료되었습니다.";
 
     @Transactional
     public TradeResponse createTrade(UUID userId, UUID chatRoomId, TradeCreateRequest request) {
@@ -179,6 +180,9 @@ public class TradeService {
         completeRequestTradeIfPresent(trade);
         walletService.deposit(trade.getPayeeId(), trade.getAmount(), trade);
         trade.complete();
+
+        publishTradeCompletedMessage(userId, trade);
+
         return TradeResponse.from(trade);
     }
 
@@ -219,6 +223,19 @@ public class TradeService {
         if (!trade.getPayerId().equals(userId) && !trade.getPayeeId().equals(userId)) {
             throw new CustomException(ErrorCode.TRADE_ACCESS_DENIED);
         }
+    }
+
+    private void publishTradeCompletedMessage(UUID userId, TradeEntity trade) {
+        chatRoomRepository.findById(trade.getChatRoomId()).ifPresent(chatRoom ->
+                userRepository.findById(userId).ifPresent(completer ->
+                        chatMessagePublisher.publishTradeCompleted(
+                                chatRoom,
+                                completer,
+                                TRADE_COMPLETED_MESSAGE,
+                                trade
+                        )
+                )
+        );
     }
 
     private void startRequestTradeIfPresent(TradeEntity trade) {

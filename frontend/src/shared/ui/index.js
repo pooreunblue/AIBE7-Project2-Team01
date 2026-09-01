@@ -6,19 +6,19 @@ export function formatMoney(value) {
 
 export function shell(content, route, { isLoggedIn = false, canGoBack = false } = {}) {
   const links = [
-    ["home", "⌂", "Home"],
     ["talents", "재능글", "재능글 목록"],
     ["requests", "요청글", "요청글 목록"],
     ["ai-search", "AI 매칭", "AI 매칭"],
     ["chat", "채팅", "채팅"],
   ];
-  const headerTitle = escapeHtml(getHeaderTitle(route));
   const safeRoute = escapeHtml(route);
 
   return `
     <header class="site-header">
       ${backControl(canGoBack)}
-      <strong class="header-title">${headerTitle}</strong>
+      <a class="header-logo" href="#/home" aria-label="메인 화면으로 이동">
+        <img src="assets/knotty-logo.png" alt="Knotty" />
+      </a>
       <nav class="icon-nav" aria-label="main navigation">
         ${links.map(([key, icon, label]) => headerLink(key, icon, label, route)).join("")}
         ${accountControl(isLoggedIn, route)}
@@ -57,36 +57,6 @@ function headerLink(key, icon, label, route) {
   `;
 }
 
-function getHeaderTitle(route) {
-  const titles = {
-    home: "Home",
-    login: "Login",
-    signup: "Sign Up",
-    talents: "Talent",
-    "talent-new": "Talent Create",
-    requests: "Requests",
-    "request-new": "Request Create",
-    "ai-search": "AI Search",
-    chat: "Chat",
-    mypage: "My Page",
-    "user-profile": "Profile",
-    "my-trades": "Trades",
-    portfolios: "Portfolio",
-    "portfolio-new": getPortfolioWriteTitle(),
-    checkout: "Payment",
-    "not-found": "Not Found",
-    error: "Error",
-  };
-
-  return titles[route] || "TalentPulse";
-}
-
-function getPortfolioWriteTitle() {
-  return window.location.hash.includes("?id=")
-    ? "Portfolio Edit"
-    : "Portfolio Create";
-}
-
 function accountControl(isLoggedIn, route) {
   if (!isLoggedIn) {
     return `<a class="icon-link ${route === "login" ? "active" : ""}" href="#/login" aria-label="Login"><span aria-hidden="true">○</span></a>`;
@@ -104,14 +74,8 @@ function accountControl(isLoggedIn, route) {
 export function footer() {
   return `
     <footer class="site-footer">
-      <strong>TalentPulse</strong>
-      <div>
-        <a href="#/home">Terms</a>
-        <a href="#/home">Privacy</a>
-        <a href="#/home">Help</a>
-        <a href="#/home">Contact</a>
-      </div>
-      <span>© 2026 TalentPulse. Premium Marketplace.</span>
+      <strong>Knotty</strong>
+      <span>© 2026 Knotty. Premium Marketplace.</span>
     </footer>
   `;
 }
