@@ -2,12 +2,11 @@ services:
   # ─── Backend (Spring Boot) ───────────────────────────────────────────────────
   - type: web
     name: talentpulse-backend
-    runtime: java
+    runtime: docker
     region: singapore
     plan: free
     rootDir: backend
-    buildCommand: ./gradlew clean bootJar -x test
-    startCommand: java -Dspring.profiles.active=prod,db,auth,redis,storage,ai -jar build/libs/backend-0.0.1.md-SNAPSHOT.jar
+    dockerfilePath: ./backend/Dockerfile   # 저장소 루트 기준 경로
     healthCheckPath: /actuator/health
     envVars:
       # ── PostgreSQL ────────────────────────────────────────────────────────────
