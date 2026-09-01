@@ -36,7 +36,6 @@ import {
   uploadPortfolioFile,
 } from "./features/portfolio/portfolioApi.js";
 import {
-  closeRequest,
   createRequest,
   deleteRequest,
   fetchRequest,
@@ -2057,7 +2056,6 @@ async function bindRequestDetailActions(request) {
   if (isOwner) {
     button.remove();
     appendSafeHtml(actions, "beforeend", `
-      <button class="button quiet" type="button" data-request-close="${escapeHtml(request.requestPostId)}">비활성화</button>
       <a class="button quiet" href="#/request-new?id=${escapeHtml(request.requestPostId)}">수정하기</a>
       <button class="button quiet danger" type="button" data-request-delete="${escapeHtml(request.requestPostId)}">삭제</button>
     `);
@@ -2077,25 +2075,6 @@ async function bindRequestDetailActions(request) {
       }
     });
   }
-
-  actions.querySelector("[data-request-close]")?.addEventListener("click", async (event) => {
-    const confirmed = await openConfirmModal({
-      title: "요청글 비활성화",
-      message: "이 요청글을 비활성화하시겠습니까? 더 이상 거래 요청을 받지 않게 됩니다.",
-      confirmLabel: "비활성화",
-    });
-    if (!confirmed) return;
-
-    const closeButton = event.currentTarget;
-    closeButton.disabled = true;
-    try {
-      await closeRequest(closeButton.dataset.requestClose);
-      await loadRequestDetail(closeButton.dataset.requestClose);
-    } catch (error) {
-      alert(error.message);
-      closeButton.disabled = false;
-    }
-  });
 
   actions.querySelector("[data-request-delete]")?.addEventListener("click", async (event) => {
     const confirmed = await openConfirmModal({
