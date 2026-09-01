@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+      - merge
+      - main
+      - "feature/**"
+      - "fix/**"
+
+jobs:
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: link_test
+          POSTGRES_USER: link
+          POSTGRES_PASSWORD: link
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U link -d link_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      DB_HOST: localhost
+      DB_NAME: link_test
+      DB_USERNAME: link
+      DB_PASSWORD: link
+      JWT_SECRET: ci-test-secret-ci-test-secret-ci-test-secret-ci-test-secret
+      GEMINI_API_KEY: ci-dummy-key
+      GOOGLE_CLIENT_ID: ci-dummy-client-id
+      GOOGLE_CLIENT_SECRET: ci-dummy-client-secret
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      REDIS_USERNAME: ""
+      REDIS_PASSWORD: ""
+      SUPABASE_URL: http://localhost
+      SUPABASE_SERVICE_KEY: ci-dummy-service-key
+      SUPABASE_BUCKET: ci-dummy-bucket
+      AI_PGVECTOR_INITIALIZE_SCHEMA: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Enable pgvector extension
+        run: |
+          PGPASSWORD=link psql -h localhost -U link -d link_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+      - name: Run backend tests
+        run: ./gradlew test
+
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run frontend tests
+        run: npm test
