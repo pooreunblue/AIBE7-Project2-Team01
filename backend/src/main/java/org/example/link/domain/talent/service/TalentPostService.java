@@ -16,6 +16,7 @@ import org.example.link.domain.talent.dto.TalentPostRequestDto;
 import org.example.link.domain.talent.entity.TalentPostEntity;
 import org.example.link.domain.talent.repository.TalentPostRepository;
 import org.example.link.domain.talent.util.TalentPostStatus;
+import org.example.link.domain.talent.util.DurationUnit;
 import org.example.link.domain.user.entity.UserEntity;
 import org.example.link.domain.user.repository.UserRepository;
 import org.jspecify.annotations.NonNull;
@@ -49,8 +50,11 @@ public class TalentPostService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TalentPostEntity> readAll(Pageable pageable) {
-        return talentPostRepository.findAll(pageable);
+    public Page<TalentPostEntity> readAll(UUID categoryId, Long maxPrice,
+                                          Integer maxEstimatedDuration, DurationUnit durationUnit,
+                                          Pageable pageable) {
+        return talentPostRepository.findAllByFilters(
+                categoryId, maxPrice, convertToDays(maxEstimatedDuration, durationUnit), pageable);
     }
 
     public TalentPostEntity readOne(UUID talentPostId) {
@@ -60,9 +64,31 @@ public class TalentPostService {
     @Transactional(readOnly = true)
     public Page<TalentPostEntity> search(
             String keyword,
+            UUID categoryId,
+            Long maxPrice,
+            Integer maxEstimatedDuration,
+            DurationUnit durationUnit,
             Pageable pageable
     ) {
-        return talentPostRepository.search(keyword, pageable);
+        return talentPostRepository.search(keyword, categoryId, maxPrice,
+                convertToDays(maxEstimatedDuration, durationUnit), pageable);
+    }
+
+    private Integer convertToDays(Integer duration, DurationUnit durationUnit) {
+        if (duration == null) {
+            return null;
+        }
+        return duration * durationMultiplier(durationUnit);
+    }
+
+    private int durationMultiplier(DurationUnit durationUnit) {
+        if (durationUnit == null || durationUnit == DurationUnit.DAY) {
+            return 1;
+        }
+        if (durationUnit == DurationUnit.WEEK) {
+            return 7;
+        }
+        return 30;
     }
 
     @Transactional

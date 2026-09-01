@@ -43,8 +43,12 @@ public class RequestPostService {
     }
 
     @Transactional(readOnly = true)
-    public Page<RequestPostEntity> readAll(Pageable pageable) {
-        return requestPostRepository.findAll(pageable);
+    public Page<RequestPostEntity> readAll(UUID categoryId, Long minBudget, Long maxBudget,
+                                           java.time.LocalDate dueDateFrom,
+                                           java.time.LocalDate dueDateTo,
+                                           Pageable pageable) {
+        return requestPostRepository.findAllByFilters(
+                categoryId, minBudget, maxBudget, dueDateFrom, dueDateTo, pageable);
     }
 
     public RequestPostEntity readOne(UUID requestPostId) {
@@ -54,9 +58,15 @@ public class RequestPostService {
     @Transactional(readOnly = true)
     public Page<RequestPostEntity> search(
             String keyword,
+            UUID categoryId,
+            Long minBudget,
+            Long maxBudget,
+            java.time.LocalDate dueDateFrom,
+            java.time.LocalDate dueDateTo,
             Pageable pageable
     ) {
-        return requestPostRepository.search(keyword, pageable);
+        return requestPostRepository.search(keyword, categoryId, minBudget, maxBudget,
+                dueDateFrom, dueDateTo, pageable);
     }
 
     @Transactional

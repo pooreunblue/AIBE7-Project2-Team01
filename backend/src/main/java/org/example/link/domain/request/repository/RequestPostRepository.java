@@ -22,6 +22,24 @@ public interface RequestPostRepository extends JpaRepository<RequestPostEntity, 
     @EntityGraph(attributePaths = {"user", "category"})
     Page<RequestPostEntity> findAll(Pageable pageable);
 
+    @Query("""
+            SELECT r FROM RequestPostEntity r
+            WHERE (:categoryId IS NULL OR r.category.id = :categoryId)
+              AND (:minBudget IS NULL OR r.budgetMax >= :minBudget)
+              AND (:maxBudget IS NULL OR r.budgetMin <= :maxBudget)
+              AND (CAST(:dueDateFrom AS date) IS NULL OR r.dueDate >= :dueDateFrom)
+              AND (CAST(:dueDateTo AS date) IS NULL OR r.dueDate <= :dueDateTo)
+            """)
+    @EntityGraph(attributePaths = {"user", "category"})
+    Page<RequestPostEntity> findAllByFilters(
+            @Param("categoryId") UUID categoryId,
+            @Param("minBudget") Long minBudget,
+            @Param("maxBudget") Long maxBudget,
+            @Param("dueDateFrom") java.time.LocalDate dueDateFrom,
+            @Param("dueDateTo") java.time.LocalDate dueDateTo,
+            Pageable pageable
+    );
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from RequestPostEntity r where r.id = :requestPostId")
     Optional<RequestPostEntity> findByIdForUpdate(@Param("requestPostId") UUID requestPostId);
@@ -37,10 +55,20 @@ public interface RequestPostRepository extends JpaRepository<RequestPostEntity, 
            LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
            OR
            LOWER(r.content) LIKE LOWER(CONCAT('%', :keyword, '%')))
+      AND (:categoryId IS NULL OR r.category.id = :categoryId)
+      AND (:minBudget IS NULL OR r.budgetMax >= :minBudget)
+      AND (:maxBudget IS NULL OR r.budgetMin <= :maxBudget)
+      AND (CAST(:dueDateFrom AS date) IS NULL OR r.dueDate >= :dueDateFrom)
+      AND (CAST(:dueDateTo AS date) IS NULL OR r.dueDate <= :dueDateTo)
     """)
     @EntityGraph(attributePaths = {"user", "category"})
     Page<RequestPostEntity> search(
             @Param("keyword") String keyword,
+            @Param("categoryId") UUID categoryId,
+            @Param("minBudget") Long minBudget,
+            @Param("maxBudget") Long maxBudget,
+            @Param("dueDateFrom") java.time.LocalDate dueDateFrom,
+            @Param("dueDateTo") java.time.LocalDate dueDateTo,
             Pageable pageable
     );
 }

@@ -44,11 +44,17 @@ public class RequestPostController {
     @GetMapping
     @Operation(summary = "의뢰글 목록 조회")
     public ApiResponse<Page<RequestPostResponseDto>> readAll(
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) Long minBudget,
+            @RequestParam(required = false) Long maxBudget,
+            @RequestParam(required = false) java.time.LocalDate dueDateFrom,
+            @RequestParam(required = false) java.time.LocalDate dueDateTo,
             @ParameterObject
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
-        Page<RequestPostEntity> requestPostEntities = requestPostService.readAll(pageable);
+        Page<RequestPostEntity> requestPostEntities = requestPostService.readAll(
+                categoryId, minBudget, maxBudget, dueDateFrom, dueDateTo, pageable);
         return ApiResponse.ok(requestPostEntities.map(RequestPostResponseDto::toDto));
     }
 
@@ -63,6 +69,11 @@ public class RequestPostController {
     @Operation(summary = "의뢰글 검색")
     public ApiResponse<Page<RequestPostResponseDto>> searchRequests(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) Long minBudget,
+            @RequestParam(required = false) Long maxBudget,
+            @RequestParam(required = false) java.time.LocalDate dueDateFrom,
+            @RequestParam(required = false) java.time.LocalDate dueDateTo,
             @ParameterObject
             @PageableDefault(
                     size = 20,
@@ -70,7 +81,8 @@ public class RequestPostController {
                     direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
-        Page<RequestPostEntity> requestPostEntities = requestPostService.search(keyword, pageable);
+        Page<RequestPostEntity> requestPostEntities = requestPostService.search(
+                keyword, categoryId, minBudget, maxBudget, dueDateFrom, dueDateTo, pageable);
         return ApiResponse.ok(requestPostEntities.map(RequestPostResponseDto::toDto));
     }
 
