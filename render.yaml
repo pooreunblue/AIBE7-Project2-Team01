@@ -6,7 +6,6 @@ services:
     region: singapore
     plan: free
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /health
     envVars:
       # ── PostgreSQL ────────────────────────────────────────────────────────────
       - key: DB_HOST
@@ -68,7 +67,5 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: "3000"
       - key: API_TARGET
         sync: false
