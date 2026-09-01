@@ -1,4 +1,5 @@
 import { fetchCategories } from "../category/categoryApi.js";
+import { bindCategoryPicker, syncCategoryPickerButton } from "../category/categoryPicker.js";
 import { escapeHtml, safeImageUrl, safeUrl, setSafeHtml } from "../../shared/security/xss.js";
 import { formatMoney } from "../../shared/ui/index.js";
 import { analyzeAiMatchQuery, searchAiMatches } from "./matchingApi.js";
@@ -35,9 +36,12 @@ export function AiSearchPage() {
           <div class="ai-condition-bar">
             <label class="field ai-category-field">
               <span>카테고리</span>
-              <select name="categoryId" data-ai-category>
+              <select class="visually-hidden-select" name="categoryId" data-ai-category>
                 <option value="">전체 카테고리</option>
               </select>
+              <button class="category-select-button" type="button" data-ai-category-open>
+                <span data-category-picker-label>전체 카테고리</span>
+              </button>
             </label>
 
             <div class="ai-target-fields" data-ai-target-fields="TALENT">
@@ -98,6 +102,7 @@ export function initAiSearchPage() {
   const categoriesReady = loadCategories(form);
 
   applyInitialSearch(form, params);
+  bindAiCategoryPicker(form);
   bindTargetType(form);
   bindFilterToggle(form);
   bindSearchActions(form);
@@ -173,6 +178,7 @@ function bindTargetType(form) {
 
 async function loadCategories(form) {
   const select = form.querySelector("[data-ai-category]");
+  const button = form.querySelector("[data-ai-category-open]");
   try {
     const categories = await fetchCategories();
     setSafeHtml(select, `
@@ -181,9 +187,20 @@ async function loadCategories(form) {
         <option value="${escapeHtml(category.categoryId)}">${escapeHtml(category.name)}</option>
       `).join("")}
     `);
+    syncCategoryPickerButton(select, button, true);
   } catch {
     setSafeHtml(select, '<option value="">카테고리를 불러오지 못했습니다</option>');
+    syncCategoryPickerButton(select, button, true);
   }
+}
+
+function bindAiCategoryPicker(form) {
+  bindCategoryPicker({
+    select: form.querySelector("[data-ai-category]"),
+    trigger: form.querySelector("[data-ai-category-open]"),
+    title: "AI 검색 카테고리 선택",
+    includeAll: true,
+  });
 }
 
 async function runAiSearch(form) {
@@ -226,6 +243,11 @@ function applyAnalysis(form, analysis) {
 
   const condition = analysis.condition || {};
   setControlValue(form, "categoryId", condition.categoryId);
+  syncCategoryPickerButton(
+    form.querySelector("[data-ai-category]"),
+    form.querySelector("[data-ai-category-open]"),
+    true
+  );
   setControlValue(form, "maxPrice", condition.maxPrice);
   setControlValue(form, "maxEstimatedDuration", condition.maxEstimatedDuration);
   setControlValue(form, "durationUnit", condition.durationUnit);

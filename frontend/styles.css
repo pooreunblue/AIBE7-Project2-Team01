@@ -615,6 +615,44 @@ a.button {
   width: min(460px, 100%);
 }
 
+.category-picker-modal {
+  width: min(420px, 100%);
+}
+
+.category-picker-list {
+  display: grid;
+  max-height: min(52vh, 420px);
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.category-picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0 12px;
+  background: #fff;
+  color: var(--text);
+  font-weight: 800;
+  text-align: left;
+}
+
+.category-picker-item:hover,
+.category-picker-item.is-selected {
+  border-color: #ffd1c9;
+  background: #fff1ee;
+  color: var(--blue);
+}
+
+.category-picker-item strong {
+  color: var(--blue);
+  font-size: 12px;
+}
+
 .list-filter-form {
   display: grid;
   gap: 14px;
@@ -628,6 +666,7 @@ a.button {
 .filter-actions button,
 .field input,
 .field select,
+.field .category-select-button,
 .field textarea,
 .conversation-list input {
   width: 100%;
@@ -636,6 +675,39 @@ a.button {
   border-radius: var(--radius);
   background: #fff;
   color: var(--text);
+}
+
+.visually-hidden-select {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.category-select-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.category-select-button::after {
+  content: "⌄";
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.category-select-button:hover,
+.category-select-button:focus-visible {
+  border-color: #ffd1c9;
+  background: #fff7f5;
+  outline: 0;
 }
 
 .filter-actions select,

@@ -12,6 +12,11 @@ import { parseRoute, resolvePage } from "./router.js";
 import { login, logout, signup } from "./features/auth/authApi.js";
 import { getCurrentUser, getCurrentUserId } from "./auth/currentUser.js";
 import { fetchCategories } from "./features/category/categoryApi.js";
+import {
+  bindCategoryPicker,
+  resolveCategoryLabel,
+  syncCategoryPickerButton,
+} from "./features/category/categoryPicker.js";
 import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
 import { startChat } from "./features/chat/startChat.js";
 import { initCheckoutPage } from "./features/payment/CheckoutPage.js";
@@ -976,13 +981,21 @@ async function loadRequestCategories() {
     setSafeHtml(select, categories.length
       ? `<option value="">카테고리 선택</option>${categories.map((category) => `<option value="${category.categoryId}">${escapeHtml(category.name)}</option>`).join("")}`
       : `<option value="">등록된 카테고리가 없습니다</option>`);
+    syncCategoryPickerButton(select, document.querySelector("[data-request-category-open]"));
   } catch {
     setSafeHtml(select, `<option value="">카테고리를 불러오지 못했습니다</option>`);
+    syncCategoryPickerButton(select, document.querySelector("[data-request-category-open]"));
   }
 }
 
 function bindRequestSettingsModal(form) {
   const renderSelected = () => renderRequestSettingsSummary(form);
+  bindCategoryPicker({
+    select: form.querySelector("[data-request-category-select]"),
+    trigger: form.querySelector("[data-request-category-open]"),
+    title: "요청글 카테고리 선택",
+    onChange: renderSelected,
+  });
 
   form.querySelector("[data-request-settings-open]")?.addEventListener("click", () => {
     openRequestSettingsModal(form);
@@ -1019,7 +1032,7 @@ function openRequestSettingsModal(form) {
   if (!modal) return;
   modal.hidden = false;
   document.body.classList.add("modal-open");
-  form.querySelector("[data-request-category-select]")?.focus();
+  form.querySelector("[data-request-category-open]")?.focus();
 }
 
 function closeRequestSettingsModal(form) {
@@ -1521,8 +1534,15 @@ function bindTalentPortfolioModal(form) {
 
 async function loadTalentSettingsOptions(form) {
   const categorySelect = form.querySelector("[data-talent-category-select]");
+  const categoryButton = form.querySelector("[data-talent-category-open]");
 
   const renderSelected = () => renderTalentSettingsSummary(form);
+  bindCategoryPicker({
+    select: categorySelect,
+    trigger: categoryButton,
+    title: "재능글 카테고리 선택",
+    onChange: renderSelected,
+  });
 
   try {
     const categories = await fetchCategories();
@@ -1531,9 +1551,11 @@ async function loadTalentSettingsOptions(form) {
         ? `<option value="">카테고리 선택</option>${categories.map((category) => `<option value="${category.categoryId}">${escapeHtml(category.name)}</option>`).join("")}`
         : `<option value="">등록된 카테고리가 없습니다</option>`);
       categorySelect.addEventListener("change", renderSelected);
+      syncCategoryPickerButton(categorySelect, categoryButton);
     }
   } catch {
     setSafeHtml(categorySelect, `<option value="">카테고리를 불러오지 못했습니다</option>`);
+    syncCategoryPickerButton(categorySelect, categoryButton);
   }
 
   await loadTalentPortfolioOptions(form);
@@ -1610,7 +1632,7 @@ function openTalentSettingsModal(form) {
   if (!modal) return;
   modal.hidden = false;
   document.body.classList.add("modal-open");
-  form.querySelector("[data-talent-category-select]")?.focus();
+  form.querySelector("[data-talent-category-open]")?.focus();
 }
 
 function closeTalentSettingsModal(form) {
@@ -1827,7 +1849,7 @@ function getRequestPreviewImage(files) {
 
 function selectedOptionText(select) {
   if (!select || !select.value) return "";
-  return select.options[select.selectedIndex]?.textContent || "";
+  return resolveCategoryLabel(select);
 }
 
 function setFormValue(form, name, value) {
