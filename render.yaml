@@ -6,7 +6,7 @@ services:
     region: singapore
     plan: free
     rootDir: backend
-    dockerfilePath: ./backend/Dockerfile   # 저장소 루트 기준 경로
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /actuator/health
     envVars:
       # ── PostgreSQL ────────────────────────────────────────────────────────────
