@@ -203,12 +203,17 @@ function bindSignupForm() {
 
     const message = signupForm.querySelector("[data-signup-message]");
     const formData = new FormData(signupForm);
+    const password = String(formData.get("password") || "");
+    if (password.length < 8) {
+      message.textContent = "비밀번호는 8자 이상 입력해 주세요.";
+      return;
+    }
 
     try {
       message.textContent = "";
       await signup({
         email: formData.get("email"),
-        password: formData.get("password"),
+        password,
         nickname: formData.get("nickname"),
         profileImage: fileInput?.files[0] || null,
       });
