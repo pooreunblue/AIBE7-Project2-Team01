@@ -50,7 +50,6 @@ public class TradeService {
     private final EmbeddingEventPublisher embeddingEventPublisher;
 
     private static final String TRADE_REQUEST_MESSAGE = "거래를 요청했습니다.";
-    private static final String TRADE_PAID_MESSAGE = "결제가 완료되었습니다.";
     private static final String TRADE_COMPLETED_MESSAGE = "거래 완료되었습니다.";
     private static final String TRADE_CANCELLED_MESSAGE = "거래가 취소되었습니다.";
 
@@ -159,12 +158,6 @@ public class TradeService {
         walletService.withdraw(trade.getPayerId(), trade.getAmount(), trade);
         trade.paid();
 
-        ChatRoom chatRoom = chatRoomRepository.findById(trade.getChatRoomId())
-                .orElseThrow(() -> new CustomException(ErrorCode.CHAT_ROOM_NOT_FOUND));
-        UserEntity payer = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        chatMessagePublisher.publishTradePaid(chatRoom, payer, TRADE_PAID_MESSAGE, trade);
-
         completePaidTrade(userId, trade);
 
         return TradeResponse.from(trade);
@@ -187,18 +180,13 @@ public class TradeService {
 
     @Transactional
     public TradeResponse cancel(UUID userId, UUID tradeId) {
-        TradeEntity trade = getOwnedTradeForUpdate(userId, tradeId);
-        if (trade.getStatus() != TradeStatus.PENDING && trade.getStatus() != TradeStatus.PAID) {
+        TradeEntity trade = getTradeForUpdate(tradeId);
+        validateTradeCanceller(userId, trade);
+        if (trade.getStatus() != TradeStatus.PENDING) {
             throw new CustomException(ErrorCode.INVALID_TRADE_STATUS);
         }
 
-        if (trade.getStatus() == TradeStatus.PENDING) {
-            reopenRequestTradeIfPresent(trade);
-        }
-        if (trade.getStatus() == TradeStatus.PAID) {
-            reopenRequestTradeIfPresent(trade);
-            walletService.refund(trade.getPayerId(), trade.getAmount(), trade);
-        }
+        reopenRequestTradeIfPresent(trade);
         trade.cancel();
         publishTradeCancelledMessage(userId, trade);
         return TradeResponse.from(trade);
@@ -224,6 +212,12 @@ public class TradeService {
 
     private void validateTradeOwner(UUID userId, TradeEntity trade) {
         if (!trade.getPayerId().equals(userId) && !trade.getPayeeId().equals(userId)) {
+            throw new CustomException(ErrorCode.TRADE_ACCESS_DENIED);
+        }
+    }
+
+    private void validateTradeCanceller(UUID userId, TradeEntity trade) {
+        if (!trade.getPayeeId().equals(userId)) {
             throw new CustomException(ErrorCode.TRADE_ACCESS_DENIED);
         }
     }

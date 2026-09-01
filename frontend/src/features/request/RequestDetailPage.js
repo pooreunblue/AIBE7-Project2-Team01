@@ -22,7 +22,7 @@ export function RequestDetailPage(id) {
           </div>
         </div>
       </article>
-      <aside class="checkout-card">
+      <aside class="checkout-card" data-request-actions>
         <span>Estimated Budget</span>
         <strong data-request-budget>-</strong>
         <p data-request-meta>의뢰 정보를 확인 중입니다.</p>

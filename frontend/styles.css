@@ -3348,6 +3348,28 @@ body.modal-open {
   gap: 16px;
 }
 
+/* 좌우 여백이 좁아지면 양옆 화살표가 화면 밖으로 잘리므로 그리드 하단으로 내린다. */
+@media (max-width: 1300px) {
+  .list-page-frame {
+    gap: 28px;
+  }
+
+  .list-pagination {
+    position: static;
+    inset: auto;
+    justify-content: center;
+    gap: 14px;
+    pointer-events: auto;
+  }
+
+  .list-pagination span {
+    position: static;
+    bottom: auto;
+    left: auto;
+    transform: none;
+  }
+}
+
 @media (max-width: 980px) {
   .site-header {
     padding: 10px 22px;
@@ -3457,18 +3479,6 @@ body.modal-open {
   .ai-result-footer {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .list-pagination {
-    position: static;
-    justify-content: center;
-    gap: 14px;
-    pointer-events: auto;
-  }
-
-  .list-pagination span {
-    position: static;
-    transform: none;
   }
 
   .section-head,

@@ -58,6 +58,15 @@ export async function updateRequest(requestPostId, payload) {
   return unwrapApiResponse(response);
 }
 
+export async function deleteRequest(requestPostId) {
+  await apiRequest(`/requests/${requestPostId}`, { method: "DELETE" });
+}
+
+export async function closeRequest(requestPostId) {
+  const response = await apiRequest(`/requests/${requestPostId}/close`, { method: "PATCH" });
+  return unwrapApiResponse(response);
+}
+
 export async function uploadRequestFile(requestPostId, file) {
   const formData = new FormData();
   formData.append("file", file);

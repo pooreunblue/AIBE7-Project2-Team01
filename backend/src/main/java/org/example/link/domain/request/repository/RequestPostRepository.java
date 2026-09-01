@@ -24,7 +24,10 @@ public interface RequestPostRepository extends JpaRepository<RequestPostEntity, 
 
     @Query("""
             SELECT r FROM RequestPostEntity r
-            WHERE (:categoryId IS NULL OR r.category.id = :categoryId)
+            WHERE r.status NOT IN (
+                    org.example.link.domain.request.util.RequestPostStatus.CLOSED,
+                    org.example.link.domain.request.util.RequestPostStatus.CANCELLED)
+              AND (:categoryId IS NULL OR r.category.id = :categoryId)
               AND (:minBudget IS NULL OR r.budgetMax >= :minBudget)
               AND (:maxBudget IS NULL OR r.budgetMin <= :maxBudget)
               AND (CAST(:dueDateFrom AS date) IS NULL OR r.dueDate >= :dueDateFrom)
@@ -51,7 +54,10 @@ public interface RequestPostRepository extends JpaRepository<RequestPostEntity, 
     @Query("""
     SELECT r
     FROM RequestPostEntity r
-    WHERE (:keyword IS NULL OR
+    WHERE r.status NOT IN (
+            org.example.link.domain.request.util.RequestPostStatus.CLOSED,
+            org.example.link.domain.request.util.RequestPostStatus.CANCELLED)
+      AND (:keyword IS NULL OR
            LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
            OR
            LOWER(r.content) LIKE LOWER(CONCAT('%', :keyword, '%')))
