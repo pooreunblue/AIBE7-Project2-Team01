@@ -16,7 +16,7 @@ export function SignupPage() {
         </div>
         ${formField("닉네임", `<input name="nickname" type="text" autocomplete="nickname" required minlength="2" maxlength="20" />`)}
         ${formField("아이디", `<input name="email" type="email" autocomplete="email" required placeholder="이메일 형식으로 입력" />`)}
-        ${formField("비밀번호", `<input name="password" type="password" autocomplete="new-password" required />`)}
+        ${formField("비밀번호", `<input name="password" type="password" autocomplete="new-password" required minlength="8" placeholder="8자 이상 입력" />`)}
         <button class="button primary" type="submit">Sign Up</button>
         <p class="form-message" data-signup-message aria-live="polite"></p>
         <div class="auth-options">

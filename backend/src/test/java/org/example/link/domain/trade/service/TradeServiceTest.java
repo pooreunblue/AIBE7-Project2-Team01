@@ -1,8 +1,7 @@
 package org.example.link.domain.trade.service;
 
 import org.example.link.ai.embedding.event.EmbeddingEventPublisher;
-import org.example.link.common.exception.CustomException;
-import org.example.link.common.exception.ErrorCode;
+import org.example.link.domain.chat.entity.ChatParticipant;
 import org.example.link.domain.chat.entity.ChatRoom;
 import org.example.link.domain.chat.repository.ChatParticipantRepository;
 import org.example.link.domain.chat.repository.ChatRoomRepository;
@@ -10,6 +9,7 @@ import org.example.link.domain.chat.service.ChatMessagePublisher;
 import org.example.link.domain.request.entity.RequestPostEntity;
 import org.example.link.domain.request.repository.RequestPostRepository;
 import org.example.link.domain.request.util.RequestPostStatus;
+import org.example.link.domain.trade.dto.TradeCreateRequest;
 import org.example.link.domain.talent.repository.TalentPostRepository;
 import org.example.link.domain.trade.entity.TradeEntity;
 import org.example.link.domain.trade.entity.TradeStatus;
@@ -22,13 +22,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -73,13 +75,46 @@ class TradeServiceTest {
     }
 
     @Test
-    void paysRequestTradeUsingLockedTradeAndRequestPost() {
+    void createsRequestTradeAndStartsRequestPost() {
+        UUID chatRoomId = UUID.randomUUID();
+        UUID requestPostId = UUID.randomUUID();
+        UUID payerId = UUID.randomUUID();
+        UUID payeeId = UUID.randomUUID();
+        ChatRoom chatRoom = new ChatRoom(requestPostId, null);
+        ReflectionTestUtils.setField(chatRoom, "id", chatRoomId);
+        UserEntity payer = user(payerId);
+        UserEntity payee = user(payeeId);
+        RequestPostEntity requestPost = requestPost(RequestPostStatus.OPEN, requestPostId, payer);
+
+        when(chatRoomRepository.findByIdForUpdate(chatRoomId)).thenReturn(Optional.of(chatRoom));
+        when(chatParticipantRepository.existsByChatRoomIdAndUserId(chatRoomId, payeeId)).thenReturn(true);
+        when(tradeRepository.existsByChatRoomIdAndStatusIn(any(), any())).thenReturn(false);
+        when(requestPostRepository.findByIdForUpdate(requestPostId)).thenReturn(Optional.of(requestPost));
+        when(chatParticipantRepository.findByChatRoomId(chatRoomId)).thenReturn(List.of(
+                new ChatParticipant(chatRoom, payer),
+                new ChatParticipant(chatRoom, payee)
+        ));
+        when(tradeRepository.save(any(TradeEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findById(payeeId)).thenReturn(Optional.of(payee));
+
+        tradeService.createTrade(
+                payeeId,
+                chatRoomId,
+                new TradeCreateRequest(BigDecimal.valueOf(100_000), requestPostId, null)
+        );
+
+        assertThat(requestPost.getStatus()).isEqualTo(RequestPostStatus.IN_PROGRESS);
+        verify(embeddingEventPublisher).deleteRequest(requestPostId);
+    }
+
+    @Test
+    void paysRequestTradeAndCompletesImmediately() {
         UUID tradeId = UUID.randomUUID();
         UUID chatRoomId = UUID.randomUUID();
         UUID requestPostId = UUID.randomUUID();
         UUID payerId = UUID.randomUUID();
         TradeEntity trade = requestTrade(chatRoomId, requestPostId, payerId);
-        RequestPostEntity requestPost = requestPost(RequestPostStatus.OPEN);
+        RequestPostEntity requestPost = requestPost(RequestPostStatus.IN_PROGRESS);
 
         when(tradeRepository.findByIdForUpdate(tradeId)).thenReturn(Optional.of(trade));
         when(requestPostRepository.findByIdForUpdate(requestPostId)).thenReturn(Optional.of(requestPost));
@@ -88,10 +123,10 @@ class TradeServiceTest {
 
         tradeService.pay(payerId, tradeId);
 
-        assertThat(trade.getStatus()).isEqualTo(TradeStatus.PAID);
-        assertThat(requestPost.getStatus()).isEqualTo(RequestPostStatus.IN_PROGRESS);
+        assertThat(trade.getStatus()).isEqualTo(TradeStatus.COMPLETED);
+        assertThat(requestPost.getStatus()).isEqualTo(RequestPostStatus.CLOSED);
         verify(walletService).withdraw(payerId, trade.getAmount(), trade);
-        verify(embeddingEventPublisher).deleteRequest(requestPostId);
+        verify(walletService).deposit(trade.getPayeeId(), trade.getAmount(), trade);
     }
 
     @Test
@@ -134,7 +169,7 @@ class TradeServiceTest {
     }
 
     @Test
-    void rejectsAnotherPaymentAfterRequestPostWasSelected() {
+    void cancelsPendingRequestTradeAndReopensRequestPost() {
         UUID tradeId = UUID.randomUUID();
         UUID requestPostId = UUID.randomUUID();
         UUID payerId = UUID.randomUUID();
@@ -144,11 +179,11 @@ class TradeServiceTest {
         when(tradeRepository.findByIdForUpdate(tradeId)).thenReturn(Optional.of(trade));
         when(requestPostRepository.findByIdForUpdate(requestPostId)).thenReturn(Optional.of(requestPost));
 
-        assertThatThrownBy(() -> tradeService.pay(payerId, tradeId))
-                .isInstanceOf(CustomException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.INVALID_REQUEST_POST_STATUS);
+        tradeService.cancel(trade.getPayeeId(), tradeId);
 
+        assertThat(trade.getStatus()).isEqualTo(TradeStatus.CANCELLED);
+        assertThat(requestPost.getStatus()).isEqualTo(RequestPostStatus.OPEN);
+        verify(embeddingEventPublisher).saveRequest(requestPost);
         verifyNoInteractions(walletService);
     }
 
@@ -167,5 +202,20 @@ class TradeServiceTest {
         return RequestPostEntity.builder()
                 .status(status)
                 .build();
+    }
+
+    private RequestPostEntity requestPost(RequestPostStatus status, UUID requestPostId, UserEntity user) {
+        RequestPostEntity requestPost = RequestPostEntity.builder()
+                .user(user)
+                .status(status)
+                .build();
+        ReflectionTestUtils.setField(requestPost, "id", requestPostId);
+        return requestPost;
+    }
+
+    private UserEntity user(UUID userId) {
+        UserEntity user = new UserEntity("user-" + userId + "@test.com", "password", "nickname-" + userId);
+        ReflectionTestUtils.setField(user, "id", userId);
+        return user;
     }
 }

@@ -40,6 +40,10 @@ public class ChatMessagePublisher {
         return publish(new ChatMessage(chatRoom, sender, content, ChatMessage.MessageType.SYSTEM, trade));
     }
 
+    public ChatMessageResponse publishTradeCancelled(ChatRoom chatRoom, UserEntity sender, String content, TradeEntity trade) {
+        return publish(new ChatMessage(chatRoom, sender, content, ChatMessage.MessageType.SYSTEM, trade));
+    }
+
     public ChatMessageResponse publishImage(ChatRoom chatRoom, UserEntity sender, String imageUrl, String attachmentPath) {
         return publish(ChatMessage.image(chatRoom, sender, imageUrl, attachmentPath));
     }
