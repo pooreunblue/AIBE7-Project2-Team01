@@ -5,8 +5,7 @@ services:
     runtime: docker
     region: singapore
     plan: free
-    rootDir: backend
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./backend/Dockerfile
     healthCheckPath: /actuator/health
     envVars:
       # ── PostgreSQL ────────────────────────────────────────────────────────────
