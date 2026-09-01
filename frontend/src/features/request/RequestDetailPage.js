@@ -13,6 +13,13 @@ export function RequestDetailPage(id) {
             <p>내용을 확인하고 있습니다.</p>
           </div>
           <div data-request-files></div>
+          <div class="seller-box" data-request-author-box>
+            <div class="avatar" data-request-avatar>?</div>
+            <div>
+              <strong data-request-author>작성자 확인 중</strong>
+              <span data-request-author-meta>-</span>
+            </div>
+          </div>
         </div>
       </article>
       <aside class="checkout-card">
