@@ -1,7 +1,7 @@
 services:
   # ─── Backend (Spring Boot) ───────────────────────────────────────────────────
   - type: web
-    name: talentpulse-backend
+    name: knotty-backend
     runtime: docker
     region: singapore
     plan: free
@@ -59,7 +59,7 @@ services:
 
   # ─── Frontend (Node.js / Express) ───────────────────────────────────────────
   - type: web
-    name: talentpulse-frontend
+    name: knotty-frontend
     runtime: node
     region: singapore
     plan: free
