@@ -13,3 +13,8 @@ export async function chargeWallet(amount) {
 
   return response.data || response;
 }
+
+export async function fetchWalletTransactions({ page = 0, size = 30 } = {}) {
+  const response = await apiRequest(`/wallet/transactions?page=${page}&size=${size}`);
+  return response.data || response;
+}

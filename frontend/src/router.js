@@ -13,7 +13,9 @@ import { AiSearchPage } from "./features/search/AiSearchPage.js";
 import { TalentCreatePage } from "./features/talent/TalentCreatePage.js";
 import { TalentDetailPage } from "./features/talent/TalentDetailPage.js";
 import { TalentListPage } from "./features/talent/TalentListPage.js";
+import { MyTradesPage } from "./features/trade/MyTradesPage.js";
 import { MyPage } from "./features/user/MyPage.js";
+import { UserProfilePage } from "./features/user/UserProfilePage.js";
 
 const routes = {
   home: HomePage,
@@ -26,6 +28,7 @@ const routes = {
   "ai-search": AiSearchPage,
   chat: ChatPage,
   mypage: MyPage,
+  "my-trades": MyTradesPage,
   portfolios: PortfolioPage,
   "portfolio-new": PortfolioCreatePage,
   checkout: CheckoutPage,
@@ -53,6 +56,10 @@ export function resolvePage(segments) {
 
   if (route === "chat" && id) {
     return { route: "chat", content: ChatPage(id) };
+  }
+
+  if (route === "users" && id) {
+    return { route: "user-profile", content: UserProfilePage(id) };
   }
 
   const page = routes[route];

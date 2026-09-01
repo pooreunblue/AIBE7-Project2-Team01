@@ -75,8 +75,30 @@ a.button {
   transform: translateX(-50%);
 }
 
+.header-back-button {
+  position: absolute;
+  left: 40px;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  padding: 0;
+  color: var(--blue);
+  background: transparent;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.header-back-button:hover {
+  border-color: #c7d7fe;
+  background: #edf4ff;
+}
+
 .icon-nav {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
 }
@@ -119,6 +141,28 @@ a.button {
 .icon-link.active {
   border-color: #c7d7fe;
   background: #edf4ff;
+}
+
+.header-text-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0 14px;
+  color: #344054;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.header-text-link:hover,
+.header-text-link.active {
+  border-color: #c7d7fe;
+  background: #edf4ff;
+  color: var(--blue);
 }
 
 .account-menu {
@@ -311,27 +355,18 @@ a.button {
 }
 
 .spark,
-.ai-search-logo-button {
+.ai-search-logo {
   color: var(--blue);
   font-weight: 900;
 }
 
-.ai-search-logo-button {
+.ai-search-logo {
   display: inline-grid;
   width: 24px;
   height: 34px;
   min-width: 24px;
   place-items: center;
-  border: 0;
-  border-radius: 50%;
-  padding: 0;
-  background: transparent;
   font-size: 16px;
-  cursor: pointer;
-}
-
-.ai-search-logo-button:hover {
-  background: #eaf2ff;
 }
 
 .search-box input {
@@ -341,7 +376,7 @@ a.button {
   outline: 0;
 }
 
-.search-box > button:not(.ai-search-logo-button),
+.search-box > button,
 .message-compose button {
   height: 38px;
   border: 0;
@@ -588,6 +623,69 @@ a.button {
 
 .talent-grid.two-col {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.list-page-frame {
+  position: relative;
+  display: grid;
+  gap: 54px;
+}
+
+.list-pagination {
+  position: absolute;
+  inset: 0 -62px;
+  left: -62px;
+  right: -62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.list-pagination span {
+  position: absolute;
+  left: 50%;
+  bottom: -40px;
+  min-width: 72px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.list-page-arrow {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  padding: 0;
+  background: #fff;
+  color: var(--blue);
+  font-size: 30px;
+  font-weight: 900;
+  box-shadow: 0 14px 32px rgba(16, 24, 40, 0.12);
+  pointer-events: auto;
+}
+
+.list-page-arrow:hover {
+  border-color: #bcd1f3;
+  background: #edf4ff;
+}
+
+.list-page-arrow:disabled {
+  opacity: 0.45;
+}
+
+.list-page-arrow.is-hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .talent-card,
@@ -1194,6 +1292,42 @@ dd {
   box-shadow: none;
 }
 
+.ai-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  justify-self: start;
+  min-width: 150px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0 14px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ai-filter-toggle strong {
+  color: var(--blue);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.ai-filter-toggle:hover {
+  border-color: #bcd1f3;
+  background: #f7fbff;
+}
+
+.ai-match-options {
+  display: grid;
+  gap: 16px;
+}
+
+.ai-match-options[hidden] {
+  display: none;
+}
+
 .ai-condition-bar {
   display: grid;
   grid-template-columns: minmax(180px, 0.7fr) minmax(0, 2fr);
@@ -1700,12 +1834,40 @@ dd {
   gap: 18px;
 }
 
+.mypage-page {
+  display: grid;
+  gap: 18px;
+}
+
+.public-profile-page {
+  display: grid;
+  gap: 18px;
+}
+
+.public-profile-posts,
+.mypage-authored-section {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.public-profile-post-list {
+  display: grid;
+  gap: 12px;
+}
+
 .profile-summary {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 20px;
   padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
 }
 
 .profile-summary h1,
@@ -1717,14 +1879,38 @@ dd {
   color: var(--muted);
 }
 
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.mypage-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 0.9fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.mypage-portfolio-section {
+  grid-row: span 2;
+}
+
 .wallet-summary {
   display: grid;
-  justify-items: end;
+  justify-items: start;
   gap: 10px;
 }
 
 .wallet-summary strong {
   font-size: 24px;
+}
+
+.wallet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .stats-grid,
@@ -1769,12 +1955,116 @@ dd {
   align-items: center;
 }
 
-.mypage-portfolio-section {
+.mypage-portfolio-section,
+.mypage-wallet-section,
+.mypage-trade-section,
+.trade-status-section {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 24px;
   background: var(--panel);
   box-shadow: var(--shadow);
+}
+
+.mypage-trade-preview,
+.trade-list {
+  display: grid;
+  gap: 12px;
+}
+
+.trade-page {
+  display: grid;
+  gap: 20px;
+}
+
+.trade-status-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.trade-list-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  background: #fff;
+  color: inherit;
+}
+
+.trade-list-card.is-clickable:hover {
+  border-color: #bcd1f3;
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.08);
+}
+
+.trade-list-card span,
+.trade-list-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.trade-list-card h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 17px;
+}
+
+.trade-list-card.compact h3 {
+  font-size: 15px;
+}
+
+.wallet-history-modal {
+  width: min(640px, calc(100vw - 32px));
+}
+
+.wallet-history-list {
+  display: grid;
+  max-height: min(520px, 62vh);
+  gap: 10px;
+  overflow: auto;
+}
+
+.wallet-history-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  background: #fff;
+}
+
+.wallet-history-item h3,
+.wallet-history-item p {
+  margin: 0;
+}
+
+.wallet-history-item span,
+.wallet-history-item p,
+.wallet-history-item small {
+  color: var(--muted);
+}
+
+.wallet-history-item strong {
+  display: block;
+  color: var(--blue);
+  text-align: right;
+}
+
+.author-profile-link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  color: inherit;
+}
+
+.author-profile-link:hover strong {
+  color: var(--blue);
 }
 
 .portfolio-card-grid {
@@ -2921,6 +3211,9 @@ body.modal-open {
   .detail-layout,
   .checkout-grid,
   .dashboard-layout,
+  .mypage-grid,
+  .public-profile-grid,
+  .trade-status-layout,
   .search-results-layout {
     grid-template-columns: 1fr;
   }
@@ -2945,6 +3238,30 @@ body.modal-open {
 }
 
 @media (max-width: 680px) {
+  .site-header {
+    justify-content: center;
+    min-height: auto;
+  }
+
+  .header-back-button {
+    left: 14px;
+  }
+
+  .header-title {
+    display: none;
+  }
+
+  .icon-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .header-text-link {
+    min-height: 34px;
+    padding: 0 11px;
+    font-size: 12px;
+  }
+
   .route-view {
     width: min(100% - 28px, 1180px);
     padding-top: 22px;
@@ -2976,12 +3293,34 @@ body.modal-open {
     flex-direction: column;
   }
 
+  .list-pagination {
+    position: static;
+    justify-content: center;
+    gap: 14px;
+    pointer-events: auto;
+  }
+
+  .list-pagination span {
+    position: static;
+    transform: none;
+  }
+
   .section-head,
   .list-heading,
   .chat-panel header,
+  .profile-actions,
+  .wallet-actions,
   .form-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .wallet-history-item {
+    grid-template-columns: 1fr;
+  }
+
+  .wallet-history-item strong {
+    text-align: left;
   }
 
   .filter-actions,
