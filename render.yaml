@@ -6,7 +6,7 @@ services:
     region: singapore
     plan: free
     autoDeployTrigger: commit
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./backend/Dockerfile
     healthCheckPath: /health
     envVars:
       # ── PostgreSQL ────────────────────────────────────────────────────────────
