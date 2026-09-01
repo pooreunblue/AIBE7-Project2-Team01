@@ -20,7 +20,8 @@ public interface TalentPostRepository extends JpaRepository<TalentPostEntity, UU
 
     @Query("""
             SELECT t FROM TalentPostEntity t
-            WHERE (:categoryId IS NULL OR t.category.id = :categoryId)
+            WHERE t.status = org.example.link.domain.talent.util.TalentPostStatus.ACTIVE
+              AND (:categoryId IS NULL OR t.category.id = :categoryId)
               AND (:maxPrice IS NULL OR t.price <= :maxPrice)
               AND (:maxEstimatedDurationDays IS NULL OR
                    CASE
@@ -44,7 +45,8 @@ public interface TalentPostRepository extends JpaRepository<TalentPostEntity, UU
     @Query("""
     SELECT t
     FROM TalentPostEntity t
-    WHERE (:keyword IS NULL OR
+    WHERE t.status = org.example.link.domain.talent.util.TalentPostStatus.ACTIVE
+      AND (:keyword IS NULL OR
            LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
            OR
            LOWER(t.content) LIKE LOWER(CONCAT('%', :keyword, '%')))
