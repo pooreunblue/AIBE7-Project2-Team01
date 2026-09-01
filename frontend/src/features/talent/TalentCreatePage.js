@@ -42,9 +42,12 @@ export function TalentCreatePage() {
             </div>
             <label class="field">
               <span>카테고리</span>
-              <select name="categoryId" data-talent-category-select>
+              <select class="visually-hidden-select" name="categoryId" data-talent-category-select>
                 <option value="">카테고리를 불러오는 중...</option>
               </select>
+              <button class="category-select-button" type="button" data-talent-category-open>
+                <span data-category-picker-label>카테고리 선택</span>
+              </button>
             </label>
             <label class="field">
               <span>가격</span>

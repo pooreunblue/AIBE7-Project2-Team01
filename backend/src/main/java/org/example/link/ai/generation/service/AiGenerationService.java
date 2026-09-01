@@ -21,12 +21,19 @@ import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AiGenerationService {
+    private static final Pattern MARKDOWN_IMAGE_PATTERN = Pattern.compile(
+            "!\\[[^\\]]*]\\([^\\s)]+(?:\\s+\\\"[^\\\"]*\\\")?\\)");
+
     private final ChatModel chatModel;
     private final CategoryRepository categoryRepository;
     private final JsonMapper objectMapper;
@@ -37,7 +44,7 @@ public class AiGenerationService {
         String details = "요청글\n카테고리: %s\n최소 예산: %d원\n최대 예산: %d원\n희망 마감일: %s\n사용자 초안: %s"
                 .formatted(category.getName(), request.budgetMin(), request.budgetMax(),
                         valueOrNone(request.dueDate()), request.content());
-        return generate(details, image);
+        return generate(details, request.content(), image);
     }
 
     public PostGenerationResponse generateTalent(
@@ -46,14 +53,15 @@ public class AiGenerationService {
         String details = "재능글\n카테고리: %s\n가격: %d원\n예상 작업기간: %d %s\n사용자 초안: %s"
                 .formatted(category.getName(), request.price(), request.estimatedDuration(),
                         request.durationUnit(), request.content());
-        return generate(details, image);
+        return generate(details, request.content(), image);
     }
 
-    private PostGenerationResponse generate(String details, MultipartFile image) {
+    private PostGenerationResponse generate(String details, String originalContent, MultipartFile image) {
         String instruction = """
                 다음 정보를 바탕으로 한국어 게시글을 전문적이고 구체적으로 작성해 주세요.
                 사용자의 의도와 사실은 유지하고, 입력되지 않은 가격·기간·경력·성과를 임의로 만들지 마세요.
                 이미지가 제공되면 이미지에서 확인되는 대상과 특징만 자연스럽게 반영하세요.
+                사용자 초안에 포함된 마크다운 이미지 문법(![설명](URL))은 URL과 문법을 변경하거나 삭제하지 말고 결과 본문에 반드시 그대로 포함하세요.
                 결과는 반드시 JSON 하나만 반환하세요. 본문은 마크다운 코드 블록을 적극적으로 사용해서 작성해주세요.
                 JSON 형식: {"title":"간결하고 명확한 제목","content":"구체적인 게시글 본문"}
                 본문에는 목적, 작업 범위 또는 제공 범위, 필요한 조건과 진행 관련 안내를 포함하세요.
@@ -76,7 +84,9 @@ public class AiGenerationService {
             }
             ChatResponse response = chatModel.call(new Prompt(message.build()));
             String result = response.getResult().getOutput().getText();
-            return objectMapper.readValue(cleanJson(result), PostGenerationResponse.class);
+            PostGenerationResponse generated = objectMapper.readValue(
+                    cleanJson(result), PostGenerationResponse.class);
+            return preserveMarkdownImages(originalContent, generated);
         } catch (CustomException e) {
             throw e;
         } catch (IOException | RuntimeException e) {
@@ -104,5 +114,34 @@ public class AiGenerationService {
 
     private String valueOrNone(Object value) {
         return value == null ? "입력되지 않음" : value.toString();
+    }
+
+    private PostGenerationResponse preserveMarkdownImages(
+            String originalContent, PostGenerationResponse generated) {
+        List<String> images = extractMarkdownImages(originalContent);
+        if (images.isEmpty()) {
+            return generated;
+        }
+
+        String content = generated.content() == null ? "" : generated.content();
+        List<String> missingImages = images.stream()
+                .filter(image -> !content.contains(image))
+                .toList();
+        if (missingImages.isEmpty()) {
+            return generated;
+        }
+
+        return new PostGenerationResponse(
+                generated.title(),
+                content + "\n\n" + String.join("\n\n", missingImages));
+    }
+
+    private List<String> extractMarkdownImages(String content) {
+        List<String> images = new ArrayList<>();
+        Matcher matcher = MARKDOWN_IMAGE_PATTERN.matcher(content == null ? "" : content);
+        while (matcher.find()) {
+            images.add(matcher.group());
+        }
+        return images;
     }
 }

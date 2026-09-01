@@ -1,4 +1,5 @@
 import { fetchCategories } from "../category/categoryApi.js";
+import { bindCategoryPicker, syncCategoryPickerButton } from "../category/categoryPicker.js";
 import { appendSafeHtml, escapeHtml, setSafeHtml } from "../../shared/security/xss.js";
 
 // AI 검색(#/ai-search)의 조건 필드와 동일한 항목을 모달로 제공한다.
@@ -22,9 +23,12 @@ export function openListFilterModal({ targetType = "TALENT", current = {}, onApp
         <form class="list-filter-form" data-list-filter-form>
           <label class="field">
             <span>카테고리</span>
-            <select name="categoryId" data-list-filter-category>
+            <select class="visually-hidden-select" name="categoryId" data-list-filter-category>
               <option value="">전체 카테고리</option>
             </select>
+            <button class="category-select-button" type="button" data-list-filter-category-open>
+              <span data-category-picker-label>전체 카테고리</span>
+            </button>
           </label>
           ${isTalent ? talentFields(current) : requestFields(current)}
           <div class="form-actions">
@@ -39,8 +43,16 @@ export function openListFilterModal({ targetType = "TALENT", current = {}, onApp
   const backdrop = document.querySelector("[data-list-filter-modal]");
   const form = backdrop.querySelector("[data-list-filter-form]");
   const categorySelect = backdrop.querySelector("[data-list-filter-category]");
+  const categoryButton = backdrop.querySelector("[data-list-filter-category-open]");
 
   loadCategoryOptions(categorySelect, current.categoryId);
+  bindCategoryPicker({
+    select: categorySelect,
+    trigger: categoryButton,
+    title: "필터 카테고리 선택",
+    includeAll: true,
+  });
+  document.body.classList.add("modal-open");
 
   backdrop.addEventListener("click", (event) => {
     if (event.target === backdrop || event.target.closest("[data-list-filter-close]")) {
@@ -51,6 +63,7 @@ export function openListFilterModal({ targetType = "TALENT", current = {}, onApp
   form.querySelector("[data-list-filter-reset]").addEventListener("click", () => {
     form.reset();
     categorySelect.value = "";
+    syncCategoryPickerButton(categorySelect, categoryButton, true);
   });
 
   form.addEventListener("submit", (event) => {
@@ -62,6 +75,7 @@ export function openListFilterModal({ targetType = "TALENT", current = {}, onApp
 
 export function closeListFilterModal() {
   document.querySelector("[data-list-filter-modal]")?.remove();
+  document.body.classList.toggle("modal-open", Boolean(document.querySelector(".modal-backdrop:not([hidden])")));
 }
 
 function talentFields(current) {
@@ -132,8 +146,10 @@ async function loadCategoryOptions(select, selectedId) {
         <option value="${escapeHtml(category.categoryId)}"${String(category.categoryId) === String(selectedId || "") ? " selected" : ""}>${escapeHtml(category.name)}</option>
       `).join("")}
     `);
+    syncCategoryPickerButton(select, document.querySelector("[data-list-filter-category-open]"), true);
   } catch {
     setSafeHtml(select, '<option value="">카테고리를 불러오지 못했습니다</option>');
+    syncCategoryPickerButton(select, document.querySelector("[data-list-filter-category-open]"), true);
   }
 }
 

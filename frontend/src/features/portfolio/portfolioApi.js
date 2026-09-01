@@ -5,6 +5,11 @@ export async function getMyPortfolios() {
   return response.data || response;
 }
 
+export async function getUserPortfolios(userId) {
+  const response = await apiRequest(`/users/public/${userId}/portfolios`, { authOptional: true });
+  return response.data || response;
+}
+
 export async function createPortfolio(payload) {
   const response = await apiRequest("/portfolios", {
     method: "POST",

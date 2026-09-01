@@ -12,6 +12,11 @@ import { parseRoute, resolvePage } from "./router.js";
 import { login, logout, signup } from "./features/auth/authApi.js";
 import { getCurrentUser, getCurrentUserId } from "./auth/currentUser.js";
 import { fetchCategories } from "./features/category/categoryApi.js";
+import {
+  bindCategoryPicker,
+  resolveCategoryLabel,
+  syncCategoryPickerButton,
+} from "./features/category/categoryPicker.js";
 import { initChatPage, teardownChatPage } from "./features/chat/ChatPage.js";
 import { startChat } from "./features/chat/startChat.js";
 import { initCheckoutPage } from "./features/payment/CheckoutPage.js";
@@ -23,6 +28,7 @@ import {
   deletePortfolioFile,
   getPortfolio,
   getMyPortfolios,
+  getUserPortfolios,
   getPortfolioFiles,
   setPortfolioThumbnail,
   updatePortfolio,
@@ -51,12 +57,17 @@ import {
   updateTalent,
   uploadTalentFile,
 } from "./features/talent/talentApi.js";
-import { getMyPage } from "./features/user/userApi.js";
-import { chargeWallet } from "./features/wallet/walletApi.js";
+import { getMyPage, getPublicUser, updateMyPage, updateProfileImage } from "./features/user/userApi.js";
+import { chargeWallet, fetchWalletTransactions } from "./features/wallet/walletApi.js";
+import { fetchMyTrades } from "./features/trade/tradeApi.js";
 
 const app = document.querySelector("#app");
+const LIST_PAGE_SIZE = 6;
+const LIST_FETCH_SIZE = 100;
+const PROFILE_POST_PREVIEW_SIZE = 4;
 let accountMenuOutsideHandler = null;
 const portfolioCache = new Map();
+let latestMyPage = null;
 let renderSequence = 0;
 
 const isHandlingOAuthSuccess = handleOAuthSuccess();
@@ -75,18 +86,24 @@ async function render() {
 
   const currentUser = await getCurrentUser({ optional: true });
   if (sequence !== renderSequence) return;
-  setSafeHtml(app, shell(content, route, { isLoggedIn: Boolean(currentUser) }));
+  setSafeHtml(app, shell(content, route, {
+    isLoggedIn: Boolean(currentUser),
+    canGoBack: canNavigateBack(route),
+  }));
   bindPageEvents();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
 function bindPageEvents() {
+  bindHeaderBackButton();
   bindHomeFlow();
   bindLoginForm();
   bindSignupForm();
   bindAccountMenu();
   bindHeaderProfileImage();
   bindMyPage();
+  bindUserProfilePage();
+  bindMyTradesPage();
   bindPortfolioPage();
   bindCategoryTabs();
   bindTalentListPage();
@@ -101,16 +118,6 @@ function bindPageEvents() {
   bindErrorPage();
 
   document.querySelectorAll("form").forEach((form) => {
-    form.querySelector("[data-home-ai-submit]")?.addEventListener("click", () => {
-      const formData = new FormData(form);
-      const query = String(formData.get("query") || "").trim();
-      if (query) {
-        window.location.hash = `/ai-search?query=${encodeURIComponent(query)}&mode=ai`;
-      } else {
-        window.location.hash = "/ai-search?mode=ai";
-      }
-    });
-
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       if (form.matches("[data-search-form]")) {
@@ -121,6 +128,19 @@ function bindPageEvents() {
         window.location.hash = `/ai-search${suffix}`;
       }
     });
+  });
+}
+
+function canNavigateBack(route) {
+  return route !== "home" && window.history.length > 1;
+}
+
+function bindHeaderBackButton() {
+  const button = document.querySelector("[data-header-back]");
+  if (!button) return;
+
+  button.addEventListener("click", () => {
+    window.history.back();
   });
 }
 
@@ -204,8 +224,143 @@ function bindMyPage() {
   if (!summary) return;
 
   bindWalletChargeModal();
+  bindWalletHistoryModal();
+  bindProfileEditModal();
+  bindMyPageLogout();
   loadMyPage();
   loadPortfolioPreview();
+  loadMyTradePreview();
+}
+
+function bindUserProfilePage() {
+  const page = document.querySelector("[data-user-profile]");
+  if (!page) return;
+
+  loadUserProfile(page.dataset.userProfile);
+}
+
+async function loadUserProfile(userId) {
+  const messageTarget = document.querySelector("[data-user-profile-posts]");
+
+  try {
+    const [user, portfolios, talents, requests] = await Promise.all([
+      getPublicUser(userId),
+      getUserPortfolios(userId).catch(() => []),
+      fetchAllTalentPosts("").catch(() => []),
+      fetchAllRequestPosts("").catch(() => []),
+    ]);
+
+    renderUserProfileInfo(user);
+    renderUserProfilePortfolios(portfolios);
+    renderUserProfilePosts(userId, talents, requests);
+  } catch (error) {
+    if (messageTarget) {
+      setSafeHtml(messageTarget, `<article class="trade-list-card"><span>ERROR</span><h3>프로필을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></article>`);
+    }
+  }
+}
+
+function renderUserProfileInfo(user) {
+  setText("[data-user-profile-nickname]", user.nickname || "사용자");
+  setText("[data-user-profile-created-at]", `가입일 ${formatDate(user.createdAt)}`);
+
+  const avatar = document.querySelector("[data-user-profile-avatar]");
+  if (!avatar) return;
+
+  if (user.profileImageUrl) {
+    setSafeHtml(avatar, `<img src="${escapeHtml(safeImageUrl(user.profileImageUrl))}" alt="" />`);
+    return;
+  }
+
+  avatar.textContent = String(user.nickname || "?").charAt(0).toUpperCase();
+}
+
+function renderUserProfilePortfolios(portfolios) {
+  const target = document.querySelector("[data-user-profile-portfolios]");
+  if (!target) return;
+
+  const normalized = portfolios.map((portfolio) => ({
+    ...portfolio,
+    files: [],
+  }));
+  cachePortfolios(normalized);
+  setSafeHtml(target, renderPortfolioPreviewCards(normalized));
+  bindPortfolioCardOpen(target);
+}
+
+function renderUserProfilePosts(userId, talents, requests) {
+  const target = document.querySelector("[data-user-profile-posts]");
+  const allButton = document.querySelector("[data-user-profile-posts-all]");
+  if (!target) return;
+
+  const posts = buildAuthoredPosts(userId, talents, requests);
+  renderPostPreview(target, allButton, posts);
+}
+
+function buildAuthoredPosts(userId, talents, requests) {
+  const posts = [
+    ...talents
+      .filter((talent) => String(talent.userId || "") === String(userId))
+      .map((talent) => ({
+        type: "재능글",
+        title: talent.title,
+        content: talent.content,
+        categoryName: talent.categoryName,
+        status: talent.status,
+        createdAt: talent.createdAt,
+        href: `#/talent/${talent.talentPostId}`,
+      })),
+    ...requests
+      .filter((request) => String(request.userId || "") === String(userId))
+      .map((request) => ({
+        type: "요청글",
+        title: request.title,
+        content: request.content,
+        categoryName: request.categoryName,
+        status: request.status,
+        createdAt: request.createdAt,
+        href: `#/request/${request.requestPostId}`,
+      })),
+  ];
+
+  posts.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+  return posts;
+}
+
+function renderPostPreview(target, allButton, posts) {
+  const previewPosts = posts.slice(0, PROFILE_POST_PREVIEW_SIZE);
+  setSafeHtml(target, renderUserProfilePostCards(previewPosts));
+
+  if (!allButton) {
+    return;
+  }
+
+  const shouldShowAllButton = posts.length > PROFILE_POST_PREVIEW_SIZE;
+  allButton.hidden = !shouldShowAllButton;
+  allButton.onclick = () => {
+    setSafeHtml(target, renderUserProfilePostCards(posts));
+    allButton.hidden = true;
+  };
+}
+
+function renderUserProfilePostCards(posts) {
+  if (!posts.length) {
+    return `
+      <article class="trade-list-card">
+        <span>EMPTY</span>
+        <h3>작성한 게시글이 없습니다.</h3>
+        <p>공개된 재능글이나 요청글이 있으면 이곳에 표시됩니다.</p>
+      </article>
+    `;
+  }
+
+  return posts.map((post) => `
+    <a class="trade-list-card is-clickable" href="${escapeHtml(safeUrl(post.href))}">
+      <span>${escapeHtml(post.type)} · ${escapeHtml(post.categoryName || "카테고리")} · ${escapeHtml(post.status || "-")}</span>
+      <h3>${escapeHtml(post.title || "제목 없음")}</h3>
+      <p>${escapeHtml(markdownExcerpt(post.content || ""))}</p>
+    </a>
+  `).join("");
 }
 
 async function bindHeaderProfileImage() {
@@ -283,6 +438,151 @@ function bindWalletChargeModal() {
   });
 }
 
+function bindWalletHistoryModal() {
+  const modal = document.querySelector("[data-wallet-history-modal]");
+  const openButton = document.querySelector("[data-wallet-history-open]");
+  const closeButtons = document.querySelectorAll("[data-wallet-history-close]");
+  const list = document.querySelector("[data-wallet-history-list]");
+  if (!modal || !openButton || !list) return;
+
+  const closeModal = () => {
+    modal.hidden = true;
+  };
+
+  openButton.addEventListener("click", async () => {
+    modal.hidden = false;
+    setSafeHtml(list, renderWalletHistoryLoading());
+    try {
+      const page = await fetchWalletTransactions({ size: 50 });
+      setSafeHtml(list, renderWalletHistoryList(page.content || []));
+    } catch (error) {
+      setSafeHtml(list, `<article class="wallet-history-item"><h3>거래내역을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></article>`);
+    }
+  });
+
+  closeButtons.forEach((button) => button.addEventListener("click", closeModal));
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+}
+
+function bindProfileEditModal() {
+  const modal = document.querySelector("[data-profile-edit-modal]");
+  const form = document.querySelector("[data-profile-edit-form]");
+  const openButton = document.querySelector("[data-profile-edit-open]");
+  const closeButtons = document.querySelectorAll("[data-profile-edit-close]");
+  const message = document.querySelector("[data-profile-edit-message]");
+  const nicknameInput = form?.querySelector('input[name="nickname"]');
+  const fileInput = form?.querySelector('input[name="profileImage"]');
+  const preview = form?.querySelector("[data-profile-edit-preview]");
+  const fileName = form?.querySelector("[data-profile-edit-file-name]");
+  let previewUrl = null;
+  if (!modal || !form || !openButton || !nicknameInput) return;
+
+  const openModal = () => {
+    modal.hidden = false;
+    nicknameInput.value = document.querySelector("[data-my-page-nickname]")?.textContent?.trim() || "";
+    renderProfileEditPreview(preview, latestMyPage);
+    if (fileName) fileName.textContent = "선택사항 · JPG, PNG 파일";
+    if (message) message.textContent = "";
+    nicknameInput.focus();
+  };
+
+  const closeModal = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      previewUrl = null;
+    }
+    modal.hidden = true;
+    form.reset();
+    renderProfileEditPreview(preview, latestMyPage);
+    if (fileName) fileName.textContent = "선택사항 · JPG, PNG 파일";
+    if (message) message.textContent = "";
+  };
+
+  openButton.addEventListener("click", openModal);
+  closeButtons.forEach((button) => button.addEventListener("click", closeModal));
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+
+  fileInput?.addEventListener("change", () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      previewUrl = null;
+    }
+
+    const file = fileInput.files[0];
+    if (!file) {
+      renderProfileEditPreview(preview, latestMyPage);
+      if (fileName) fileName.textContent = "선택사항 · JPG, PNG 파일";
+      return;
+    }
+
+    if (!isImageFile(file)) {
+      if (message) message.textContent = "프로필 사진은 이미지 파일만 선택할 수 있습니다.";
+      fileInput.value = "";
+      renderProfileEditPreview(preview, latestMyPage);
+      if (fileName) fileName.textContent = "선택사항 · JPG, PNG 파일";
+      return;
+    }
+
+    previewUrl = URL.createObjectURL(file);
+    setSafeHtml(preview, `<img src="${escapeHtml(safeImageUrl(previewUrl))}" alt="" />`);
+    if (fileName) fileName.textContent = file.name;
+    if (message) message.textContent = "";
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const nickname = String(new FormData(form).get("nickname") || "").trim();
+    if (!nickname) {
+      if (message) message.textContent = "닉네임을 입력해 주세요.";
+      return;
+    }
+
+    try {
+      if (message) message.textContent = "";
+      let myPage = await updateMyPage({ nickname });
+      const profileImage = fileInput?.files[0] || null;
+      if (profileImage) {
+        myPage = await updateProfileImage(profileImage);
+      }
+      renderMyPage(myPage);
+      renderHeaderAvatar(myPage);
+      closeModal();
+    } catch (error) {
+      if (message) message.textContent = error.message;
+    }
+  });
+}
+
+function renderProfileEditPreview(preview, myPage) {
+  if (!preview) return;
+
+  if (myPage?.profileImageUrl) {
+    setSafeHtml(preview, `<img src="${escapeHtml(safeImageUrl(myPage.profileImageUrl))}" alt="" />`);
+    return;
+  }
+
+  preview.textContent = String(myPage?.nickname || myPage?.email || "○").charAt(0).toUpperCase();
+}
+
+function bindMyPageLogout() {
+  const button = document.querySelector("[data-my-page-logout]");
+  if (!button) return;
+
+  button.addEventListener("click", async () => {
+    await logout();
+    window.location.hash = "/home";
+    render();
+  });
+}
+
 function bindPortfolioPage() {
   const list = document.querySelector("[data-portfolio-list]");
   if (list) {
@@ -353,37 +653,38 @@ function bindRequestListPage() {
 
   const searchForm = document.querySelector("[data-list-search]");
   const filtersButton = document.querySelector("[data-list-filters]");
-  const loadMoreButton = document.querySelector("[data-request-load-more]");
+  const prevButton = document.querySelector("[data-request-page-prev]");
+  const nextButton = document.querySelector("[data-request-page-next]");
+  const pageLabel = document.querySelector("[data-request-page-label]");
   const categoryId = currentCategoryId();
   let keyword = "";
   let conditions = {};
-  let nextPage = 0;
+  let currentPage = 0;
   let loading = false;
 
-  const loadPage = async (reset = false) => {
+  const loadPage = async (pageNumber = 0) => {
     if (loading) return;
-    if (reset) nextPage = 0;
 
     loading = true;
-    if (loadMoreButton) loadMoreButton.disabled = true;
+    setButtonsDisabled([prevButton, nextButton], true);
     try {
-      const page = await loadRequestList(keyword, categoryId, nextPage, reset, conditions);
-      nextPage = Number(page.page || 0) + 1;
-      if (loadMoreButton) loadMoreButton.hidden = Boolean(page.last);
+      const page = await loadRequestList(keyword, categoryId, pageNumber, conditions);
+      currentPage = Number(page.page || pageNumber || 0);
+      updateListPagination({ prevButton, nextButton, pageLabel, page });
     } catch {
-      if (loadMoreButton) loadMoreButton.hidden = true;
+      updateListPagination({ prevButton, nextButton, pageLabel, page: null });
     } finally {
       loading = false;
-      if (loadMoreButton) loadMoreButton.disabled = false;
+      setButtonsDisabled([prevButton, nextButton], false);
     }
   };
 
-  loadPage(true);
+  loadPage(0);
 
   searchForm?.addEventListener("submit", (event) => {
     event.preventDefault();
     keyword = String(new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "");
-    loadPage(true);
+    loadPage(0);
   });
 
   filtersButton?.addEventListener("click", () => {
@@ -393,12 +694,13 @@ function bindRequestListPage() {
       onApply: (next) => {
         conditions = next;
         syncCategoryTabs(next.categoryId);
-        loadPage(true);
+        loadPage(0);
       },
     });
   });
 
-  loadMoreButton?.addEventListener("click", () => loadPage(false));
+  prevButton?.addEventListener("click", () => loadPage(Math.max(currentPage - 1, 0)));
+  nextButton?.addEventListener("click", () => loadPage(currentPage + 1));
 }
 
 function bindRequestDetailPage() {
@@ -556,33 +858,105 @@ async function loadRequestEditForm(form, requestPostId) {
   }
 }
 
-async function loadRequestList(keyword = "", categoryId = "", pageNumber = 0, reset = true, conditions = {}) {
+async function loadRequestList(keyword = "", categoryId = "", pageNumber = 0, conditions = {}) {
   const list = document.querySelector("[data-request-list]");
   if (!list) return { content: [], page: 0, last: true };
 
   try {
-    const page = await fetchRequestPage({ keyword, page: pageNumber });
-    const filteredRequests = filterByConditions(filterByCategory(page.content, categoryId), "REQUEST", conditions);
+    const requests = await fetchAllRequestPosts(keyword);
+    const filteredRequests = filterByConditions(filterByCategory(requests, categoryId), "REQUEST", conditions);
+    const page = createClientPage(filteredRequests, pageNumber);
     const requestsWithFiles = await Promise.all(
-      filteredRequests.map(async (request) => ({
+      page.content.map(async (request) => ({
         ...request,
         files: await getRequestFiles(request.requestPostId).catch(() => []),
       }))
     );
 
     const cards = requestsWithFiles.map(renderRequestCard).join("");
-    if (reset) {
-      setSafeHtml(list, cards || `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 의뢰글이 없습니다.</h3><p>검색 조건을 조정하거나 첫 의뢰글을 작성해 보세요.</p></div></article>`);
-    } else if (cards) {
-      appendSafeHtml(list, "beforeend", cards);
-    }
+    setSafeHtml(list, cards || `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 의뢰글이 없습니다.</h3><p>검색 조건을 조정하거나 첫 의뢰글을 작성해 보세요.</p></div></article>`);
     return page;
   } catch (error) {
-    if (reset) {
-      setSafeHtml(list, `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">ERROR</span><h3>의뢰글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`);
-    }
+    setSafeHtml(list, `<article class="request-card request-list-card"><div class="card-body"><span class="kicker">ERROR</span><h3>의뢰글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`);
     throw error;
   }
+}
+
+function updateListPagination({ prevButton, nextButton, pageLabel, page }) {
+  if (!page) {
+    if (prevButton) prevButton.hidden = true;
+    if (nextButton) nextButton.hidden = true;
+    if (pageLabel) pageLabel.textContent = "1 / 1";
+    return;
+  }
+
+  const pageNumber = Number(page.page || 0);
+  const totalPages = Math.max(Number(page.totalPages || 0), 1);
+  const isFirst = page.first ?? pageNumber <= 0;
+  const isLast = page.last ?? pageNumber >= totalPages - 1;
+
+  updateListPageButton(prevButton, isFirst);
+  updateListPageButton(nextButton, isLast);
+  if (pageLabel) pageLabel.textContent = `${pageNumber + 1} / ${totalPages}`;
+}
+
+function updateListPageButton(button, hidden) {
+  if (!button) return;
+
+  button.hidden = false;
+  button.classList.toggle("is-hidden", hidden);
+  button.setAttribute("aria-hidden", String(hidden));
+  button.tabIndex = hidden ? -1 : 0;
+}
+
+async function fetchAllRequestPosts(keyword = "") {
+  return fetchAllPostPages((pageNumber) => fetchRequestPage({
+    keyword,
+    page: pageNumber,
+    size: LIST_FETCH_SIZE,
+  }));
+}
+
+async function fetchAllTalentPosts(keyword = "") {
+  return fetchAllPostPages((pageNumber) => fetchTalentPage({
+    keyword,
+    page: pageNumber,
+    size: LIST_FETCH_SIZE,
+  }));
+}
+
+async function fetchAllPostPages(fetchPage) {
+  const items = [];
+  let pageNumber = 0;
+  let last = false;
+
+  while (!last) {
+    const page = await fetchPage(pageNumber);
+    items.push(...(page.content || []));
+    last = Boolean(page.last);
+    pageNumber += 1;
+
+    if (pageNumber > 20) {
+      break;
+    }
+  }
+
+  return items;
+}
+
+function createClientPage(items, requestedPage) {
+  const totalPages = Math.max(Math.ceil(items.length / LIST_PAGE_SIZE), 1);
+  const pageNumber = Math.min(Math.max(Number(requestedPage || 0), 0), totalPages - 1);
+  const start = pageNumber * LIST_PAGE_SIZE;
+  const content = items.slice(start, start + LIST_PAGE_SIZE);
+
+  return {
+    content,
+    page: pageNumber,
+    totalPages,
+    first: pageNumber === 0,
+    last: pageNumber >= totalPages - 1,
+  };
 }
 
 async function loadRequestDetail(requestPostId) {
@@ -607,13 +981,21 @@ async function loadRequestCategories() {
     setSafeHtml(select, categories.length
       ? `<option value="">카테고리 선택</option>${categories.map((category) => `<option value="${category.categoryId}">${escapeHtml(category.name)}</option>`).join("")}`
       : `<option value="">등록된 카테고리가 없습니다</option>`);
+    syncCategoryPickerButton(select, document.querySelector("[data-request-category-open]"));
   } catch {
     setSafeHtml(select, `<option value="">카테고리를 불러오지 못했습니다</option>`);
+    syncCategoryPickerButton(select, document.querySelector("[data-request-category-open]"));
   }
 }
 
 function bindRequestSettingsModal(form) {
   const renderSelected = () => renderRequestSettingsSummary(form);
+  bindCategoryPicker({
+    select: form.querySelector("[data-request-category-select]"),
+    trigger: form.querySelector("[data-request-category-open]"),
+    title: "요청글 카테고리 선택",
+    onChange: renderSelected,
+  });
 
   form.querySelector("[data-request-settings-open]")?.addEventListener("click", () => {
     openRequestSettingsModal(form);
@@ -650,7 +1032,7 @@ function openRequestSettingsModal(form) {
   if (!modal) return;
   modal.hidden = false;
   document.body.classList.add("modal-open");
-  form.querySelector("[data-request-category-select]")?.focus();
+  form.querySelector("[data-request-category-open]")?.focus();
 }
 
 function closeRequestSettingsModal(form) {
@@ -734,37 +1116,38 @@ function bindTalentListPage() {
 
   const searchForm = document.querySelector("[data-list-search]");
   const filtersButton = document.querySelector("[data-list-filters]");
-  const loadMoreButton = document.querySelector("[data-talent-load-more]");
+  const prevButton = document.querySelector("[data-talent-page-prev]");
+  const nextButton = document.querySelector("[data-talent-page-next]");
+  const pageLabel = document.querySelector("[data-talent-page-label]");
   const categoryId = currentCategoryId();
   let keyword = "";
   let conditions = {};
-  let nextPage = 0;
+  let currentPage = 0;
   let loading = false;
 
-  const loadPage = async (reset = false) => {
+  const loadPage = async (pageNumber = 0) => {
     if (loading) return;
-    if (reset) nextPage = 0;
 
     loading = true;
-    if (loadMoreButton) loadMoreButton.disabled = true;
+    setButtonsDisabled([prevButton, nextButton], true);
     try {
-      const page = await loadTalentList(keyword, categoryId, nextPage, reset, conditions);
-      nextPage = Number(page.page || 0) + 1;
-      if (loadMoreButton) loadMoreButton.hidden = Boolean(page.last);
+      const page = await loadTalentList(keyword, categoryId, pageNumber, conditions);
+      currentPage = Number(page.page || pageNumber || 0);
+      updateListPagination({ prevButton, nextButton, pageLabel, page });
     } catch {
-      if (loadMoreButton) loadMoreButton.hidden = true;
+      updateListPagination({ prevButton, nextButton, pageLabel, page: null });
     } finally {
       loading = false;
-      if (loadMoreButton) loadMoreButton.disabled = false;
+      setButtonsDisabled([prevButton, nextButton], false);
     }
   };
 
-  loadPage(true);
+  loadPage(0);
 
   searchForm?.addEventListener("submit", (event) => {
     event.preventDefault();
     keyword = String(new FormData(searchForm).get("keyword") || searchForm.querySelector("input")?.value || "");
-    loadPage(true);
+    loadPage(0);
   });
 
   filtersButton?.addEventListener("click", () => {
@@ -774,12 +1157,13 @@ function bindTalentListPage() {
       onApply: (next) => {
         conditions = next;
         syncCategoryTabs(next.categoryId);
-        loadPage(true);
+        loadPage(0);
       },
     });
   });
 
-  loadMoreButton?.addEventListener("click", () => loadPage(false));
+  prevButton?.addEventListener("click", () => loadPage(Math.max(currentPage - 1, 0)));
+  nextButton?.addEventListener("click", () => loadPage(currentPage + 1));
 }
 
 function bindTalentDetailPage() {
@@ -907,31 +1291,26 @@ function bindTalentCreatePage() {
   });
 }
 
-async function loadTalentList(keyword = "", categoryId = "", pageNumber = 0, reset = true, conditions = {}) {
+async function loadTalentList(keyword = "", categoryId = "", pageNumber = 0, conditions = {}) {
   const list = document.querySelector("[data-list='talents']");
   if (!list) return { content: [], page: 0, last: true };
 
   try {
-    const page = await fetchTalentPage({ keyword, page: pageNumber });
-    const filteredTalents = filterByConditions(filterByCategory(page.content, categoryId), "TALENT", conditions);
+    const talents = await fetchAllTalentPosts(keyword);
+    const filteredTalents = filterByConditions(filterByCategory(talents, categoryId), "TALENT", conditions);
+    const page = createClientPage(filteredTalents, pageNumber);
     const talentsWithFiles = await Promise.all(
-      filteredTalents.map(async (talent) => ({
+      page.content.map(async (talent) => ({
         ...talent,
         files: await getTalentFiles(talent.talentPostId).catch(() => []),
       }))
     );
 
     const cards = talentsWithFiles.map(renderTalentCard).join("");
-    if (reset) {
-      setSafeHtml(list, cards || `<article class="talent-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 재능글이 없습니다.</h3><p>검색 조건을 조정하거나 첫 재능글을 작성해 보세요.</p></div></article>`);
-    } else if (cards) {
-      appendSafeHtml(list, "beforeend", cards);
-    }
+    setSafeHtml(list, cards || `<article class="talent-card"><div class="card-body"><span class="kicker">EMPTY</span><h3>등록된 재능글이 없습니다.</h3><p>검색 조건을 조정하거나 첫 재능글을 작성해 보세요.</p></div></article>`);
     return page;
   } catch (error) {
-    if (reset) {
-      setSafeHtml(list, `<article class="talent-card"><div class="card-body"><span class="kicker">ERROR</span><h3>재능글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`);
-    }
+    setSafeHtml(list, `<article class="talent-card"><div class="card-body"><span class="kicker">ERROR</span><h3>재능글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></div></article>`);
     throw error;
   }
 }
@@ -1028,18 +1407,10 @@ function renderTalentDetail(talent, files = []) {
 }
 
 function renderTalentAuthor(talent) {
-  const name = authorLabel(talent);
-  setText("[data-talent-author]", name);
+  const box = document.querySelector("[data-talent-author-box]");
+  if (!box) return;
 
-  const avatar = document.querySelector("[data-talent-avatar]");
-  if (!avatar) return;
-
-  if (talent.authorProfileImageUrl) {
-    setSafeHtml(avatar, `<img src="${escapeHtml(safeImageUrl(talent.authorProfileImageUrl))}" alt="" />`);
-    return;
-  }
-
-  avatar.textContent = String(talent.authorNickname || talent.userId || "?").charAt(0).toUpperCase();
+  setSafeHtml(box, renderAuthorProfileLink(talent, "판매자 프로필 보기"));
 }
 
 function hideTalentAuthorMeta() {
@@ -1163,8 +1534,15 @@ function bindTalentPortfolioModal(form) {
 
 async function loadTalentSettingsOptions(form) {
   const categorySelect = form.querySelector("[data-talent-category-select]");
+  const categoryButton = form.querySelector("[data-talent-category-open]");
 
   const renderSelected = () => renderTalentSettingsSummary(form);
+  bindCategoryPicker({
+    select: categorySelect,
+    trigger: categoryButton,
+    title: "재능글 카테고리 선택",
+    onChange: renderSelected,
+  });
 
   try {
     const categories = await fetchCategories();
@@ -1173,9 +1551,11 @@ async function loadTalentSettingsOptions(form) {
         ? `<option value="">카테고리 선택</option>${categories.map((category) => `<option value="${category.categoryId}">${escapeHtml(category.name)}</option>`).join("")}`
         : `<option value="">등록된 카테고리가 없습니다</option>`);
       categorySelect.addEventListener("change", renderSelected);
+      syncCategoryPickerButton(categorySelect, categoryButton);
     }
   } catch {
     setSafeHtml(categorySelect, `<option value="">카테고리를 불러오지 못했습니다</option>`);
+    syncCategoryPickerButton(categorySelect, categoryButton);
   }
 
   await loadTalentPortfolioOptions(form);
@@ -1252,7 +1632,7 @@ function openTalentSettingsModal(form) {
   if (!modal) return;
   modal.hidden = false;
   document.body.classList.add("modal-open");
-  form.querySelector("[data-talent-category-select]")?.focus();
+  form.querySelector("[data-talent-category-open]")?.focus();
 }
 
 function closeTalentSettingsModal(form) {
@@ -1469,7 +1849,7 @@ function getRequestPreviewImage(files) {
 
 function selectedOptionText(select) {
   if (!select || !select.value) return "";
-  return select.options[select.selectedIndex]?.textContent || "";
+  return resolveCategoryLabel(select);
 }
 
 function setFormValue(form, name, value) {
@@ -1600,6 +1980,7 @@ function renderRequestDetail(request, files = []) {
   setText("[data-request-title]", request.title);
   setText("[data-request-budget]", formatBudget(request));
   setText("[data-request-meta]", `${authorLabel(request)} · 등록일 ${formatDate(request.createdAt)}`);
+  renderRequestAuthor(request);
 
   const content = document.querySelector("[data-request-content]");
   setSafeHtml(content, renderMarkdown("", request.content || ""));
@@ -1615,6 +1996,13 @@ function renderRequestDetail(request, files = []) {
       `
       : `<span data-request-category>${escapeHtml(request.categoryName || "Request")}</span>`);
   }
+}
+
+function renderRequestAuthor(request) {
+  const box = document.querySelector("[data-request-author-box]");
+  if (!box) return;
+
+  setSafeHtml(box, renderAuthorProfileLink(request, "요청자 프로필 보기"));
 }
 
 async function bindRequestChatButton(request) {
@@ -1649,6 +2037,35 @@ function authorLabel(post) {
   return post.authorNickname || post.nickname || "작성자";
 }
 
+function renderAuthorProfileLink(post, label) {
+  const userId = post.userId;
+  const name = authorLabel(post);
+  const initial = String(post.authorNickname || post.nickname || userId || "?").charAt(0).toUpperCase();
+  const avatar = post.authorProfileImageUrl
+    ? `<img src="${escapeHtml(safeImageUrl(post.authorProfileImageUrl))}" alt="" />`
+    : escapeHtml(initial);
+
+  if (!userId) {
+    return `
+      <div class="avatar">${avatar}</div>
+      <div>
+        <strong>${escapeHtml(name)}</strong>
+        <span>${escapeHtml(label)}</span>
+      </div>
+    `;
+  }
+
+  return `
+    <a class="author-profile-link" href="#/users/${escapeHtml(userId)}" aria-label="${escapeHtml(name)} 프로필 보기">
+      <div class="avatar">${avatar}</div>
+      <div>
+        <strong>${escapeHtml(name)}</strong>
+        <span>${escapeHtml(label)}</span>
+      </div>
+    </a>
+  `;
+}
+
 function formatBudget(request) {
   return `${formatMoney(Number(request.budgetMin || 0))} - ${formatMoney(Number(request.budgetMax || 0))}`;
 }
@@ -1659,6 +2076,7 @@ async function loadMyPage() {
   try {
     const myPage = await getMyPage();
     renderMyPage(myPage);
+    loadMyAuthoredPosts(myPage.userId);
     if (message) {
       message.textContent = "";
     }
@@ -1669,7 +2087,25 @@ async function loadMyPage() {
   }
 }
 
+async function loadMyAuthoredPosts(userId) {
+  const target = document.querySelector("[data-my-authored-posts]");
+  const allButton = document.querySelector("[data-my-authored-posts-all]");
+  if (!target || !userId) return;
+
+  try {
+    const [talents, requests] = await Promise.all([
+      fetchAllTalentPosts("").catch(() => []),
+      fetchAllRequestPosts("").catch(() => []),
+    ]);
+    const posts = buildAuthoredPosts(userId, talents, requests);
+    renderPostPreview(target, allButton, posts);
+  } catch (error) {
+    setSafeHtml(target, `<article class="trade-list-card"><span>ERROR</span><h3>작성한 게시글을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></article>`);
+  }
+}
+
 function renderMyPage(myPage) {
+  latestMyPage = myPage;
   renderMyPageAvatar(myPage);
   setText("[data-my-page-nickname]", myPage.nickname);
   setText("[data-my-page-email]", myPage.email);
@@ -1687,6 +2123,166 @@ function renderMyPageAvatar(myPage) {
   }
 
   avatar.textContent = (myPage.nickname || myPage.email || "?").charAt(0).toUpperCase();
+}
+
+async function loadMyTradePreview() {
+  const preview = document.querySelector("[data-my-trade-preview]");
+  if (!preview) return;
+
+  try {
+    const page = await fetchMyTrades({ size: 4 });
+    const trades = await enrichTrades(page.content || []);
+    setSafeHtml(preview, renderTradeCards(trades.slice(0, 3), { compact: true }));
+  } catch (error) {
+    setSafeHtml(preview, `<article class="trade-list-card"><span>ERROR</span><h3>거래 목록을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></article>`);
+  }
+}
+
+function bindMyTradesPage() {
+  const page = document.querySelector("[data-my-trades-page]");
+  if (!page) return;
+
+  loadMyTradesPage();
+}
+
+async function loadMyTradesPage() {
+  const activeList = document.querySelector('[data-trade-list="active"]');
+  const completedList = document.querySelector('[data-trade-list="completed"]');
+  if (!activeList || !completedList) return;
+
+  try {
+    const page = await fetchMyTrades({ size: 100 });
+    const trades = await enrichTrades(page.content || []);
+    const completedTrades = trades.filter((trade) => trade.status === "COMPLETED");
+    const activeTrades = trades.filter((trade) => trade.status !== "COMPLETED");
+
+    setSafeHtml(activeList, renderTradeCards(activeTrades));
+    setSafeHtml(completedList, renderTradeCards(completedTrades));
+  } catch (error) {
+    const errorHtml = `<article class="trade-list-card"><span>ERROR</span><h3>거래 목록을 불러오지 못했습니다.</h3><p>${escapeHtml(error.message)}</p></article>`;
+    setSafeHtml(activeList, errorHtml);
+    setSafeHtml(completedList, errorHtml);
+  }
+}
+
+async function enrichTrades(trades) {
+  return Promise.all(trades.map(enrichTrade));
+}
+
+async function enrichTrade(trade) {
+  const postInfo = await getTradePostInfo(trade);
+  return {
+    ...trade,
+    ...postInfo,
+  };
+}
+
+async function getTradePostInfo(trade) {
+  try {
+    if (trade.requestPostId) {
+      const post = await fetchRequest(trade.requestPostId);
+      return {
+        postTypeLabel: "요청글",
+        postTitle: post.title || "요청글",
+        postHref: `#/request/${trade.requestPostId}`,
+      };
+    }
+
+    if (trade.talentPostId) {
+      const post = await fetchTalent(trade.talentPostId);
+      return {
+        postTypeLabel: "재능글",
+        postTitle: post.title || "재능글",
+        postHref: `#/talent/${trade.talentPostId}`,
+      };
+    }
+  } catch {
+    return getFallbackTradePostInfo(trade);
+  }
+
+  return getFallbackTradePostInfo(trade);
+}
+
+function getFallbackTradePostInfo(trade) {
+  if (trade.requestPostId) {
+    return {
+      postTypeLabel: "요청글",
+      postTitle: "요청글 상세보기",
+      postHref: `#/request/${trade.requestPostId}`,
+    };
+  }
+
+  if (trade.talentPostId) {
+    return {
+      postTypeLabel: "재능글",
+      postTitle: "재능글 상세보기",
+      postHref: `#/talent/${trade.talentPostId}`,
+    };
+  }
+
+  return {
+    postTypeLabel: "거래",
+    postTitle: "연결된 게시글 정보 없음",
+    postHref: "#/my-trades",
+  };
+}
+
+function renderTradeCards(trades, { compact = false } = {}) {
+  if (!trades.length) {
+    return `<article class="trade-list-card"><span>EMPTY</span><h3>표시할 거래가 없습니다.</h3><p>거래가 생성되면 이곳에서 확인할 수 있습니다.</p></article>`;
+  }
+
+  return trades.map((trade) => renderTradeCard(trade, { compact })).join("");
+}
+
+function renderTradeCard(trade, { compact = false } = {}) {
+  const meta = [
+    trade.postTypeLabel,
+    tradeStatusLabelForList(trade.status),
+    formatDate(trade.createdAt),
+  ].filter(Boolean).join(" · ");
+
+  return `
+    <a class="trade-list-card is-clickable ${compact ? "compact" : ""}" href="${escapeHtml(safeUrl(trade.postHref))}">
+      <span>${escapeHtml(meta)}</span>
+      <h3>${escapeHtml(trade.postTitle)}</h3>
+      <p>${formatMoney(Number(trade.amount || 0))}</p>
+    </a>
+  `;
+}
+
+function renderWalletHistoryLoading() {
+  return `
+    <article class="wallet-history-item">
+      <h3>거래내역을 불러오는 중입니다.</h3>
+      <p>잠시만 기다려 주세요.</p>
+    </article>
+  `;
+}
+
+function renderWalletHistoryList(transactions) {
+  if (!transactions.length) {
+    return `
+      <article class="wallet-history-item">
+        <h3>거래내역이 없습니다.</h3>
+        <p>충전이나 거래가 발생하면 이곳에 표시됩니다.</p>
+      </article>
+    `;
+  }
+
+  return transactions.map((transaction) => `
+    <article class="wallet-history-item">
+      <div>
+        <span>${escapeHtml(walletTransactionLabel(transaction.transactionType))}</span>
+        <h3>${escapeHtml(transaction.description || "지갑 거래")}</h3>
+        <p>${escapeHtml(formatDateTime(transaction.createdAt))}</p>
+      </div>
+      <div>
+        <strong>${escapeHtml(formatWalletTransactionAmount(transaction))}</strong>
+        <small>${formatMoney(Number(transaction.balanceAfter || 0))}</small>
+      </div>
+    </article>
+  `).join("");
 }
 
 async function loadPortfolioPreview() {
@@ -2142,6 +2738,14 @@ function setText(selector, value) {
   }
 }
 
+function setButtonsDisabled(buttons, disabled) {
+  buttons.forEach((button) => {
+    if (button) {
+      button.disabled = disabled;
+    }
+  });
+}
+
 function formatDate(value) {
   if (!value) return "-";
 
@@ -2150,6 +2754,46 @@ function formatDate(value) {
     month: "2-digit",
     day: "2-digit",
   }).format(new Date(value));
+}
+
+function formatDateTime(value) {
+  if (!value) return "-";
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function tradeStatusLabelForList(status) {
+  const labels = {
+    PENDING: "결제 대기",
+    PAID: "진행 중",
+    COMPLETED: "완료",
+    CANCELLED: "취소",
+  };
+  return labels[status] || "상태 확인";
+}
+
+function walletTransactionLabel(type) {
+  const labels = {
+    CHARGE: "충전",
+    PAYMENT: "결제",
+    RECEIVE: "정산",
+    REFUND: "환불",
+  };
+  return labels[type] || "거래";
+}
+
+function formatWalletTransactionAmount(transaction) {
+  const amount = formatMoney(Number(transaction.amount || 0));
+  if (transaction.transactionType === "PAYMENT") {
+    return `-${amount}`;
+  }
+  return `+${amount}`;
 }
 
 function formatFileSize(bytes) {

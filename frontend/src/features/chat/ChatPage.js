@@ -19,6 +19,7 @@ import {
 } from "../../shared/security/xss.js";
 
 let activeClient = null;
+const noticeTimers = new WeakMap();
 
 // 채팅 목록 페이지(#/chat) 겸 채팅방 페이지(#/chat/{id}).
 // 실제 데이터는 initChatPage()가 렌더링 후 비동기로 채워 넣음 (app.js의 bindPageEvents에서 호출).
@@ -114,11 +115,8 @@ async function openRoom(panelEl, room) {
     loadActiveTrade(room.chatRoomId),
     fetchChatMessages(room.chatRoomId).catch(() => null),
   ]);
-  const latestTradeFlowMessage = history?.find((message) =>
-    isTradeAmountRequest(message) || message.messageType === "TRADE_REQUEST"
-  );
-  const hasOpenAmountRequest = !activeTrade &&
-    isTradeAmountRequest(latestTradeFlowMessage);
+  const tradeFlow = resolveTradeFlow(history, activeTrade);
+  const hasOpenAmountRequest = tradeFlow.hasOpenAmountRequest;
   const post = requestPost || talentPost;
   const isPostOwner = currentUserId != null && post != null &&
     String(post.userId) === String(currentUserId);
@@ -131,7 +129,11 @@ async function openRoom(panelEl, room) {
   const canSetRequestAmount = Boolean(
     requestPost && hasOpenAmountRequest && !isPostOwner
   );
-  const roomContext = { ...room, hasActiveTrade: Boolean(activeTrade) };
+  const roomContext = {
+    ...room,
+    hasActiveTrade: tradeFlow.hasActiveTrade,
+    openAmountRequestMessageId: tradeFlow.openAmountRequestMessageId,
+  };
 
   setSafeHtml(panelEl, panelTemplate(room, { canRequestTrade, canSetRequestAmount }));
   const streamEl = panelEl.querySelector("[data-message-stream]");
@@ -142,6 +144,8 @@ async function openRoom(panelEl, room) {
   activeClient = connectChatRoom(room.chatRoomId, {
     onMessage: (message) => {
       if (isTradeAmountRequest(message)) {
+        roomContext.hasActiveTrade = false;
+        roomContext.openAmountRequestMessageId = getMessageId(message);
         panelEl.querySelector("[data-trade-request-open]")?.remove();
         if (String(message.senderId) !== String(currentUserId)) {
           showRequestAmountAction(panelEl);
@@ -149,14 +153,16 @@ async function openRoom(panelEl, room) {
       }
       if (message.messageType === "TRADE_REQUEST") {
         roomContext.hasActiveTrade = true;
+        roomContext.openAmountRequestMessageId = null;
         panelEl.querySelector("[data-trade-request-open]")?.remove();
         panelEl.querySelector("[data-request-amount-open]")?.remove();
-        panelEl.querySelectorAll("[data-trade-amount-open]").forEach((button) => {
-          button.replaceWith(statusText("거래 금액이 확정되었습니다."));
-        });
+        markAmountRequestButtonsAsFixed(panelEl);
       }
       if (isTradePaid(message)) {
         updateTradeCardStatus(panelEl, message.trade, "결제 완료");
+      }
+      if (isTradeCompleted(message)) {
+        updateTradeCardStatus(panelEl, message.trade, "거래 완료");
       }
       appendSafeHtml(streamEl, "beforeend", renderBubble(message, currentUserId, roomContext));
       streamEl.scrollTop = streamEl.scrollHeight;
@@ -176,7 +182,7 @@ async function openRoom(panelEl, room) {
       sendChatMessage(activeClient, room.chatRoomId, value);
       input.value = "";
     } catch (error) {
-      alert(error.message);
+      showChatNotice(panelEl, error.message, "error");
     }
   });
 
@@ -190,7 +196,7 @@ async function openRoom(panelEl, room) {
       // 업로드만 하면 서버가 STOMP 로 메시지를 브로드캐스트 → onMessage 에서 화면에 그려짐.
       await uploadChatImage(room.chatRoomId, file);
     } catch (error) {
-      alert(`이미지 전송 실패: ${error.message}`);
+      showChatNotice(panelEl, `이미지 전송 실패: ${error.message}`, "error");
     } finally {
       formEl.classList.remove("uploading");
       imageInputEl.value = "";
@@ -198,7 +204,7 @@ async function openRoom(panelEl, room) {
   });
 
   const leaveButtonEl = panelEl.querySelector("[data-leave-room]");
-  leaveButtonEl?.addEventListener("click", () => handleLeaveRoom(room.chatRoomId));
+  leaveButtonEl?.addEventListener("click", () => handleLeaveRoom(room.chatRoomId, panelEl));
 
   panelEl.querySelector("[data-trade-request-open]")?.addEventListener("click", () => {
     if (room.talentPostId) {
@@ -260,13 +266,13 @@ async function loadActiveTrade(chatRoomId) {
   }
 }
 
-async function handleLeaveRoom(chatRoomId) {
+async function handleLeaveRoom(chatRoomId, panelEl) {
   if (!confirm("채팅방을 나가시겠습니까? 대화 내용을 다시 볼 수 없습니다.")) return;
 
   try {
     await leaveChatRoom(chatRoomId);
   } catch (error) {
-    alert(`채팅방 나가기 실패: ${error.message}`);
+    showChatNotice(panelEl, `채팅방 나가기 실패: ${error.message}`, "error");
     return;
   }
 
@@ -289,12 +295,13 @@ async function loadHistory(streamEl, room, currentUserId, initialHistory = null)
 
 function panelTemplate(room, { canRequestTrade = false, canSetRequestAmount = false } = {}) {
   const tradeButtonLabel = room.talentPostId ? "판매 금액 설정" : "금액 설정 요청";
+  const profileContent = `
+    ${renderChatAvatar(room)}
+    <div><strong>${escapeHtml(room.otherUserNickname ?? "상대방")}</strong><span>${postLabel(room)}</span></div>
+  `;
   return `
     <header>
-      <div class="seller-box">
-        ${renderChatAvatar(room)}
-        <div><strong>${escapeHtml(room.otherUserNickname ?? "상대방")}</strong><span>${postLabel(room)}</span></div>
-      </div>
+      ${renderChatPostLink(room, profileContent)}
       <div class="chat-panel-actions">
         ${canRequestTrade ? `<button type="button" class="button primary" data-trade-request-open>${tradeButtonLabel}</button>` : ""}
         ${canSetRequestAmount ? `<button type="button" class="button primary" data-request-amount-open>금액 설정</button>` : ""}
@@ -304,6 +311,7 @@ function panelTemplate(room, { canRequestTrade = false, canSetRequestAmount = fa
     <div class="message-stream" data-message-stream>
       <p>메시지를 불러오는 중...</p>
     </div>
+    <div class="chat-notice" data-chat-notice role="status" aria-live="polite" hidden></div>
     <form class="message-compose" data-compose-form>
       <label class="compose-attach" title="사진 보내기">
         <input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp" data-image-input hidden />
@@ -331,6 +339,10 @@ function renderBubble(message, currentUserId, room) {
     return renderTradePaidBubble(message, mineClass);
   }
 
+  if (isTradeCompleted(message)) {
+    return renderTradeCompletedBubble(message, mineClass);
+  }
+
   if (message.messageType === "IMAGE") {
     const src = safeImageUrl(message.content);
     if (!src) {
@@ -346,17 +358,24 @@ function renderBubble(message, currentUserId, room) {
 }
 
 function renderTradeAmountRequestBubble(message, currentUserId, mineClass, room) {
-  const canSetAmount = room?.requestPostId && currentUserId != null &&
-    String(message.senderId) !== String(currentUserId) && !room.hasActiveTrade;
+  const isCounterpart = currentUserId != null && String(message.senderId) !== String(currentUserId);
+  const isOpenRequest = getMessageId(message) === room?.openAmountRequestMessageId;
+  const canSetAmount = Boolean(room?.requestPostId && isCounterpart && isOpenRequest && !room.hasActiveTrade);
+
+  let actionHtml = `<small>상대방의 금액 설정을 기다리는 중입니다.</small>`;
+  if (room?.hasActiveTrade || !isOpenRequest) {
+    actionHtml = `<small>거래 금액이 확정되었습니다.</small>`;
+  }
+  if (canSetAmount) {
+    actionHtml = `<button type="button" class="button primary" data-trade-amount-open>금액 설정</button>`;
+  }
 
   return `
     <article class="bubble trade-bubble ${mineClass}">
       <span>금액 설정 요청</span>
       <strong>거래 금액을 설정해 주세요</strong>
       <p>재능 보유자가 금액을 확정하면 요청자가 결제할 수 있습니다.</p>
-      ${canSetAmount
-        ? `<button type="button" class="button primary" data-trade-amount-open>금액 설정</button>`
-        : `<small>${room.hasActiveTrade ? "거래 금액이 확정되었습니다." : "상대방의 금액 설정을 기다리는 중입니다."}</small>`}
+      ${actionHtml}
     </article>
   `;
 }
@@ -396,6 +415,16 @@ function renderTradePaidBubble(message, mineClass) {
   `;
 }
 
+function renderTradeCompletedBubble(message, mineClass) {
+  return `
+    <article class="bubble trade-bubble trade-paid-bubble ${mineClass}">
+      <span>거래 완료</span>
+      <strong>${formatTradeAmount(message.trade?.amount)}</strong>
+      <p>거래 완료되었습니다.</p>
+    </article>
+  `;
+}
+
 async function sendRequestTradeAmountCard(panelEl, room) {
   const buttonEl = panelEl.querySelector("[data-trade-request-open]");
   buttonEl.disabled = true;
@@ -403,14 +432,14 @@ async function sendRequestTradeAmountCard(panelEl, room) {
     await requestTradeAmount(room.chatRoomId);
     buttonEl.remove();
   } catch (error) {
-    alert(error.message);
+    showChatNotice(panelEl, error.message, "error");
     buttonEl.disabled = false;
   }
 }
 
 function openTalentTradeRequestModal(panelEl, { room, talentPost }) {
   if (!talentPost) {
-    alert("재능글 정보를 불러오지 못했습니다.");
+    showChatNotice(panelEl, "재능글 정보를 불러오지 못했습니다.", "error");
     return;
   }
 
@@ -459,6 +488,7 @@ function openTalentTradeRequestModal(panelEl, { room, talentPost }) {
       await createTrade(room.chatRoomId, { amount, talentPostId: talentPost.talentPostId });
       panelEl.querySelector("[data-trade-request-open]")?.remove();
       closeChatModal(panelEl);
+      showChatNotice(panelEl, "거래 요청을 보냈습니다.");
     } catch (error) {
       messageEl.textContent = error.message;
       submitButton.disabled = false;
@@ -468,7 +498,7 @@ function openTalentTradeRequestModal(panelEl, { room, talentPost }) {
 
 function openRequestTradeAmountModal(panelEl, { room, requestPost }) {
   if (!requestPost) {
-    alert("요청글 정보를 불러오지 못했습니다.");
+    showChatNotice(panelEl, "요청글 정보를 불러오지 못했습니다.", "error");
     return;
   }
 
@@ -515,10 +545,9 @@ function openRequestTradeAmountModal(panelEl, { room, requestPost }) {
     try {
       await createTrade(room.chatRoomId, { amount, requestPostId: requestPost.requestPostId });
       panelEl.querySelector("[data-request-amount-open]")?.remove();
-      panelEl.querySelectorAll("[data-trade-amount-open]").forEach((button) => {
-        button.replaceWith(statusText("거래 금액이 확정되었습니다."));
-      });
+      markAmountRequestButtonsAsFixed(panelEl);
       closeChatModal(panelEl);
+      showChatNotice(panelEl, "지불 요청을 보냈습니다.");
     } catch (error) {
       messageEl.textContent = error.message;
       submitButton.disabled = false;
@@ -573,7 +602,7 @@ async function openTradePayModal(panelEl, trade) {
       await payTrade(trade.tradeId);
       closeChatModal(panelEl);
       updateTradeCardStatus(panelEl, trade, "결제 완료");
-      alert("결제가 완료되었습니다.");
+      showChatNotice(panelEl, "결제가 완료되었습니다. 채팅에 안내 메시지가 추가됩니다.");
     } catch (error) {
       messageEl.textContent = error.message;
       payButton.disabled = false;
@@ -609,6 +638,31 @@ function statusText(text) {
   return element;
 }
 
+function showChatNotice(panelEl, message, type = "success") {
+  const noticeEl = panelEl.querySelector("[data-chat-notice]");
+  if (!noticeEl) return;
+
+  const previousTimer = noticeTimers.get(noticeEl);
+  if (previousTimer) {
+    clearTimeout(previousTimer);
+  }
+
+  noticeEl.textContent = message;
+  noticeEl.hidden = false;
+  noticeEl.className = `chat-notice ${type}`;
+
+  const nextTimer = setTimeout(() => {
+    noticeEl.hidden = true;
+  }, 3000);
+  noticeTimers.set(noticeEl, nextTimer);
+}
+
+function markAmountRequestButtonsAsFixed(panelEl) {
+  panelEl.querySelectorAll("[data-trade-amount-open]").forEach((button) => {
+    button.replaceWith(statusText("거래 금액이 확정되었습니다."));
+  });
+}
+
 function showRequestAmountAction(panelEl) {
   const actionsEl = panelEl.querySelector(".chat-panel-actions");
   if (!actionsEl || actionsEl.querySelector("[data-request-amount-open]")) return;
@@ -633,6 +687,38 @@ function isTradePaid(message) {
     message.actionType === "TRADE_PAID" ||
     (message.messageType === "SYSTEM" && message.content === "결제가 완료되었습니다.")
   );
+}
+
+function isTradeCompleted(message) {
+  return Boolean(message?.trade) && (
+    message.actionType === "TRADE_COMPLETED" ||
+    (message.messageType === "SYSTEM" && message.content === "거래 완료되었습니다.")
+  );
+}
+
+function resolveTradeFlow(history, activeTrade) {
+  const messages = Array.isArray(history) ? history : [];
+  const latestTradeFlowMessage = messages.find((message) =>
+    isTradeAmountRequest(message) || message.messageType === "TRADE_REQUEST"
+  );
+  const latestTradeRequest = messages.find((message) => message.messageType === "TRADE_REQUEST");
+  const hasActiveTrade = Boolean(activeTrade || isActiveTradeRequest(latestTradeRequest));
+  const hasOpenAmountRequest = Boolean(!hasActiveTrade && isTradeAmountRequest(latestTradeFlowMessage));
+
+  return {
+    hasActiveTrade,
+    hasOpenAmountRequest,
+    openAmountRequestMessageId: hasOpenAmountRequest ? getMessageId(latestTradeFlowMessage) : null,
+  };
+}
+
+function isActiveTradeRequest(message) {
+  if (!message?.trade) return false;
+  return message.trade.status === "PENDING" || message.trade.status === "PAID";
+}
+
+function getMessageId(message) {
+  return String(message?.chatMessageId || message?.messageId || message?.id || "");
 }
 
 function updateTradeCardStatus(panelEl, trade, label) {
@@ -660,6 +746,29 @@ function postLabel(room) {
   if (room.postTitle) return escapeHtml(room.postTitle);
   if (room.talentPostId) return "판매글";
   if (room.requestPostId) return "요청글";
+  return "";
+}
+
+function renderChatPostLink(room, content) {
+  const href = postDetailHref(room);
+  if (!href) {
+    return `<div class="seller-box">${content}</div>`;
+  }
+
+  return `
+    <a class="seller-box chat-post-link" href="${href}" aria-label="연결된 게시글 상세 보기">
+      ${content}
+    </a>
+  `;
+}
+
+function postDetailHref(room) {
+  if (room.talentPostId) {
+    return `#/talent/${escapeHtml(room.talentPostId)}`;
+  }
+  if (room.requestPostId) {
+    return `#/request/${escapeHtml(room.requestPostId)}`;
+  }
   return "";
 }
 

@@ -58,6 +58,16 @@ public class PortfolioController {
         );
     }
 
+    @GetMapping("/users/public/{userId}/portfolios")
+    @Operation(summary = "공개 사용자 포트폴리오 목록")
+    public ApiResponse<List<PortfolioResponse>> getPublicUserPortfolios(
+            @PathVariable UUID userId
+    ) {
+        return ApiResponse.ok(
+                portfolioService.getUserPortfolios(userId)
+        );
+    }
+
     @GetMapping("/portfolios/{portfolioId}")
     @Operation(summary = "포트폴리오 상세")
     public ApiResponse<PortfolioResponse> getPortfolio(
