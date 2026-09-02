@@ -58,8 +58,7 @@ AI_PGVECTOR_INITIALIZE_SCHEMA=true
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
-CREATE EXTENSION IF NOT EXISTS hstore;
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 ```
 
 설치 여부는 다음 쿼리로 확인한다.
@@ -67,10 +66,10 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 ```sql
 SELECT extname
 FROM pg_extension
-WHERE extname IN ('vector', 'hstore', 'uuid-ossp');
+WHERE extname IN ('vector', 'pgcrypto');
 ```
 
-결과에 세 확장 이름이 모두 표시되면 준비가 완료된 것이다.
+결과에 `vector`, `pgcrypto`가 표시되면 준비가 완료된 것이다.
 
 확장 생성 권한이 없다면 DB 관리자에게 설치를 요청해야 한다. 기존 테이블이나 스키마를 삭제할 필요는 없다.
 

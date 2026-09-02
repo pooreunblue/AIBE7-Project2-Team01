@@ -2,8 +2,8 @@
 
 ## 1. 문서 개요
 
-- 프로젝트: AI 기반 양방향 재능 거래 플랫폼 TalentPulse
-- 기준일: 2026년 8월 31일
+- 프로젝트: AI 기반 양방향 재능 거래 플랫폼 Knotty
+- 기준일: 2026년 9월 1일
 - 상태 기준: `완료`, `부분 완료`, `예정`, `MVP 제외`
 - 구현 기준: 현재 Backend/Frontend 코드와 ADR
 
@@ -30,9 +30,9 @@ Review/Reputation과 Bookmark는 핵심 거래 흐름, 프론트 연동, 성능 
 | 재능글 | 완료 | CRUD, 상태, 파일, 썸네일, 포트폴리오 연결 |
 | 요청글 | 완료 | CRUD, 상태 전이, 파일, 썸네일 |
 | 포트폴리오 | 완료 | CRUD, 파일, 썸네일, 재능글 연결 |
-| 검색 | 부분 완료 | 키워드·카테고리 완료, AI 프론트 연동 예정 |
+| 검색 | 완료 | 키워드·카테고리·AI 검색 화면 연동 |
 | AI 생성 | 완료 | Gemini 기반 Talent/Request 초안 생성 |
-| AI 매칭 | 부분 완료 | Backend 완료, Frontend 연동·운영 보완 예정 |
+| AI 매칭 | 완료 | Backend/Frontend 연동 완료, 운영 배포 공개 API 재검증 필요 |
 | 채팅 | 완료 | STOMP, 이미지, 거래 액션 메시지 |
 | 거래·결제 | 완료 | 양방향 거래, 상태 전이, 잠금, 환불·정산 |
 | 보안 | 완료 | XSS, HttpOnly Cookie, SameSite, CSRF, CORS |
@@ -99,11 +99,13 @@ Review/Reputation과 Bookmark는 핵심 거래 흐름, 프론트 연동, 성능 
 | FR-SEARCH-07 | 추천 이유 | 서버 TOP 후보에 대해 Gemini가 이유만 생성, 실패 시 결과 유지 | 중 | 완료 |
 | FR-SEARCH-08 | 매칭 썸네일 | 대표 이미지를 후보 응답에 일괄 포함 | 중 | 완료 |
 | FR-SEARCH-09 | 공개 검색 | 비로그인 사용자도 AI 매칭 API 호출 가능 | 중 | 완료 |
-| FR-SEARCH-10 | AI 검색 화면 연동 | mock 화면을 실제 매칭 API와 연결 | 상 | 예정 |
-| FR-SEARCH-11 | Keyword fallback | AI 장애 시 일반 검색 결과 제공 | 중 | 예정 |
+| FR-SEARCH-10 | AI 검색 화면 연동 | mock 화면을 실제 매칭 API와 연결 | 상 | 완료 |
+| FR-SEARCH-11 | AI 조건 자동 채움 | 검색 문장을 분석해 대상 타입과 조건 입력값을 채움 | 중 | 완료 |
+| FR-SEARCH-12 | Keyword fallback | AI 장애 시 일반 검색 결과 제공 | 중 | 예정 |
 | NFR-AI-01 | 공개 API 호출 제한 | IP 기준 Rate Limit과 `429` 응답 | 상 | 예정 |
 | NFR-AI-02 | 임베딩 복구 | 실패 대상 재처리와 전체·대상별 재임베딩 수단 | 상 | 예정 |
 | NFR-AI-03 | 정형 조건 후보 누락 방지 | metadata 또는 SQL 선필터로 TOP K 이후 필터 누락 완화 | 중 | 예정 |
+| NFR-AI-04 | 운영 배포 검증 | Render 배포 환경에서 `/ai/matches` 공개 호출 정상화 | 상 | 예정 |
 
 Portfolio 임베딩은 다른 AI 기능에서 사용할 수 있으나 B Matching 검색 대상에서는 제외한다.
 
@@ -126,9 +128,9 @@ Portfolio 임베딩은 다른 AI 기능에서 사용할 수 있으나 B Matching
 | FR-TRADE-01 | Request 거래 요청 | 글 작성자가 상대에게 금액 설정 요청, 상대가 금액 확정 | 상 | 완료 |
 | FR-TRADE-02 | Talent 거래 요청 | 글 작성자가 금액을 확정해 결제 요청 | 상 | 완료 |
 | FR-TRADE-03 | 결제 주체 | Request는 작성자, Talent는 신청자가 payer | 상 | 완료 |
-| FR-TRADE-04 | 결제 | 지갑 차감과 거래 `PENDING → PAID` 처리 | 상 | 완료 |
-| FR-TRADE-05 | 완료·정산 | payee 지갑 정산과 `PAID → COMPLETED` 처리 | 상 | 완료 |
-| FR-TRADE-06 | 취소·환불 | 결제 전 취소 또는 결제 후 환불과 상태 복구 | 상 | 완료 |
+| FR-TRADE-04 | 결제 | 지갑 차감, payee 정산과 거래 `PENDING → PAID → COMPLETED` 처리 | 상 | 완료 |
+| FR-TRADE-05 | 완료·정산 | 결제 API에서 즉시 완료 처리하고 완료 메시지 발행 | 상 | 완료 |
+| FR-TRADE-06 | 취소 | 수취자가 결제 전 `PENDING` 거래를 취소하고 요청글 상태 복구 | 상 | 완료 |
 | FR-TRADE-07 | 거래 조회 | 참여자의 거래 목록·상세 조회 | 중 | 완료 |
 | FR-WALLET-01 | 지갑 충전 | 최소 금액 검증과 충전 내역 기록 | 상 | 완료 |
 | FR-WALLET-02 | 지갑 내역 | 충전·결제·정산·환불 내역 페이지 조회 | 중 | 완료 |
@@ -151,4 +153,6 @@ Review/Reputation 제외 결정은 [ADR-003](./adr/ADR-003-리뷰-평판-MVP-제
 - Frontend 보안 테스트에서 XSS sanitizing과 CSRF Header 처리가 통과해야 한다.
 - Request 결제 경쟁 상황에서 하나의 거래만 게시글을 선점해야 한다.
 - AI 추천 이유 생성 실패가 매칭 후보와 Ranking 결과를 제거하지 않아야 한다.
+- 프론트 AI 검색 화면은 `/ai/matches/analyze`와 `/ai/matches`를 순서대로 호출해야 한다.
+- 운영 배포에서는 `/ai/matches`가 비로그인 호출에서도 200을 반환하는지 별도 확인한다.
 - 실제 API Key, JWT Secret과 환경변수 파일은 Git에 포함하지 않는다.

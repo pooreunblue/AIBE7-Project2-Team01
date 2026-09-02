@@ -1,4 +1,4 @@
-# TalentPulse
+# Knotty
 
 재능을 판매하는 사람과 필요한 일을 요청하는 사람을 연결하는 양방향 재능 거래 플랫폼입니다.  
 재능글과 요청글을 탐색하고 채팅에서 거래를 시작하며, 자연어 기반 AI 매칭으로 조건에 맞는 게시글을 추천받을 수 있습니다.
@@ -192,6 +192,7 @@ npm test
 - [요구사항 명세서](./docs/requirements.md)
 - [API 명세서](./docs/api.md)
 - [ERD](./docs/erd.md)
+- [Render 배포 점검 가이드](./docs/deployment-render.md)
 - [코딩 및 PR 컨벤션](./docs/CONVENTION.md)
 - [AI 기능 개발 가이드](./docs/ai/AI-기능-개발-가이드.md)
 - [ADR 목록](./docs/README.md#adr)
@@ -199,7 +200,7 @@ npm test
 
 ## 현재 후속 과제
 
-- AI 매칭 화면과 백엔드 API 최종 연동
+- Render 운영 배포에서 `/ai/matches` 공개 접근 설정 재검증
 - 공개 AI API 호출 제한 적용
 - 임베딩 전체 재생성 및 장애 복구 수단 마련
 - 대규모 데이터에서 metadata 선필터 및 후보 누락 개선

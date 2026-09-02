@@ -32,7 +32,7 @@ ai
 └── matching        # B
 
 A: Domain CRUD → Document 생성 → EmbeddingService → VectorStore
-B: AI Chat → TALENT/REQUEST 검색 계획 → Vector Search → 원본 DB → Ranking → 추천
+B: AI 검색 화면 → Query 분석 → TALENT/REQUEST 검색 계획 → Vector Search → 원본 DB → Ranking → 추천
 ```
 
 ## 4. 공통 Embedding 규칙
@@ -51,7 +51,7 @@ PORTFOLIO:{UUID}
 
 `EmbeddingTargetType`은 `TALENT`, `REQUEST`, `PORTFOLIO`만 사용한다. 동일 ID로 다시 저장해 수정 시 upsert하고, 삭제 시 같은 ID를 사용한다.
 
-주의: 현재 pgvector 기본 ID 컬럼은 UUID 타입이다. 위 합성 ID를 사용하기 전에 팀 합의 후 VectorStore ID 타입을 `TEXT`로 맞춰야 한다.
+현재 `application-ai.yaml`과 `docs/schema.sql`은 PgVectorStore ID 타입을 `TEXT`로 맞춘다.
 
 ### Metadata
 
@@ -79,7 +79,8 @@ Markdown 이미지 문법과 URL은 제거하되 의미가 있는 본문과 기�
 ```text
 사용자 Query
 → targetType 확인(TALENT 또는 REQUEST)
-→ 초기에는 API가 구조화된 검색 조건을 직접 받음
+→ `/ai/matches/analyze`가 자연어에서 targetType과 조건을 추출
+→ 사용자가 확인 가능한 조건으로 `/ai/matches` 호출
 → 서버가 검색 계획 검증
 → targetType metadata filter
 → Vector Search로 후보 추출
@@ -90,7 +91,7 @@ Markdown 이미지 문법과 URL은 제거하되 의미가 있는 본문과 기�
 → LLM이 추천 이유 생성
 ```
 
-B는 Portfolio Document를 검색하거나 Ranking에 직접 사용하지 않는다. 초기 API는 `query`, `targetType`, 선택적 `categoryId`와 금액·기간 조건을 받으며 자연어 조건 추출은 검색 흐름이 안정된 뒤 추가한다.
+B는 Portfolio Document를 검색하거나 Ranking에 직접 사용하지 않는다. 검색 API는 `query`, `targetType`, 선택적 `categoryId`와 금액·기간 조건을 받는다. 프론트는 자연어 분석 API 결과로 해당 입력값을 자동 채운다.
 
 `VectorSearchService`는 Spring AI `VectorStoreRetriever`로 검색하고, `AiMatchingService`는 원본 조회와 전체 흐름을 조정하며, `MatchRankingService`는 외부 의존성 없이 점수만 계산한다. Ranking은 서버가 결정하고 LLM은 내부 UUID나 임의 SQL/filter 또는 순위를 만들지 않는다.
 
@@ -106,10 +107,11 @@ B는 Portfolio Document를 검색하거나 Ranking에 직접 사용하지 않는
 - [x] 구조화된 TALENT Matching API와 단순 Ranking 완성
 - [x] Request 임베딩과 Matching 확장(Portfolio 검색 제외)
 - [ ] Portfolio 임베딩 lifecycle 확장
-- [ ] LLM 자연어 Query 조건 분석
+- [x] LLM 자연어 Query 조건 분석
 - [x] LLM 추천 이유 생성
 - [ ] 기존 데이터 재임베딩과 장애 복구 방법 준비
-- [ ] 프론트 AI 채팅 연동
+- [x] 프론트 AI 검색 화면 연동
+- [ ] 운영 배포 환경 `/ai/matches` 공개 호출 재검증
 
 ## 7. 협업 시 주의사항
 

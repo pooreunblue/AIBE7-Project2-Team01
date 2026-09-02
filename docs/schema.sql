@@ -1,4 +1,4 @@
--- TalentPulse DB schema
+-- Knotty DB schema
 -- 기준: docs/erd.md
 -- 대상: PostgreSQL (Neon)
 

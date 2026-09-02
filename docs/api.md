@@ -12,7 +12,7 @@
 | 공통 성공 응답 | `{"success":true,"data":...}` |
 | 식별자 | UUID |
 
-`Category` 목록과 `/health`는 공통 응답 객체를 사용하지 않는다. 목록 API 중 Talent/Request 기본 목록은 배열을, 검색 API는 Spring `Page`를 반환한다.
+`/health`는 문자열을 반환한다. 그 외 주요 API는 `ApiResponse`로 감싸며, Talent/Request 목록과 검색 API는 Spring `Page`를 `data`에 담아 반환한다.
 
 ## 2. 인증 및 보안
 
@@ -28,7 +28,9 @@
 - `GET /health`, `GET /categories`
 - `POST /users/signup`
 - `GET /auth/csrf`, `POST /auth/login`, `POST /auth/refresh`
+- `GET /users/public/**`
 - `GET /talents/**`, `GET /requests/**`
+- `POST /ai/matches/analyze`
 - `POST /ai/matches`
 - `/oauth2/**`, `/login/oauth2/**`, `/swagger-ui/**`, `/v3/api-docs/**`, `/ws/**`
 
@@ -48,6 +50,7 @@
 | PATCH | `/users/me` | 필요 | JSON | 닉네임 수정 |
 | PATCH | `/users/me/profile-image` | 필요 | Multipart | 프로필 이미지 수정. `file` part |
 | DELETE | `/users/me` | 필요 | - | 회원 탈퇴 |
+| GET | `/users/public/{userId}` | 공개 | - | 공개 프로필 사용자 정보 조회 |
 
 ```json
 // POST /auth/login
@@ -56,6 +59,8 @@
   "password": "password"
 }
 ```
+
+회원가입 비밀번호는 최소 8자 이상이어야 한다. 내 정보 수정은 현재 닉네임 변경과 프로필 이미지 변경을 분리해서 처리한다.
 
 ## 4. Category
 
@@ -135,6 +140,7 @@ Talent와 Request 파일 API의 구조는 동일하다.
 | POST | `/portfolios` | 필요 | 포트폴리오 등록 |
 | GET | `/users/me/portfolios` | 필요 | 내 포트폴리오 목록 |
 | GET | `/users/{userId}/portfolios` | 필요 | 사용자 포트폴리오 목록 |
+| GET | `/users/public/{userId}/portfolios` | 공개 | 공개 프로필용 사용자 포트폴리오 목록 |
 | GET | `/portfolios/{portfolioId}` | 필요 | 포트폴리오 상세 |
 | PATCH | `/portfolios/{portfolioId}` | 작성자 | 포트폴리오 수정 |
 | DELETE | `/portfolios/{portfolioId}` | 작성자 | 포트폴리오 삭제 |
@@ -159,9 +165,18 @@ Talent와 Request 파일 API의 구조는 동일하다.
 
 | Method | URL | 인증 | 설명 |
 | --- | --- | --- | --- |
+| POST | `/ai/matches/analyze` | 공개 | 자연어 검색 문장을 `targetType`과 정형 조건으로 분석 |
 | POST | `/ai/matches` | 공개 | 자연어 기반 Talent 또는 Request 매칭 |
 
 ```json
+// POST /ai/matches/analyze
+{
+  "query": "50만원 이하 Spring 백엔드 개발자 찾아줘"
+}
+```
+
+```json
+// POST /ai/matches
 {
   "query": "50만원 이하 Spring 백엔드 개발",
   "targetType": "TALENT",
@@ -186,6 +201,7 @@ Talent와 Request 파일 API의 구조는 동일하다.
 - Vector Search 후 SQL 원본 상태와 조건을 재검증한다.
 - 응답 후보는 `thumbnailUrl`, `semanticScore`, `amountScore`, `matchScore`, `recommendationReason`을 포함한다.
 - Gemini 추천 이유 생성에 실패하면 순위와 후보는 유지하고 `recommendationReason`만 비어 있을 수 있다.
+- 프론트 AI 검색 화면은 먼저 `/ai/matches/analyze`로 검색 문장을 분석한 뒤, 사용자가 확인 가능한 조건으로 `/ai/matches`를 호출한다.
 
 ## 11. Chat / WebSocket
 
@@ -206,7 +222,7 @@ WebSocket 연결과 메시지 경로:
 | Publish | `/app/chat.send` |
 | Subscribe | `/topic/chat-rooms/{chatRoomId}` |
 
-메시지 타입은 `TEXT`, `IMAGE`, `SYSTEM`, `TRADE_REQUEST`를 사용한다.
+메시지 타입은 `TEXT`, `IMAGE`, `SYSTEM`, `TRADE_REQUEST`를 사용한다. `SYSTEM` 메시지는 `actionType`으로 `TRADE_AMOUNT_REQUEST`, `TRADE_PAID`, `TRADE_COMPLETED`, `TRADE_CANCELLED`를 내려줄 수 있고, 거래 카드 렌더링에는 `trade` 객체를 사용한다.
 
 ## 12. Trade / Wallet
 
@@ -215,9 +231,9 @@ WebSocket 연결과 메시지 경로:
 | POST | `/chatrooms/{chatRoomId}/trades` | 참여자 및 정책상 요청 권한자 | 채팅방 거래 생성 |
 | GET | `/trades` | 필요 | 내 거래 목록. Pageable 지원 |
 | GET | `/trades/{tradeId}` | 참여자 | 거래 상세 |
-| POST | `/trades/{tradeId}/pay` | 결제자 | 지갑 결제 및 `PENDING → PAID` |
-| PATCH | `/trades/{tradeId}/complete` | 참여자 | 정산 및 `PAID → COMPLETED` |
-| PATCH | `/trades/{tradeId}/cancel` | 참여자 | 거래 취소. 결제 후에는 환불 포함 |
+| POST | `/trades/{tradeId}/pay` | 결제자 | 지갑 결제, 정산 및 `PENDING → PAID → COMPLETED` |
+| PATCH | `/trades/{tradeId}/complete` | 결제자 | `PAID` 상태 거래 수동 완료. 현재 결제 API가 즉시 완료하므로 예외 보정용 |
+| PATCH | `/trades/{tradeId}/cancel` | 수취자 | `PENDING` 거래 취소. 요청글 거래면 `OPEN`으로 복구 |
 | GET | `/wallet` | 필요 | 내 지갑 조회 |
 | POST | `/wallet/charge` | 필요 | 지갑 충전. 최소 1,000원 |
 | GET | `/wallet/transactions` | 필요 | 지갑 거래 내역. Pageable 지원 |
@@ -231,8 +247,8 @@ WebSocket 연결과 메시지 경로:
 }
 ```
 
-- Request 거래: 요청글 작성자가 payer, 신청자가 payee이다. 요청글은 결제 시 `IN_PROGRESS`, 완료 시 `CLOSED`, 결제 후 취소 시 `OPEN`으로 전환된다.
-- Talent 거래: 신청자가 payer, 재능글 작성자가 payee이다. 재능글은 거래 후에도 `ACTIVE`를 유지한다.
+- Request 거래: 요청글 작성자가 payer, 신청자가 payee이다. 거래 요청 생성 시 요청글은 `IN_PROGRESS`가 되고, 결제 후 바로 `CLOSED`로 완료 처리된다. 결제 전 취소 시에는 요청글을 다시 `OPEN`으로 복구한다.
+- Talent 거래: 신청자가 payer, 재능글 작성자가 payee이다. 결제 후 바로 완료 처리되며 재능글은 거래 후에도 `ACTIVE`를 유지한다.
 - 거래 상태: `PENDING`, `PAID`, `COMPLETED`, `CANCELLED`.
 - 지갑 내역 타입: `CHARGE`, `PAYMENT`, `RECEIVE`, `REFUND`.
 

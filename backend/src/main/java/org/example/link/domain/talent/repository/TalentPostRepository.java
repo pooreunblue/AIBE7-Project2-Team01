@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface TalentPostRepository extends JpaRepository<TalentPostEntity, UUID> {
@@ -36,6 +37,16 @@ public interface TalentPostRepository extends JpaRepository<TalentPostEntity, UU
             @Param("maxPrice") Long maxPrice,
             @Param("maxEstimatedDurationDays") Integer maxEstimatedDurationDays,
             Pageable pageable
+    );
+
+    @EntityGraph(attributePaths = {"user", "category", "portfolio"})
+    @Query("""
+        SELECT t
+        FROM TalentPostEntity t
+        WHERE t.id = :talentPostId
+        """)
+    Optional<TalentPostEntity> findDetailById(
+            @Param("talentPostId") UUID talentPostId
     );
 
     /** 벡터 검색 후보를 일괄 조회하고 응답에 필요한 작성자와 카테고리도 함께 로딩한다. */
