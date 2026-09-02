@@ -101,13 +101,32 @@
       </div>
     </section>
 
-    <section class="slide" data-slide>
+    <section class="slide integrity-slide" data-slide>
       <p class="eyebrow">Trade Integrity</p>
       <h2>거래 정합성</h2>
-      <div class="state-flow">
-        <span>PENDING</span><i></i><span>IN_PROGRESS</span><i></i><span>COMPLETED</span>
+      <div class="integrity-layout">
+        <article class="integrity-main">
+          <div class="mini-label">REQUEST POST · 1회성 거래</div>
+          <div class="state-flow compact">
+            <span>OPEN</span><div class="troubleshooting-arrow">→</div><span>IN_PROGRESS</span><div class="troubleshooting-arrow">→</div><span>CLOSED</span>
+          </div>
+          <p>결제 시 요청글을 선점하고, 취소 시 다시 OPEN으로 복구합니다</p>
+        </article>
+        <article class="integrity-main">
+          <div class="mini-label">TRADE · 결제 생명주기</div>
+          <div class="state-flow compact">
+            <span>PENDING</span><div class="troubleshooting-arrow">→</div><span>PAID</span><div class="troubleshooting-arrow">→</div><span>COMPLETED</span>
+          </div>
+          <p>허용되지 않은 상태 전이는 엔티티에서 즉시 거절합니다</p>
+        </article>
       </div>
-      <p class="note">요청글은 거래 시작 시 검색 대상에서 제외되고, 완료 시 CLOSED로 마감됩니다</p>
+      <div class="integrity-points">
+        <article><strong><span class="point-icon">01</span>행 잠금</strong><p><code>PESSIMISTIC_WRITE</code>로 거래·요청글·지갑 변경을
+          <br> 순차 처리</p></article>
+        <article><strong><span class="point-icon">02</span>DB 제약</strong><p>중복 거래·중복 지갑 내역·잘못된 금액을 <br>DB에서도 차단</p></article>
+        <article><strong><span class="point-icon">03</span>AFTER_COMMIT</strong><p>Gemini·VectorStore 호출을 커밋 이후로 분리해
+          <br>원본 트랜잭션을 보호</p></article>
+      </div>
     </section>
 
     <section class="slide" data-slide>
@@ -119,23 +138,46 @@
       <p class="note">LLM은 순위를 결정하지 않고, 서버가 고른 후보를 설명합니다</p>
     </section>
 
-    <section class="slide" data-slide>
+    <section class="slide cicd-slide" data-slide>
       <p class="eyebrow">CI / CD</p>
       <h2>CI/CD</h2>
-      <div class="flow ci-flow">
-        <span>Push / PR</span><i></i><span>GitHub Actions</span><i></i><span>Backend Test</span><i></i><span>Frontend Test</span><i></i><span>Render</span>
+      <div class="cicd-layout">
+        <div class="cicd-lane ci-lane">
+          <div class="lane-heading"><span>CONTINUOUS INTEGRATION</span><strong>검증</strong></div>
+          <div class="flow ci-flow">
+            <span>Push / PR</span><div class="troubleshooting-arrow">→</div><span>GitHub Actions</span><div class="troubleshooting-arrow">→</div><span>Backend<br />40 tests</span><div class="troubleshooting-arrow">→</div><span>Frontend<br />23 tests</span>
+          </div>
+        </div>
+        <div class="cicd-lane cd-lane">
+          <div class="lane-heading"><span>CONTINUOUS DELIVERY</span><strong>배포</strong></div>
+          <div class="flow ci-flow">
+            <span>검증 완료</span><div class="troubleshooting-arrow">→</div><span>Render<br />Auto Deploy</span><div class="troubleshooting-arrow">→</div><span>Health Check<br /><code>/health</code></span>
+          </div>
+        </div>
       </div>
-      <p class="note">배운 점: 기능 완성 이후에도 검증 루프를 자동화해야 변경을 더 안정적으로 합칠 수 있습니다</p>
+      <p class="note">PR과 feature push는 테스트로 검증하고, 커밋이 반영되면 Render가 백엔드·프론트엔드를 자동 배포합니다</p>
     </section>
 
-    <section class="slide" data-slide>
+    <section class="slide troubleshooting-slide" data-slide>
       <p class="eyebrow">Troubleshooting</p>
       <h2>트러블슈팅</h2>
-      <div class="decision">
-        <span>Review/Reputation</span>
-        <strong>MVP 제외</strong>
-        <span>거래 · 보안 · AI 매칭 · 배포 집중</span>
+      <div class="troubleshooting-layout">
+        <article class="story-card">
+          <div class="story-tag">SITUATION</div>
+          <strong>리뷰 기능의 범위가<br />예상보다 커졌다</strong>
+        </article>
+        <div class="troubleshooting-arrow">→</div>
+        <article class="story-card decision-card">
+          <div class="story-tag">DECISION</div>
+          <strong>Review / Reputation<br />MVP 제외</strong>
+        </article>
+        <div class="troubleshooting-arrow">→</div>
+        <article class="story-card result-card">
+          <div class="story-tag">RESULT</div>
+          <strong>검증 가능한 핵심 흐름에<br />집중</strong>
+        </article>
       </div>
+      <div class="scope-footer"><span>재도입 조건</span><strong>거래 정책 확정 · 충분한 리뷰 데이터 · 추천 품질 비교 기준</strong></div>
     </section>
 
     <section class="slide closing" data-slide>
