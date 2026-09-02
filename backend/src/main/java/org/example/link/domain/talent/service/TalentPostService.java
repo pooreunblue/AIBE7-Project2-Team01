@@ -163,7 +163,7 @@ public class TalentPostService {
     }
 
     private @NonNull TalentPostEntity getTalentPostEntity(UUID talentPostId) {
-        return talentPostRepository.findById(talentPostId)
+        return talentPostRepository.findDetailById(talentPostId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
     }
 
