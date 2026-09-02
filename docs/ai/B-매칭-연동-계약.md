@@ -10,7 +10,7 @@ A: 원본 게시글 -> Document -> VectorStore 저장
 B: 자연어 검색 -> Vector 후보 -> SQL 원본 검증 -> Ranking
 ```
 
-현재 B Matching은 구현되어 있다. A의 Document lifecycle은 이 계약에 맞춰 연동한다. Review/Reputation은 MVP 범위에서 제외한다.
+현재 B Matching과 프론트 AI 검색 화면 연동은 구현되어 있다. A의 Document lifecycle은 이 계약에 맞춰 연동한다. Review/Reputation은 MVP 범위에서 제외한다.
 
 ## 2. 책임 요약
 
@@ -69,6 +69,7 @@ PORTFOLIO:{portfolioId UUID}
 - metadata는 source of truth가 아니다.
 - 현재 B의 VectorStore filter는 `targetType`만 사용한다.
 - B는 상태, 카테고리, 금액, 기간, 마감일을 SQL 원본으로 다시 검증한다.
+- 프론트는 `/ai/matches/analyze`로 targetType과 조건을 먼저 채운 뒤 `/ai/matches`로 실제 후보를 조회한다.
 
 예시:
 
