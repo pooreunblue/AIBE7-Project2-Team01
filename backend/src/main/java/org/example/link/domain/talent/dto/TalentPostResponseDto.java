@@ -14,6 +14,8 @@ import java.time.Instant;
 public record TalentPostResponseDto(
         UUID talentPostId,
         UUID userId,
+        String authorNickname,
+        String authorProfileImageUrl,
         UUID categoryId,
         String categoryName,
         String title,
@@ -31,6 +33,8 @@ public record TalentPostResponseDto(
         return TalentPostResponseDto.builder()
                 .talentPostId(talentPostEntity.getId())
                 .userId(talentPostEntity.getUser().getId())
+                .authorNickname(talentPostEntity.getUser().getNickname())
+                .authorProfileImageUrl(talentPostEntity.getUser().getProfileImageUrl())
                 .categoryId(talentPostEntity.getCategory().getId())
                 .categoryName(talentPostEntity.getCategory().getName())
                 .title(talentPostEntity.getTitle())

@@ -43,12 +43,9 @@
   </head>
   <body>
     <div id="app"></div>
-    <script>
-      // 백엔드는 8080에서 뜸 (README 기본값 3000은 이 프로젝트 백엔드와 다름)
-      window.__API_BASE_URL__ = "http://localhost:8080";
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+    <script src="/runtime-config.js"></script>
+    <script src="/node_modules/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="/node_modules/@stomp/stompjs/bundles/stomp.umd.min.js"></script>
     <script type="module" src="/src/app.js"></script>
   </body>
 </html>

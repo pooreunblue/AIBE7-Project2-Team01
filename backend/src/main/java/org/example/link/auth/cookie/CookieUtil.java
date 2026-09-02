@@ -21,57 +21,47 @@ public class CookieUtil {
     public ResponseCookie createAccessTokenCookie(
             String token
     ) {
-        return ResponseCookie.from(
+        return createAuthCookie(
                 ACCESS_TOKEN_COOKIE,
-                        token
-                )
-                .httpOnly(true)
-                .secure(false) // 로컬 개발
-                .sameSite("Lax")
-                .path("/")
-                .maxAge(authProperties
-                        .jwt()
-                        .accessTokenExpiry()
-                )
-                .build();
+                token,
+                authProperties.jwt().accessTokenExpiry()
+        );
     }
 
     public ResponseCookie createRefreshTokenCookie(
             String token
     ) {
-        return ResponseCookie.from(
+        return createAuthCookie(
                 REFRESH_TOKEN_COOKIE,
-                        token
-                )
-                .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
-                .path("/")
-                .maxAge(authProperties
-                        .jwt()
-                        .refreshTokenExpiry()
-                )
-                .build();
+                token,
+                authProperties.jwt().refreshTokenExpiry()
+        );
     }
 
     public ResponseCookie deleteAccessTokenCookie() {
-        return ResponseCookie.from("accessToken", "")
-                .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
-                .path("/")
-                .maxAge(0)
-                .build();
+        return deleteAuthCookie(ACCESS_TOKEN_COOKIE);
     }
 
     public ResponseCookie deleteRefreshTokenCookie() {
-        return ResponseCookie.from("refreshToken", "")
+        return deleteAuthCookie(REFRESH_TOKEN_COOKIE);
+    }
+
+    private ResponseCookie createAuthCookie(
+            String name,
+            String value,
+            Duration maxAge
+    ) {
+        return ResponseCookie.from(name, value)
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .secure(authProperties.cookie().secure())
+                .sameSite(authProperties.cookie().sameSite())
                 .path("/")
-                .maxAge(0)
+                .maxAge(maxAge)
                 .build();
+    }
+
+    private ResponseCookie deleteAuthCookie(String name) {
+        return createAuthCookie(name, "", Duration.ZERO);
     }
 
     public Optional<String> getCookieValue(

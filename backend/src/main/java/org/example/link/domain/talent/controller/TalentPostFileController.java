@@ -36,9 +36,8 @@ public class TalentPostFileController {
     @GetMapping
     @Operation(summary = "재능글 파일 목록 조회")
     public ApiResponse<List<TalentPostFileResponse>> getFiles(
-            @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable UUID talentPostId) {
-        return ApiResponse.ok(talentPostFileService.getFiles(user, talentPostId));
+        return ApiResponse.ok(talentPostFileService.getFiles(talentPostId));
     }
 
     @DeleteMapping("/{fileId}")

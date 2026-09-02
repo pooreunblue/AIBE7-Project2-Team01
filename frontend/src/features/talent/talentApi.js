@@ -1,10 +1,31 @@
 import { apiRequest } from "../../api/api.js";
 
 export async function fetchTalents(keyword = "") {
+  const page = await fetchTalentPage({ keyword });
+  return page.content;
+}
+
+export async function fetchTalentPage({ keyword = "", page = 0, size = 20, conditions = {} } = {}) {
   const query = keyword.trim();
-  const response = await apiRequest(query ? `/talents/search?keyword=${encodeURIComponent(query)}` : "/talents");
+  const params = new URLSearchParams({
+    page: String(page),
+    size: String(size),
+    sort: "createdAt,desc",
+  });
+  if (query) params.set("keyword", query);
+  setIfPresent(params, "categoryId", conditions.categoryId);
+  setIfPresent(params, "maxPrice", conditions.maxPrice);
+  setIfPresent(params, "maxEstimatedDuration", conditions.maxEstimatedDuration);
+  setIfPresent(params, "durationUnit", conditions.durationUnit);
+
+  const path = query ? "/talents/search" : "/talents";
+  const response = await apiRequest(`${path}?${params}`);
   const data = unwrapApiResponse(response);
-  return Array.isArray(data) ? data : data.content || [];
+  return normalizePage(data);
+}
+
+function setIfPresent(params, name, value) {
+  if (value !== null && value !== undefined && value !== "") params.set(name, String(value));
 }
 
 export async function fetchTalent(talentPostId) {
@@ -17,6 +38,14 @@ export async function createTalent(payload) {
     method: "POST",
     body: JSON.stringify(payload),
   });
+  return unwrapApiResponse(response);
+}
+
+export async function generateTalentPost(payload, image) {
+  const formData = new FormData();
+  formData.append("data", new Blob([JSON.stringify(payload)], { type: "application/json" }));
+  if (image) formData.append("image", image);
+  const response = await apiRequest("/ai/generation/talents", { method: "POST", body: formData });
   return unwrapApiResponse(response);
 }
 
@@ -77,4 +106,19 @@ export async function deleteTalentFile(talentPostId, fileId) {
 
 function unwrapApiResponse(response) {
   return response?.data ?? response;
+}
+
+function normalizePage(data) {
+  if (Array.isArray(data)) {
+    return { content: data, page: 0, totalPages: 1, first: true, last: true };
+  }
+
+  return {
+    ...data,
+    content: data?.content || [],
+    page: data?.number ?? data?.page ?? 0,
+    totalPages: data?.totalPages ?? 0,
+    first: data?.first ?? true,
+    last: data?.last ?? true,
+  };
 }

@@ -1,24 +1,31 @@
+import { escapeHtml, safeUrl } from "../security/xss.js";
+
 export function formatMoney(value) {
   return `${value.toLocaleString("ko-KR")}원`;
 }
 
-export function shell(content, route, { isLoggedIn = false } = {}) {
+export function shell(content, route, { isLoggedIn = false, canGoBack = false } = {}) {
   const links = [
-    ["home", "⌂", "Home"],
-    ["chat", "□", "Chat"],
+    ["talents", "재능글", "재능글 목록"],
+    ["requests", "요청글", "요청글 목록"],
+    ["ai-search", "AI 매칭", "AI 매칭"],
+    ["chat", "채팅", "채팅"],
   ];
-  const headerTitle = getHeaderTitle(route);
+  const safeRoute = escapeHtml(route);
 
   return `
     <header class="site-header">
-      <strong class="header-title">${headerTitle}</strong>
+      ${backControl(canGoBack)}
+      <a class="header-logo" href="#/home" aria-label="메인 화면으로 이동">
+        <img src="assets/knotty-logo.png" alt="Knotty" />
+      </a>
       <nav class="icon-nav" aria-label="main navigation">
-        ${links.map(([key, icon, label]) => `<a class="icon-link ${route === key ? "active" : ""}" href="#/${key}" aria-label="${label}"><span aria-hidden="true">${icon}</span></a>`).join("")}
+        ${links.map(([key, icon, label]) => headerLink(key, icon, label, route)).join("")}
         ${accountControl(isLoggedIn, route)}
       </nav>
     </header>
     <main class="page-shell">
-      <section class="route-view" data-route="${route}">
+      <section class="route-view" data-route="${safeRoute}">
         ${content}
       </section>
     </main>
@@ -26,30 +33,28 @@ export function shell(content, route, { isLoggedIn = false } = {}) {
   `;
 }
 
-function getHeaderTitle(route) {
-  const titles = {
-    home: "Home",
-    login: "Login",
-    signup: "Sign Up",
-    talents: "Talent",
-    "talent-new": "Talent Create",
-    requests: "Requests",
-    "request-new": "Request Create",
-    "ai-search": "AI Search",
-    chat: "Chat",
-    mypage: "My Page",
-    portfolios: "Portfolio",
-    "portfolio-new": getPortfolioWriteTitle(),
-    checkout: "Payment",
-  };
+function backControl(canGoBack) {
+  if (!canGoBack) {
+    return "";
+  }
 
-  return titles[route] || "TalentPulse";
+  return `
+    <button class="header-back-button" type="button" aria-label="뒤로가기" data-header-back>
+      <span aria-hidden="true">‹</span>
+    </button>
+  `;
 }
 
-function getPortfolioWriteTitle() {
-  return window.location.hash.includes("?id=")
-    ? "Portfolio Edit"
-    : "Portfolio Create";
+function headerLink(key, icon, label, route) {
+  const activeClass = route === key ? "active" : "";
+  const textKeys = new Set(["talents", "requests", "ai-search", "chat"]);
+  const linkClass = textKeys.has(key) ? "header-text-link" : "icon-link";
+
+  return `
+    <a class="${linkClass} ${activeClass}" href="#/${key}" aria-label="${escapeHtml(label)}">
+      <span aria-hidden="true">${escapeHtml(icon)}</span>
+    </a>
+  `;
 }
 
 function accountControl(isLoggedIn, route) {
@@ -57,55 +62,46 @@ function accountControl(isLoggedIn, route) {
     return `<a class="icon-link ${route === "login" ? "active" : ""}" href="#/login" aria-label="Login"><span aria-hidden="true">○</span></a>`;
   }
 
-  const isActive = route === "mypage" || route === "portfolios";
+  const isActive = route === "mypage" || route === "my-trades" || route === "portfolios";
 
   return `
-    <div class="account-nav">
-      <button class="icon-link account-trigger ${isActive ? "active" : ""}" type="button" aria-label="Account menu" aria-expanded="false" aria-controls="account-menu" data-account-trigger>
-        <span aria-hidden="true" data-header-avatar>○</span>
-      </button>
-      <div class="account-menu" id="account-menu" data-account-menu hidden>
-        <a href="#/portfolios">포트폴리오</a>
-        <a href="#/mypage">마이페이지</a>
-        <button type="button" data-logout-button>로그아웃</button>
-      </div>
-    </div>
+    <a class="icon-link ${isActive ? "active" : ""}" href="#/mypage" aria-label="마이페이지">
+      <span aria-hidden="true" data-header-avatar>○</span>
+    </a>
   `;
 }
 
 export function footer() {
   return `
     <footer class="site-footer">
-      <strong>TalentPulse</strong>
-      <div>
-        <a href="#/home">Terms</a>
-        <a href="#/home">Privacy</a>
-        <a href="#/home">Help</a>
-        <a href="#/home">Contact</a>
-      </div>
-      <span>© 2026 TalentPulse. Premium Marketplace.</span>
+      <strong>Knotty</strong>
+      <span>© 2026 Knotty. Premium Marketplace.</span>
     </footer>
   `;
 }
 
 export function button(label, href, variant = "primary") {
-  return `<a class="button ${variant}" href="${href}">${label}</a>`;
+  const allowedVariant = ["primary", "quiet"].includes(variant) ? variant : "primary";
+  return `<a class="button ${allowedVariant}" href="${escapeHtml(safeUrl(href))}">${escapeHtml(label)}</a>`;
 }
 
 export function categoryTabs(active = "All", href = "#/talents") {
+  const safeHref = escapeHtml(safeUrl(href));
   return `
-    <div class="tab-row" role="list" data-category-tabs data-category-active="${active}" data-category-href="${href}">
-      <a class="tab active" href="${href}">All</a>
+    <div class="tab-row" role="list" data-category-tabs data-category-active="${escapeHtml(active)}" data-category-href="${safeHref}">
+      <a class="tab active" href="${safeHref}">All</a>
     </div>
   `;
 }
 
-export function listToolbar(label, activeCategory = "All", href = "#/talents") {
+export function listToolbar(label, activeCategory = "All", href = "#/talents", { withFilters = false } = {}) {
+  const safeLabel = escapeHtml(label);
   return `
     <div class="list-toolbar">
       <form class="list-search" data-list-search>
-        <input name="keyword" type="search" placeholder="${label} 검색" aria-label="${label} 검색" />
+        <input name="keyword" type="search" placeholder="${safeLabel} 검색" aria-label="${safeLabel} 검색" />
         <button type="submit">Search</button>
+        ${withFilters ? `<button class="list-filters-button" type="button" data-list-filters>Filters</button>` : ""}
       </form>
       ${categoryTabs(activeCategory, href)}
     </div>
@@ -155,7 +151,7 @@ export function requestCard(request) {
 export function formField(label, control) {
   return `
     <label class="field">
-      <span>${label}</span>
+      <span>${escapeHtml(label)}</span>
       ${control}
     </label>
   `;
@@ -164,9 +160,9 @@ export function formField(label, control) {
 export function pageTitle(kicker, title, copy = "") {
   return `
     <div class="page-title">
-      <span class="kicker">${kicker}</span>
-      <h1>${title}</h1>
-      ${copy ? `<p>${copy}</p>` : ""}
+      <span class="kicker">${escapeHtml(kicker)}</span>
+      <h1>${escapeHtml(title)}</h1>
+      ${copy ? `<p>${escapeHtml(copy)}</p>` : ""}
     </div>
   `;
 }

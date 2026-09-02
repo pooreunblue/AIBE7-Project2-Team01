@@ -10,21 +10,22 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class
-SecurityConfig {
+public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final AuthProperties authProperties;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -36,7 +37,12 @@ SecurityConfig {
                                 SessionCreationPolicy.STATELESS
                         )
                 )
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(csrfTokenRepository())
+                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                        // SockJS는 WebSocket fallback 전송에 내부 POST 요청을 사용한다.
+                        .ignoringRequestMatchers("/ws/**")
+                )
                 .oauth2Login(oauth -> oauth
                         .userInfoEndpoint(userInfo ->
                                 userInfo.userService(customOAuth2UserService)
@@ -48,7 +54,9 @@ SecurityConfig {
                                 "/",
                                 "/categories",
                                 "/users/signup",
+                                "/users/public/**",
                                 "/auth/login",
+                                "/auth/csrf",
                                 "/auth/refresh",
                                 "/health",
                                 "/oauth2/**",
@@ -62,6 +70,8 @@ SecurityConfig {
                         ).permitAll()
                                 .requestMatchers(HttpMethod.GET, "/requests/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/talents/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/ai/matches/analyze").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/ai/matches").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/requests").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/talents").authenticated()
                                 .requestMatchers(HttpMethod.PUT, "/requests/**").authenticated()
@@ -83,6 +93,20 @@ SecurityConfig {
                                 UsernamePasswordAuthenticationFilter.class
                         );
         return http.build();
+    }
+
+    @Bean
+    public CookieCsrfTokenRepository csrfTokenRepository() {
+        CookieCsrfTokenRepository repository =
+                CookieCsrfTokenRepository.withHttpOnlyFalse();
+
+        repository.setCookieCustomizer(cookie -> cookie
+                .path("/")
+                .secure(authProperties.cookie().secure())
+                .sameSite(authProperties.cookie().sameSite())
+        );
+
+        return repository;
     }
 
     @Bean

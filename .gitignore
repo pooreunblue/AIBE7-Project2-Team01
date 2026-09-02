@@ -25,6 +25,12 @@ replay_pid*
 
 .idea/
 
+# Environment variables
+.env
+.env.*
+!.env.example
+!.env.sample
+
 CLAUDE.md
 docs/chat-feature-summary.md
 docs/today-work-explained.md

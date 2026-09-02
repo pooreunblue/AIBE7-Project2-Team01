@@ -16,6 +16,8 @@ public record RequestPostResponseDto(
         UUID userId,
         UUID categoryId,
         String categoryName,
+        String authorNickname,
+        String authorProfileImageUrl,
         String title,
         String content,
         Long budgetMin,
@@ -32,6 +34,8 @@ public record RequestPostResponseDto(
                 .userId(requestPostEntity.getUser().getId())
                 .categoryId(requestPostEntity.getCategory().getId())
                 .categoryName(requestPostEntity.getCategory().getName())
+                .authorNickname(requestPostEntity.getUser().getNickname())
+                .authorProfileImageUrl(requestPostEntity.getUser().getProfileImageUrl())
                 .title(requestPostEntity.getTitle())
                 .content(requestPostEntity.getContent())
                 .budgetMin(requestPostEntity.getBudgetMin())

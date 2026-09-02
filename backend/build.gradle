@@ -21,9 +21,15 @@ repositories {
 
 ext {
     set('snippetsDir', file("build/generated-snippets"))
+    set('springAiVersion', '2.0.1')
 }
 
 dependencies {
+    implementation platform("org.springframework.ai:spring-ai-bom:${springAiVersion}")
+    implementation 'org.springframework.ai:spring-ai-starter-model-google-genai'
+    implementation 'org.springframework.ai:spring-ai-starter-model-google-genai-embedding'
+    implementation 'org.springframework.ai:spring-ai-starter-vector-store-pgvector'
+
     // Source: https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -55,6 +61,24 @@ dependencies {
 tasks.named('test') {
     outputs.dir snippetsDir
     useJUnitPlatform()
+
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat = 'full'
+    }
+
+    afterSuite { descriptor, result ->
+        if (descriptor.parent == null) {
+            println ''
+            println '========== Test Summary =========='
+            println "Result : ${result.resultType}"
+            println "Total  : ${result.testCount}"
+            println "Passed : ${result.successfulTestCount}"
+            println "Failed : ${result.failedTestCount}"
+            println "Skipped: ${result.skippedTestCount}"
+            println '=================================='
+        }
+    }
 }
 
 tasks.named('asciidoctor') {

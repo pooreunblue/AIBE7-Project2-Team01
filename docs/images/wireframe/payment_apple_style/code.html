@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TalentPulse - 결제</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "inverse-primary": "#adc6ff",
+                "surface-tint": "#005bc1",
+                "on-primary-container": "#fefcff",
+                "system-gray": "#8E8E93",
+                "surface-dim": "#d9dade",
+                "system-orange": "#FF9500",
+                "on-secondary-fixed-variant": "#46464b",
+                "tertiary-fixed-dim": "#53e16f",
+                "surface-container": "#ededf2",
+                "primary-fixed-dim": "#adc6ff",
+                "on-error-container": "#93000a",
+                "on-secondary": "#ffffff",
+                "tertiary": "#006b27",
+                "secondary-fixed-dim": "#c6c6cb",
+                "surface-container-high": "#e8e8ed",
+                "inverse-on-surface": "#f0f0f5",
+                "system-red": "#FF3B30",
+                "on-tertiary-fixed-variant": "#00531c",
+                "on-secondary-fixed": "#1a1b1f",
+                "system-green": "#34C759",
+                "on-background": "#1a1c1f",
+                "on-tertiary-fixed": "#002107",
+                "on-surface-variant": "#414755",
+                "secondary-container": "#e0dfe4",
+                "on-tertiary": "#ffffff",
+                "primary": "#0058bc",
+                "secondary": "#5d5e63",
+                "primary-container": "#0070eb",
+                "on-tertiary-container": "#f7fff2",
+                "surface-base": "#FFFFFF",
+                "tertiary-container": "#008733",
+                "outline-variant": "#c1c6d7",
+                "surface-container-low": "#f3f3f8",
+                "background": "#f9f9fe",
+                "on-primary-fixed": "#001a41",
+                "surface-container-highest": "#e2e2e7",
+                "surface-variant": "#e2e2e7",
+                "primary-fixed": "#d8e2ff",
+                "surface-grouped": "#F2F2F7",
+                "secondary-fixed": "#e3e2e7",
+                "outline": "#717786",
+                "on-primary-fixed-variant": "#004493",
+                "inverse-surface": "#2e3034",
+                "on-surface": "#1a1c1f",
+                "surface-container-lowest": "#ffffff",
+                "on-secondary-container": "#626267",
+                "tertiary-fixed": "#72fe88",
+                "on-primary": "#ffffff",
+                "on-error": "#ffffff",
+                "surface-bright": "#f9f9fe",
+                "error": "#ba1a1a",
+                "surface": "#f9f9fe",
+                "error-container": "#ffdad6"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-md": "16px",
+                "gutter": "16px",
+                "margin-desktop": "32px",
+                "unit": "8px",
+                "margin-mobile": "16px",
+                "stack-sm": "8px",
+                "stack-lg": "32px"
+        },
+        "fontFamily": {
+                "headline-md": [
+                        "Inter"
+                ],
+                "display-lg": [
+                        "Inter"
+                ],
+                "body-lg": [
+                        "Inter"
+                ],
+                "label-sm": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-md": [
+                        "22px",
+                        {
+                                "lineHeight": "28px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "34px",
+                        {
+                                "lineHeight": "41px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "17px",
+                        {
+                                "lineHeight": "22px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-sm": [
+                        "11px",
+                        {
+                                "lineHeight": "13px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "30px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-md": [
+                        "13px",
+                        {
+                                "lineHeight": "18px",
+                                "letterSpacing": "0.01em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-md": [
+                        "15px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "28px",
+                        {
+                                "lineHeight": "34px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        body {
+            background-color: #F2F2F7;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface min-h-screen pb-24 md:pb-0">
+<!-- Top Navigation Bar (Suppressed for Transactional Flow, replaced with a minimal header) -->
+<header class="sticky top-0 w-full z-50 glass-panel border-b border-black/5 shadow-sm">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-[1200px] mx-auto">
+<button class="flex items-center text-on-surface-variant hover:opacity-75 transition-opacity" onclick="history.back()">
+<span class="material-symbols-outlined mr-unit">arrow_back_ios</span>
+<span class="font-label-md text-label-md">Back</span>
+</button>
+<div class="font-headline-md text-headline-md font-bold text-primary">TalentPulse</div>
+<div class="w-8"></div> <!-- Spacer for centering -->
+</div>
+</header>
+<main class="max-w-[800px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg md:py-[48px]">
+<div class="mb-stack-lg">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-unit">Checkout</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Review your request and securely complete your payment.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-stack-lg">
+<!-- Left Column: Order Summary & Payment Details -->
+<div class="md:col-span-7 space-y-stack-lg">
+<!-- Order Summary Card -->
+<section class="bg-surface-container-lowest rounded-xl border border-black/5 p-stack-lg">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-stack-md">Request Summary</h2>
+<div class="flex items-start gap-stack-md mb-stack-md border-b border-outline-variant pb-stack-md">
+<img class="w-16 h-16 rounded-lg object-cover" data-alt="A close-up, high-quality portrait of a professional graphic designer working in a modern, well-lit studio. The designer is focused on a large digital drawing tablet. The lighting is soft and natural, creating a premium light-mode aesthetic with clean white and subtle grey tones. The mood is creative and highly professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHLagDwMP1bD3ZyET1NAKKpgvkWij08nNArlzZRqepcc2VBdKpSrUzgPH_shYt8mgtaFeGWr8GGZ1iMW1HW9PW2ZWn1Ojsm-9S_Gb-FUIRp6cBCLZzMLGjHJw9Ym2DEKLwL4YsRy3e9B8yu62hPuyJ9d88fSgYTBrZ95p49oSaTdrJWp-y7Tsw3GKXySSW9IzWBeU-zEoDPqwajJSh4y0BMFbrhYZuZ2LnPDDJhJIFLc_K6yQ3Rzt7"/>
+<div>
+<h3 class="font-label-md text-label-md font-bold">Premium Brand Identity Design</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-[4px]">by Alex Rivera</p>
+</div>
+</div>
+<ul class="space-y-stack-sm mb-stack-md">
+<li class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant flex items-center"><span class="material-symbols-outlined text-[18px] mr-unit">calendar_today</span> Delivery</span>
+<span class="font-label-md text-label-md">Oct 25, 2024</span>
+</li>
+<li class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant flex items-center"><span class="material-symbols-outlined text-[18px] mr-unit">autorenew</span> Revisions</span>
+<span class="font-label-md text-label-md">Up to 3</span>
+</li>
+</ul>
+</section>
+<!-- Payment Method Card -->
+<section class="bg-surface-container-lowest rounded-xl border border-black/5 p-stack-lg">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-stack-md">Payment Method</h2>
+<div class="space-y-stack-sm">
+<!-- Option 1 -->
+<label class="flex items-center justify-between p-stack-md rounded-lg border border-primary bg-primary-fixed/30 cursor-pointer transition-colors">
+<div class="flex items-center gap-stack-md">
+<input checked="" class="text-primary focus:ring-primary h-5 w-5 border-outline" name="payment" type="radio"/>
+<div class="flex items-center gap-stack-sm">
+<span class="material-symbols-outlined text-on-surface">credit_card</span>
+<div>
+<div class="font-label-md text-label-md font-bold">Credit Card</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant mt-[4px]">Visa ending in 4242</div>
+</div>
+</div>
+</div>
+</label>
+<!-- Option 2 -->
+<label class="flex items-center justify-between p-stack-md rounded-lg border border-outline-variant hover:bg-surface-container-low cursor-pointer transition-colors">
+<div class="flex items-center gap-stack-md">
+<input class="text-primary focus:ring-primary h-5 w-5 border-outline" name="payment" type="radio"/>
+<div class="flex items-center gap-stack-sm">
+<span class="material-symbols-outlined text-on-surface">account_balance_wallet</span>
+<div class="font-label-md text-label-md font-bold">Apple Pay</div>
+</div>
+</div>
+</label>
+</div>
+<!-- New Card Details (Hidden by default, shown if adding new) -->
+<div class="mt-stack-md pt-stack-md border-t border-outline-variant">
+<button class="font-label-md text-label-md text-primary flex items-center gap-unit hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+                            Add new payment method
+                        </button>
+</div>
+</section>
+</div>
+<!-- Right Column: Pricing & Action -->
+<div class="md:col-span-5">
+<div class="sticky top-[100px] bg-surface-container-lowest rounded-xl border border-black/5 p-stack-lg shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-stack-md">Payment Details</h2>
+<div class="space-y-stack-sm border-b border-outline-variant pb-stack-md mb-stack-md">
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Service Fee</span>
+<span class="font-label-md text-label-md">$850.00</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Platform Fee</span>
+<span class="font-label-md text-label-md">$42.50</span>
+</div>
+</div>
+<div class="flex justify-between items-center mb-stack-lg">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">Total</span>
+<span class="font-display-lg text-display-lg text-primary">$892.50</span>
+</div>
+<!-- Security Badge -->
+<div class="bg-surface-container-low rounded-lg p-[12px] flex items-start gap-[12px] mb-stack-lg">
+<span class="material-symbols-outlined text-tertiary">shield</span>
+<div>
+<h4 class="font-label-md text-label-md font-bold text-tertiary">Secure Escrow Payment</h4>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-[4px]">Funds are held securely and released only when you approve the final delivery.</p>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md font-bold py-stack-md rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-[12px]">
+<span class="material-symbols-outlined">lock</span>
+                        Pay $892.50 Now
+                    </button>
+<p class="font-label-sm text-label-sm text-center text-on-surface-variant mt-[12px]">
+                        By completing this purchase, you agree to our <a class="underline hover:text-primary" href="#">Terms of Service</a>.
+                    </p>
+</div>
+</div>
+</div>
+</main>
+</body></html>

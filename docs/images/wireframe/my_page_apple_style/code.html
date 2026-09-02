@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>마이페이지 - TalentPulse</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "inverse-primary": "#adc6ff",
+                "surface-tint": "#005bc1",
+                "on-primary-container": "#fefcff",
+                "system-gray": "#8E8E93",
+                "surface-dim": "#d9dade",
+                "system-orange": "#FF9500",
+                "on-secondary-fixed-variant": "#46464b",
+                "tertiary-fixed-dim": "#53e16f",
+                "surface-container": "#ededf2",
+                "primary-fixed-dim": "#adc6ff",
+                "on-error-container": "#93000a",
+                "on-secondary": "#ffffff",
+                "tertiary": "#006b27",
+                "secondary-fixed-dim": "#c6c6cb",
+                "surface-container-high": "#e8e8ed",
+                "inverse-on-surface": "#f0f0f5",
+                "system-red": "#FF3B30",
+                "on-tertiary-fixed-variant": "#00531c",
+                "on-secondary-fixed": "#1a1b1f",
+                "system-green": "#34C759",
+                "on-background": "#1a1c1f",
+                "on-tertiary-fixed": "#002107",
+                "on-surface-variant": "#414755",
+                "secondary-container": "#e0dfe4",
+                "on-tertiary": "#ffffff",
+                "primary": "#0058bc",
+                "secondary": "#5d5e63",
+                "primary-container": "#0070eb",
+                "on-tertiary-container": "#f7fff2",
+                "surface-base": "#FFFFFF",
+                "tertiary-container": "#008733",
+                "outline-variant": "#c1c6d7",
+                "surface-container-low": "#f3f3f8",
+                "background": "#f9f9fe",
+                "on-primary-fixed": "#001a41",
+                "surface-container-highest": "#e2e2e7",
+                "surface-variant": "#e2e2e7",
+                "primary-fixed": "#d8e2ff",
+                "surface-grouped": "#F2F2F7",
+                "secondary-fixed": "#e3e2e7",
+                "outline": "#717786",
+                "on-primary-fixed-variant": "#004493",
+                "inverse-surface": "#2e3034",
+                "on-surface": "#1a1c1f",
+                "surface-container-lowest": "#ffffff",
+                "on-secondary-container": "#626267",
+                "tertiary-fixed": "#72fe88",
+                "on-primary": "#ffffff",
+                "on-error": "#ffffff",
+                "surface-bright": "#f9f9fe",
+                "error": "#ba1a1a",
+                "surface": "#f9f9fe",
+                "error-container": "#ffdad6"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-md": "16px",
+                "gutter": "16px",
+                "margin-desktop": "32px",
+                "unit": "8px",
+                "margin-mobile": "16px",
+                "stack-sm": "8px",
+                "stack-lg": "32px"
+        },
+        "fontFamily": {
+                "headline-md": [
+                        "Inter"
+                ],
+                "display-lg": [
+                        "Inter"
+                ],
+                "body-lg": [
+                        "Inter"
+                ],
+                "label-sm": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-md": [
+                        "22px",
+                        {
+                                "lineHeight": "28px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "34px",
+                        {
+                                "lineHeight": "41px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "17px",
+                        {
+                                "lineHeight": "22px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-sm": [
+                        "11px",
+                        {
+                                "lineHeight": "13px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "30px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-md": [
+                        "13px",
+                        {
+                                "lineHeight": "18px",
+                                "letterSpacing": "0.01em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-md": [
+                        "15px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "28px",
+                        {
+                                "lineHeight": "34px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+</head>
+<body class="bg-surface-grouped text-on-surface font-body-md min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="sticky top-0 w-full z-50 bg-white/80 dark:bg-surface/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5 shadow-sm hidden md:block">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-[1200px] mx-auto">
+<div class="flex items-center gap-8">
+<a class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed" href="#">TalentPulse</a>
+<div class="hidden lg:flex items-center gap-4">
+<a class="font-body-lg text-body-lg text-on-surface-variant font-medium hover:opacity-75 transition-opacity" href="#">Talent</a>
+<a class="font-body-lg text-body-lg text-on-surface-variant font-medium hover:opacity-75 transition-opacity" href="#">Requests</a>
+<a class="font-body-lg text-body-lg text-on-surface-variant font-medium hover:opacity-75 transition-opacity" href="#">Categories</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-colors w-64 text-body-md font-body-md" placeholder="Search..." type="text"/>
+</div>
+<button class="p-2 text-primary dark:text-primary-fixed hover:opacity-75 transition-opacity rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-primary dark:text-primary-fixed hover:opacity-75 transition-opacity rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+</button>
+<button class="p-2 text-primary font-bold border-b-2 border-primary pb-1 hover:opacity-75 transition-opacity rounded-full">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop py-6 md:py-12 flex flex-col md:flex-row gap-6">
+<!-- Sidebar Navigation (Desktop) -->
+<aside class="w-full md:w-64 hidden md:flex flex-col gap-3 shrink-0 sticky top-24 self-start">
+<div class="bg-white rounded-[16px] p-4 border border-black/5 shadow-sm">
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-surface-container-low text-primary font-bold hover:opacity-75 transition-opacity" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                        대시보드
+                    </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined">edit_document</span>
+                        프로필 수정
+                    </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined">storefront</span>
+                        판매/구매 관리
+                    </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+                        거래 내역
+                    </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined">folder_special</span>
+                        포트폴리오 관리
+                    </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined">star_rate</span>
+                        리뷰 목록
+                    </a>
+</nav>
+</div>
+</aside>
+<!-- Dashboard Content -->
+<div class="flex-grow flex flex-col gap-6">
+<!-- User Profile Summary Bento -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="col-span-1 md:col-span-2 bg-white rounded-[16px] p-6 border border-black/5 flex items-center gap-6 shadow-sm hover:shadow-md transition-shadow">
+<img class="w-24 h-24 rounded-full object-cover border-4 border-surface-container-low" data-alt="A highly detailed close up portrait of a professional graphic designer, smiling warmly, well lit in a bright modern studio setting, crisp high resolution photography, premium minimalist aesthetic, light mode" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4VtvYyuINR8WwHf02apBr8KkkkEm2EsRClyieXTc8pZYDuTlsTONANDJEPAwuzxMp_34_SE0kVOQf9I28DnNaitHD7YehjaL154GlKR3bk3FtQVE1QmIw8eaFQZ8sbVLWLn1XuFj-JKHmY5KquFKX-zhSdPo4dyTJgp_eLMXGo6CfkeUeGiV3YYTo0eV1btwXjEWUTho4o__bm0HyZPb2e81dQ7qC3Swl6n2eZNbA6PY6yykx2iE7"/>
+<div class="flex-grow">
+<h1 class="font-headline-lg text-headline-lg md:font-headline-lg md:text-headline-lg text-on-surface font-bold">Alex Rivera</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">UX/UI Designer &amp; Web Developer</p>
+<div class="flex items-center gap-3 mt-3">
+<span class="bg-surface-container-low text-on-surface-variant px-3 py-1 rounded-full font-label-sm text-label-sm">Seoul, KR</span>
+<span class="flex items-center gap-1 text-primary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]" data-weight="fill">star</span> 4.9 (124 reviews)
+                            </span>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-xl font-label-md text-label-md font-bold hover:opacity-90 transition-opacity whitespace-nowrap">
+                        프로필 수정
+                    </button>
+</div>
+<div class="col-span-1 bg-white rounded-[16px] p-6 border border-black/5 flex flex-col justify-center items-center shadow-sm hover:shadow-md transition-shadow">
+<p class="font-label-md text-label-md text-on-surface-variant mb-2">사용 가능 포인트</p>
+<h2 class="font-display-lg text-display-lg text-primary font-bold">12,500 <span class="text-headline-md font-normal">P</span></h2>
+<button class="mt-4 text-primary bg-primary/10 px-4 py-2 rounded-xl font-label-md text-label-md w-full hover:bg-primary/20 transition-colors">
+                        포인트 충전
+                    </button>
+</div>
+</div>
+<!-- Stats Overview Bento Grid -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="bg-white rounded-[16px] p-4 border border-black/5 flex flex-col gap-2 shadow-sm">
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-label-md text-label-md">진행중인 거래</span>
+<span class="material-symbols-outlined text-primary">sync</span>
+</div>
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface">3</span>
+</div>
+<div class="bg-white rounded-[16px] p-4 border border-black/5 flex flex-col gap-2 shadow-sm">
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-label-md text-label-md">완료된 거래</span>
+<span class="material-symbols-outlined text-system-green">check_circle</span>
+</div>
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface">42</span>
+</div>
+<div class="bg-white rounded-[16px] p-4 border border-black/5 flex flex-col gap-2 shadow-sm">
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-label-md text-label-md">내 판매 글</span>
+<span class="material-symbols-outlined text-on-surface-variant">article</span>
+</div>
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface">8</span>
+</div>
+<div class="bg-white rounded-[16px] p-4 border border-black/5 flex flex-col gap-2 shadow-sm">
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-label-md text-label-md">새 리뷰</span>
+<span class="material-symbols-outlined text-primary">reviews</span>
+</div>
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface">2</span>
+</div>
+</div>
+<!-- Recent Activity Sections -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+<!-- Recent Transactions -->
+<div class="bg-white rounded-[16px] p-6 border border-black/5 flex flex-col gap-4 shadow-sm">
+<div class="flex justify-between items-center mb-2">
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface">최근 거래 내역</h3>
+<a class="text-primary font-label-md text-label-md hover:underline" href="#">전체보기</a>
+</div>
+<div class="flex flex-col gap-3">
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer border border-transparent hover:border-black/5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-variant flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">design_services</span>
+</div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface">로고 디자인 제작</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">구매 - 진행중</p>
+</div>
+</div>
+<span class="font-label-md text-label-md text-primary font-bold">- 150,000 P</span>
+</div>
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer border border-transparent hover:border-black/5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-variant flex items-center justify-center text-system-green">
+<span class="material-symbols-outlined">web</span>
+</div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface">랜딩페이지 퍼블리싱</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">판매 - 완료 (10.24)</p>
+</div>
+</div>
+<span class="font-label-md text-label-md text-on-surface font-bold">+ 300,000 P</span>
+</div>
+</div>
+</div>
+<!-- My Postings Management -->
+<div class="bg-white rounded-[16px] p-6 border border-black/5 flex flex-col gap-4 shadow-sm">
+<div class="flex justify-between items-center mb-2">
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface">판매/구매 글 관리</h3>
+<a class="text-primary font-label-md text-label-md hover:underline" href="#">전체보기</a>
+</div>
+<div class="flex flex-col gap-3">
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer border border-transparent hover:border-black/5">
+<div class="flex items-center gap-3">
+<div class="w-16 h-12 rounded-md overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="A sleek modern website interface displayed on an angled laptop screen, bright studio lighting, minimalist design aesthetic, premium showcase presentation, high resolution" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwNE9UVbNhVKdbqaxN2OgysdNjwBC1x7eVF_7CsqTLhPFlP05WrFA7G8mYk-P2f6OOg3q6_XGbnf_KwklOnLv_vHe2wEQ8ip9ERxP5ggOwvRRsiyC5WCDEkYtKwPAvmvhVohLXmVsog0M3d9ZwKG2W-7qk8J1GJmn4BbJKjJ9zNR3xmhhotCAlfwvLN2Hhuy34bRwepglFR-Vw8hb00sEZLBbVLEH59p6SNplw8U0tCDKsBy6qoevh"/>
+</div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface line-clamp-1">트렌디한 모바일 앱 UI 디자인 해드립니다.</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">조회수 1,204 · 찜 45</p>
+</div>
+</div>
+<div class="flex gap-2 shrink-0">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+</div>
+</div>
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer border border-transparent hover:border-black/5">
+<div class="flex items-center gap-3">
+<div class="w-16 h-12 rounded-md overflow-hidden shrink-0 bg-surface-variant flex justify-center items-center">
+<span class="material-symbols-outlined text-on-surface-variant">image</span>
+</div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface line-clamp-1">[구함] 스타트업 소개용 짧은 모션 그래픽</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">요청글 · 제안 3건</p>
+</div>
+</div>
+<div class="flex gap-2 shrink-0">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe md:hidden bg-white/80 dark:bg-surface/80 backdrop-blur-xl border-t border-black/5 dark:border-white/5 shadow-lg rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+<span class="font-label-sm text-label-sm mt-1">Explore</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined" data-icon="list_alt">list_alt</span>
+<span class="font-label-sm text-label-sm mt-1">Requests</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+<span class="font-label-sm text-label-sm mt-1">Post</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-sm text-label-sm mt-1">Messages</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold Active: scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm mt-1">Profile</span>
+</a>
+</nav>
+<!-- Footer -->
+<footer class="hidden md:flex flex-col items-center justify-center gap-4 w-full border-t border-outline-variant bg-surface-container-low dark:bg-surface-container-lowest py-8 mt-auto">
+<div class="font-headline-md text-headline-md font-bold text-primary">TalentPulse</div>
+<div class="flex gap-4 font-label-md text-label-md text-on-surface-variant">
+<a class="hover:text-primary transition-colors cursor-pointer" href="#">Terms</a>
+<a class="hover:text-primary transition-colors cursor-pointer" href="#">Privacy</a>
+<a class="hover:text-primary transition-colors cursor-pointer" href="#">Help</a>
+<a class="hover:text-primary transition-colors cursor-pointer" href="#">Contact</a>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant mt-3">© 2024 TalentPulse. Premium Marketplace.</p>
+</footer>
+</body></html>

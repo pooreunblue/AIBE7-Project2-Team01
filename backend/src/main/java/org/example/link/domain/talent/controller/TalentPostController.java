@@ -14,6 +14,7 @@ import org.example.link.domain.talent.dto.TalentPostRequestDto;
 import org.example.link.domain.talent.dto.TalentPostResponseDto;
 import org.example.link.domain.talent.entity.TalentPostEntity;
 import org.example.link.domain.talent.service.TalentPostService;
+import org.example.link.domain.talent.util.DurationUnit;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,7 +26,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -46,11 +46,18 @@ public class TalentPostController {
 
     @GetMapping
     @Operation(summary = "재능글 목록 조회")
-    public ApiResponse<List<TalentPostResponseDto>> readAll() {
-        List<TalentPostEntity> talentPostEntities = talentPostService.readAll();
-        return ApiResponse.ok(talentPostEntities.stream()
-                .map(TalentPostResponseDto::toDto)
-                .toList());
+    public ApiResponse<Page<TalentPostResponseDto>> readAll(
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) Long maxPrice,
+            @RequestParam(required = false) Integer maxEstimatedDuration,
+            @RequestParam(required = false) DurationUnit durationUnit,
+            @ParameterObject
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        Page<TalentPostEntity> talentPostEntities = talentPostService.readAll(
+                categoryId, maxPrice, maxEstimatedDuration, durationUnit, pageable);
+        return ApiResponse.ok(talentPostEntities.map(TalentPostResponseDto::toDto));
     }
 
     @GetMapping("/{talentPostId}")
@@ -64,6 +71,10 @@ public class TalentPostController {
     @Operation(summary = "재능글 검색")
     public ApiResponse<Page<TalentPostResponseDto>> searchTalents(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) Long maxPrice,
+            @RequestParam(required = false) Integer maxEstimatedDuration,
+            @RequestParam(required = false) DurationUnit durationUnit,
             @ParameterObject
             @PageableDefault(
                     size = 20,
@@ -71,7 +82,8 @@ public class TalentPostController {
                     direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
-        Page<TalentPostEntity> talentPostEntities = talentPostService.search(keyword, pageable);
+        Page<TalentPostEntity> talentPostEntities = talentPostService.search(
+                keyword, categoryId, maxPrice, maxEstimatedDuration, durationUnit, pageable);
         return ApiResponse.ok(talentPostEntities.map(TalentPostResponseDto::toDto));
     }
 

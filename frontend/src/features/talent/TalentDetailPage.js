@@ -13,7 +13,7 @@ export function TalentDetailPage(id) {
           </div>
           <div data-talent-files></div>
           <div data-talent-linked-portfolio></div>
-          <div class="seller-box">
+          <div class="seller-box" data-talent-author-box>
             <div class="avatar" data-talent-avatar>?</div>
             <div>
               <strong data-talent-author>작성자 확인 중</strong>
@@ -26,7 +26,7 @@ export function TalentDetailPage(id) {
         <span>Service Details</span>
         <strong data-talent-price>-</strong>
         <p data-talent-duration>예상 작업기간을 확인 중입니다.</p>
-        <button class="button primary" type="button" data-talent-chat disabled>Chat with Seller</button>
+        <button class="button primary" type="button" data-talent-chat disabled>판매자와 채팅</button>
       </aside>
     </section>
   `;
